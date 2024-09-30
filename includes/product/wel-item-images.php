@@ -225,6 +225,7 @@ function wel_build_list_detail_tab_file( $post_id ) {
 		?>
 		<div class="tab_file_item_pict" id="<?php echo esc_attr( $pict_id ); ?>">
 			<input type="checkbox" value="<?php echo esc_attr( $pict_id ); ?>" name="file_item_picts[]">
+			<?php echo wp_get_attachment_image( $pict_id, array( 30, 30 ), true ); ?>
 			<label><?php echo esc_html( $filename ) . '(' . esc_attr( $pict_id ) . ')'; ?></label>
 		</div>
 		<?php
@@ -389,6 +390,13 @@ function wel_item_image_ajax() {
 	);
 	$mode    = isset( $_POST['mode'] ) ? sanitize_text_field( wp_unslash( $_POST['mode'] ) ) : '';
 	$post_id = isset( $_POST['post_id'] ) ? (int) $_POST['post_id'] : 0;
+
+	if ( ! current_user_can( 'wel_publish_products', $post_id ) ) {
+		$arr_res['status'] = false;
+		$arr_res['msg']   .= __( 'You are not allowed to edit this item.', 'usces' ) . '<br>';
+		wp_send_json( $arr_res );
+	}
+
 	switch ( $mode ) {
 		case 'wel_photo_gallery_upload':
 			check_ajax_referer( 'photo-upload' );

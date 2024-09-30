@@ -301,9 +301,19 @@ class dataList { // phpcs:ignore
 
 			$this->action                           = 'changeSort';
 			$this->sortOldColumn                    = $this->sortColumn;
-			$this->sortColumn                       = str_replace( '`', '', $_REQUEST['changeSort'] );
+			// Validate sortColumn.
+			if ( in_array( $_REQUEST['changeSort'], $this->columns ) ) {
+				$this->sortColumn = $_REQUEST['changeSort'];
+			} else {
+				$this->sortColumn = 'ID'; // default.
+			}
 			$this->sortSwitchs                      = ( isset( $this->data_cookie['sortSwitchs'] ) ) ? $this->data_cookie['sortSwitchs'] : $this->sortSwitchs;
-			$this->sortSwitchs[ $this->sortColumn ] = ( 'ASC' == $_REQUEST['switch'] ) ? 'ASC' : 'DESC';
+			// Validate sortSwitchs.
+			if (isset($_REQUEST['switch']) && in_array($_REQUEST['switch'], array('ASC', 'DESC'))) {
+				$this->sortSwitchs[$this->sortColumn] = $_REQUEST['switch'];
+			} else {
+				$this->sortSwitchs[$this->sortColumn] = 'DESC'; // default.
+			}
 			$this->currentPage                      = ( isset( $this->data_cookie['currentPage'] ) ) ? $this->data_cookie['currentPage'] : $this->currentPage;
 			$this->userHeaderNames                  = ( isset( $this->data_cookie['userHeaderNames'] ) ) ? $this->data_cookie['userHeaderNames'] : $this->userHeaderNames;
 			$this->searchSql                        = ( isset( $this->data_cookie['searchSql'] ) ) ? $this->data_cookie['searchSql'] : $this->searchSql;

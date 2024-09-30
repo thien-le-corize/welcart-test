@@ -316,10 +316,6 @@ function usces_download_member_list() {
 // product list download
 function usces_download_product_list() {
 
-	if ( ! usces_admin_user_can_download_list() ) {
-		exit();
-	}
-
 	require_once( USCES_PLUGIN_DIR . "/classes/orderList.class.php" );
 	global $wpdb, $usces;
 

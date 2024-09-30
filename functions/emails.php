@@ -23,6 +23,10 @@ function usces_order_confirm_message( $order_id ) {
 	global $usces;
 
 	$data = $usces->get_order_data( $order_id, 'direct' );
+	if ( empty( $data ) ) {
+		return '';
+	}
+
 	$deli = unserialize( $data['order_delivery'] );
 	$cart = usces_get_ordercartdata( $order_id );
 
@@ -236,7 +240,9 @@ function usces_send_ordermail( $order_id ) {
 		'to_address'   => $entry['customer']['mailaddress1'],
 		'from_name'    => get_option( 'blogname' ),
 		'from_address' => $usces->options['sender_mail'],
-		'return_path'  => $usces->options['sender_mail'],
+		'reply_name'   => get_option( 'blogname' ),
+		'reply_to'     => usces_get_first_order_mail(),
+		'return_path'  => $usces->options['error_mail'],
 		'subject'      => $subject,
 		'message'      => $message,
 		'headers'      => $headers,
@@ -284,7 +290,9 @@ function usces_send_ordermail( $order_id ) {
 		'to_address'   => $usces->options['order_mail'],
 		'from_name'    => get_option( 'blogname' ),
 		'from_address' => $usces->options['sender_mail'],
-		'return_path'  => $usces->options['sender_mail'],
+		'reply_name'   => get_option( 'blogname' ),
+		'reply_to'     => usces_get_first_order_mail(),
+		'return_path'  => $usces->options['error_mail'],
 		'subject'      => $subject,
 		'message'      => $message,
 		'headers'      => $headers,
@@ -471,11 +479,16 @@ function usces_get_thanksmail_htmlbody( $args ) {
 			$pc = '';
 		}
 		$meisai .= '<p style="margin-top: 10px; font-size: 13px;">';
-		$meisai .= $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) . '<br>';
+		$reduced_output_even_empty = apply_filters( 'usces_filter_mail_reduced_output_even_empty', false, $usces_tax, $condition['tax_mode'] );
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$meisai .= $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) . '<br>';
+		}
 		$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_standard ) . ' : ' . usces_crform( $usces_tax->subtotal_standard + $usces_tax->discount_standard, true, false, 'return' ) . '<br>'; /* translators: %s is replaced with "string" */
 		$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_standard ) . ' : ' . $po . usces_crform( $usces_tax->tax_standard, true, false, 'return' ) . $pc . '<br>'; /* translators: %s is replaced with "string" */
-		$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . '<br>'; /* translators: %s is replaced with "string" */
-		$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc . '<br>'; /* translators: %s is replaced with "string" */
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . '<br>'; /* translators: %s is replaced with "string" */
+			$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc . '<br>'; /* translators: %s is replaced with "string" */
+		}
 		$meisai .= '</p>';
 	}
 
@@ -499,7 +512,7 @@ function usces_get_thanksmail_htmlbody( $args ) {
 	$msg_body .= '<table style="width: 100%;"><tbody>';
 
 	$msg_payment = '<tr><td colspan="2" style="padding: 0 0 25px 0;">' . $payment['name'] . usces_payment_detail( $entry ) . '</td></tr>';
-	if ( 'transferAdvance' === $payment['settlement'] && isset( $usces->options['transferee'] ) ) {
+	if ( 'transferAdvance' === $payment['settlement'] && ! empty( $usces->options['transferee'] ) ) {
 		$transferee   = '<td style="padding: 30px 0 10px; text-align: left; width: 100px; font-weight: normal; border-top: 1px dotted #ccc; vertical-align: text-top;">' . __( 'Transfer', 'usces' ) . '</td>';
 		$transferee  .= '<td style="padding: 30px 0 10px 50px; width: calc( 100% - 100px ); border-top: 1px dotted #ccc; vertical-align: text-top;">' . wpautop( $usces->options['transferee'] ) . '</td>';
 		$msg_payment .= '<tr>';
@@ -698,10 +711,15 @@ function usces_get_thanksmail_textbody( $args ) {
 		}
 		$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_standard ) . ' : ' . usces_crform( $usces_tax->subtotal_standard + $usces_tax->discount_standard, true, false, 'return' ) . "\r\n"; /* translators: %s is replaced with "string" */
 		$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_standard ) . ' : ' . $po . usces_crform( $usces_tax->tax_standard, true, false, 'return' ) . $pc . "\r\n"; /* translators: %s is replaced with "string" */
-		$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . "\r\n"; /* translators: %s is replaced with "string" */
-		$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc . "\r\n"; /* translators: %s is replaced with "string" */
+		$reduced_output_even_empty = apply_filters( 'usces_filter_mail_reduced_output_even_empty', false, $usces_tax, $condition['tax_mode'] );
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . "\r\n"; /* translators: %s is replaced with "string" */
+			$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc . "\r\n"; /* translators: %s is replaced with "string" */
+		}
 		$meisai .= usces_mail_line( 2, $data['order_email'] ); // --------------------
-		$meisai .= $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) . "\r\n";
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$meisai .= $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) . "\r\n";
+		}
 	}
 	$meisai .= '(' . __( 'Currency', 'usces' ) . ' : ' . __( usces_crcode( 'return' ), 'usces' ) . ")\r\n\r\n";
 
@@ -727,7 +745,7 @@ function usces_get_thanksmail_textbody( $args ) {
 	$msg_payment  = __( '** Payment method **', 'usces' ) . "\r\n";
 	$msg_payment .= usces_mail_line( 1, $entry['customer']['mailaddress1'] ); // ********************
 	$msg_payment .= $payment['name'] . usces_payment_detail( $entry ) . "\r\n\r\n";
-	if ( 'transferAdvance' === $payment['settlement'] && isset( $usces->options['transferee'] ) ) {
+	if ( 'transferAdvance' === $payment['settlement'] && ! empty( $usces->options['transferee'] ) ) {
 		$transferee   = __( 'Transfer', 'usces' ) . " : \r\n";
 		$transferee  .= $usces->options['transferee'] . "\r\n";
 		$msg_payment .= apply_filters( 'usces_filter_mail_transferee', $transferee, $payment, $order_id );
@@ -955,11 +973,16 @@ function usces_get_adminmail_htmlbody( $args ) {
 			$pc = '';
 		}
 		$meisai .= '<p style="margin-top: 10px; font-size: 13px;">';
-		$meisai .= $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) . '<br>';
+		$reduced_output_even_empty = apply_filters( 'usces_filter_mail_reduced_output_even_empty', false, $usces_tax, $condition['tax_mode'] );
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$meisai .= $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) . '<br>';
+		}
 		$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_standard ) . ' : ' . usces_crform( $usces_tax->subtotal_standard + $usces_tax->discount_standard, true, false, 'return' ) . '<br>'; /* translators: %s is replaced with "string" */
 		$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_standard ) . ' : ' . $po . usces_crform( $usces_tax->tax_standard, true, false, 'return' ) . $pc . '<br>'; /* translators: %s is replaced with "string" */
-		$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . '<br>'; /* translators: %s is replaced with "string" */
-		$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc . '<br>'; /* translators: %s is replaced with "string" */
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . '<br>'; /* translators: %s is replaced with "string" */
+			$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc . '<br>'; /* translators: %s is replaced with "string" */
+		}
 		$meisai .= '</p>';
 	}
 
@@ -984,7 +1007,7 @@ function usces_get_adminmail_htmlbody( $args ) {
 
 	$msg_payment = '<tr><td colspan="2" style="padding: 0 0 25px 0;">' . $payment['name'] . usces_payment_detail_confirm( $data ) . '</td></tr>';
 	if ( 'orderConfirmMail' === $mail_mode || 'changeConfirmMail' === $mail_mode || 'mitumoriConfirmMail' === $mail_mode || 'otherConfirmMail' === $mail_mode ) {
-		if ( 'transferAdvance' === $payment['settlement'] && isset( $usces->options['transferee'] ) ) {
+		if ( 'transferAdvance' === $payment['settlement'] && ! empty( $usces->options['transferee'] ) ) {
 			$transferee   = '<td style="padding: 30px 0 10px; text-align: left; width: 100px; font-weight: normal; border-top: 1px dotted #ccc; vertical-align: text-top;">' . __( 'Transfer', 'usces' ) . '</td>';
 			$transferee  .= '<td style="padding: 30px 0 10px 50px; width: calc( 100% - 100px ); border-top: 1px dotted #ccc; vertical-align: text-top;">' . wpautop( $usces->options['transferee'] ) . '</td>';
 			$msg_payment .= '<tr>';
@@ -1237,10 +1260,15 @@ function usces_get_adminmail_textbody( $args ) {
 		}
 		$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_standard ) . ' : ' . usces_crform( $usces_tax->subtotal_standard + $usces_tax->discount_standard, true, false, 'return' ) . "\r\n"; /* translators: %s is replaced with "string" */
 		$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_standard ) . ' : ' . $po . usces_crform( $usces_tax->tax_standard, true, false, 'return' ) . $pc . "\r\n"; /* translators: %s is replaced with "string" */
-		$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . "\r\n"; /* translators: %s is replaced with "string" */
-		$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc . "\r\n"; /* translators: %s is replaced with "string" */
+		$reduced_output_even_empty = apply_filters( 'usces_filter_mail_reduced_output_even_empty', false, $usces_tax, $condition['tax_mode'] );
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$meisai .= sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . "\r\n"; /* translators: %s is replaced with "string" */
+			$meisai .= sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) . ' : ' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc . "\r\n"; /* translators: %s is replaced with "string" */
+		}
 		$meisai .= usces_mail_line( 2, $data['order_email'] ); // --------------------
-		$meisai .= $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) . "\r\n";
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$meisai .= $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) . "\r\n";
+		}
 	}
 	$meisai .= '(' . __( 'Currency', 'usces' ) . ' : ' . __( usces_crcode( 'return' ), 'usces' ) . ")\r\n\r\n";
 
@@ -1286,7 +1314,7 @@ function usces_get_adminmail_textbody( $args ) {
 	$msg_payment .= usces_mail_line( 1, $data['order_email'] ); // ********************
 	$msg_payment .= $payment['name'] . usces_payment_detail_confirm( $data ) . "\r\n\r\n";
 	if ( 'orderConfirmMail' === $mail_mode || 'changeConfirmMail' === $mail_mode || 'mitumoriConfirmMail' === $mail_mode || 'otherConfirmMail' === $mail_mode ) {
-		if ( 'transferAdvance' === $payment['settlement'] && isset( $usces->options['transferee'] ) ) {
+		if ( 'transferAdvance' === $payment['settlement'] && ! empty( $usces->options['transferee'] ) ) {
 			$transferee   = __( 'Transfer', 'usces' ) . " :\r\n";
 			$transferee  .= $usces->options['transferee'] . "\r\n";
 			$msg_payment .= apply_filters( 'usces_filter_mail_transferee', $transferee, $payment, $order_id );
@@ -1315,8 +1343,14 @@ function usces_get_adminmail_textbody( $args ) {
 function usces_ajax_send_mail() {
 	global $wpdb, $usces;
 
-	$_POST = $usces->stripslashes_deep_post( $_POST );
-	$nonce = isset( $_POST['wc_nonce'] ) ? wp_unslash( $_POST['wc_nonce'] ) : '';
+	$nonce       = isset( $_POST['wc_nonce'] ) ? filter_var( wp_unslash( $_POST['wc_nonce'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS ) : null;
+	$message     = isset( $_POST['message'] ) ? filter_var( wp_unslash( $_POST['message'] ), FILTER_SANITIZE_STRING ) : null;
+	$name        = isset( $_POST['name'] ) ? filter_var( wp_unslash( $_POST['name'] ), FILTER_SANITIZE_STRING ) : null;
+	$mailaddress = isset( $_POST['mailaddress'] ) ? filter_var( wp_unslash( $_POST['mailaddress'] ), FILTER_SANITIZE_EMAIL ) : null;
+	$subject     = isset( $_POST['subject'] ) ? filter_var( wp_unslash( $_POST['subject'] ), FILTER_SANITIZE_STRING ) : null;
+	$order_id    = isset( $_POST['order_id'] ) ? filter_var( wp_unslash( $_POST['order_id'] ), FILTER_SANITIZE_STRING ) : null;
+	$checked     = isset( $_POST['checked'] ) ? filter_var( wp_unslash( $_POST['checked'] ), FILTER_SANITIZE_STRING ) : null;
+
 	if ( ! wp_verify_nonce( $nonce, 'wc_send_mail_order_nonce' ) ) {
 		$error_msg = array( 'message' => 'Your request is not valid.' );
 		wp_send_json_error( $error_msg, 403 );
@@ -1338,18 +1372,20 @@ function usces_ajax_send_mail() {
 		}
 	}
 	$headers = '';
-	$message = trim( urldecode( $_POST['message'] ) );
+	$message = trim( urldecode( $message ) );
 	if ( usces_is_html_mail() ) {
 		$headers = "Content-Type: text/html\r\n";
 		$message = wpautop( $message );
 	}
 	$order_para = array(
-		'to_name'      => sprintf( _x( '%s', 'honorific', 'usces' ), trim( urldecode( $_POST['name'] ) ) ),
-		'to_address'   => trim( urldecode( $_POST['mailaddress'] ) ),
+		'to_name'      => sprintf( _x( '%s', 'honorific', 'usces' ), trim( urldecode( $name ) ) ),
+		'to_address'   => trim( urldecode( $mailaddress ) ),
 		'from_name'    => get_option( 'blogname' ),
 		'from_address' => $usces->options['sender_mail'],
-		'return_path'  => $usces->options['sender_mail'],
-		'subject'      => trim( urldecode( $_POST['subject'] ) ),
+		'reply_name'   => get_option( 'blogname' ),
+		'reply_to'     => usces_get_first_order_mail(),
+		'return_path'  => $usces->options['error_mail'],
+		'subject'      => trim( urldecode( $subject ) ),
 		'message'      => $message,
 		'headers'      => $headers,
 		'attachments'  => $attachments,
@@ -1362,15 +1398,14 @@ function usces_ajax_send_mail() {
 	do_action( 'usces_action_ajax_after_send_mail_to_customer', $res, $order_para );
 
 	if ( $res ) {
-		if ( isset( $_POST['order_id'] ) && '' !== $_POST['order_id'] ) {
+		if ( $order_id ) {
 			$table_name = $wpdb->prefix . 'usces_order';
-			$order_id   = wp_unslash( $_POST['order_id'] );
-			$checked    = wp_unslash( $_POST['checked'] );
+			$checked    = wp_unslash( $checked );
 
 			$query = $wpdb->prepare( "SELECT `order_check` FROM $table_name WHERE ID = %d", $order_id );
 			$res   = $wpdb->get_var( $query );
 
-			$checkfield = unserialize( $res );
+			$checkfield = is_serialized( $res ) ? unserialize( $res ) : array();
 			if ( ! isset( $checkfield[ $checked ] ) ) {
 				$checkfield[ $checked ] = $checked;
 			}
@@ -1384,10 +1419,10 @@ function usces_ajax_send_mail() {
 
 		if ( 'ja' !== $usces->options['system']['front_lang'] ) {
 			// translators: %s: name of user.
-			$bcc_subject = trim( urldecode( $_POST['subject'] ) ) . ' to ' . sprintf( _x( '%s', 'usces' ), trim( urldecode( $_POST['name'] ) ) );
+			$bcc_subject = trim( urldecode( $subject ) ) . ' to ' . sprintf( _x( '%s', 'usces' ), trim( urldecode( $name ) ) );
 		} else {
 			// translators: %s: name of user.
-			$bcc_subject = trim( urldecode( $_POST['subject'] ) ) . ' to ' . sprintf( _x( '%s', 'honorific', 'usces' ), trim( urldecode( $_POST['name'] ) ) );
+			$bcc_subject = trim( urldecode( $subject ) ) . ' to ' . sprintf( _x( '%s', 'honorific', 'usces' ), trim( urldecode( $name ) ) );
 		}
 
 		$bcc_para = array(
@@ -1395,7 +1430,9 @@ function usces_ajax_send_mail() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
-			'return_path'  => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
+			'return_path'  => $usces->options['error_mail'],
 			'subject'      => $bcc_subject,
 			'message'      => $message,
 			'headers'      => $headers,
@@ -1456,7 +1493,7 @@ function usces_upload_file_attach( $file, $folder_move ) {
 function usces_check_validate_attach_file( $file ) {
 	global $usces;
 
-	$email_attach_file_extension = ( ! empty( $usces->options['email_attach_file_extension'] ) ) ? explode( ',', strtolower( $usces->options['email_attach_file_extension'] ) ) : array();
+	$email_attach_file_extension = wel_email_attach_file_extension( explode( ',', strtolower( $usces->options['email_attach_file_extension'] ) ) );
 	$email_attach_file_size      = (int) $usces->options['email_attach_file_size'];
 	$err_max_file_size           = false;
 	$err_max_file_extension      = false;
@@ -1534,7 +1571,9 @@ function usces_send_inquirymail() {
 		'to_address'   => $inq_mailaddress,
 		'from_name'    => get_option( 'blogname' ),
 		'from_address' => $usces->options['sender_mail'],
-		'return_path'  => $usces->options['sender_mail'],
+		'reply_name'   => get_option( 'blogname' ),
+		'reply_to'     => usces_get_first_order_mail(),
+		'return_path'  => $usces->options['error_mail'],
 		'subject'      => $subject,
 		'message'      => do_shortcode( $message ),
 	);
@@ -1554,7 +1593,9 @@ function usces_send_inquirymail() {
 			'to_address'   => $usces->options['inquiry_mail'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
-			'return_path'  => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
+			'return_path'  => $usces->options['error_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
 		);
@@ -1649,7 +1690,9 @@ function usces_send_regmembermail( $user ) {
 		'to_address'   => $mailaddress1,
 		'from_name'    => get_option( 'blogname' ),
 		'from_address' => $usces->options['sender_mail'],
-		'return_path'  => $usces->options['sender_mail'],
+		'reply_name'   => get_option( 'blogname' ),
+		'reply_to'     => usces_get_first_order_mail(),
+		'return_path'  => $usces->options['error_mail'],
 		'subject'      => $subject,
 		'message'      => do_shortcode( $message ),
 		'headers'      => $headers,
@@ -1691,7 +1734,9 @@ function usces_send_regmembermail( $user ) {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
-			'return_path'  => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
+			'return_path'  => $usces->options['error_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
 			'headers'      => $headers,
@@ -1800,7 +1845,9 @@ function usces_send_updmembermail( $user ) {
 			'to_address'   => $mailaddress1,
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
-			'return_path'  => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
+			'return_path'  => $usces->options['error_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
 		);
@@ -1823,7 +1870,9 @@ function usces_send_updmembermail( $user ) {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
-			'return_path'  => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
+			'return_path'  => $usces->options['error_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
 		);
@@ -1874,7 +1923,9 @@ function usces_send_delmembermail( $user ) {
 			'to_address'   => $mailaddress1,
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
-			'return_path'  => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
+			'return_path'  => $usces->options['error_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
 		);
@@ -1897,7 +1948,9 @@ function usces_send_delmembermail( $user ) {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
-			'return_path'  => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
+			'return_path'  => $usces->options['error_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
 		);
@@ -1934,7 +1987,9 @@ function usces_lostmail( $url ) {
 			'to_address'   => $usces_lostmail,
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
-			'return_path'  => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
+			'return_path'  => $usces->options['error_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
 		);
@@ -2151,7 +2206,7 @@ function _usces_send_mail( $para ) {
 			$from_name            = $para['from_name'] . '(' . $from_address . ')';
 		}
 	}
-	$from    = htmlspecialchars( html_entity_decode( $from_name, ENT_QUOTES ) ) . " <{$para['from_address']}>";
+	$from    = htmlspecialchars( html_entity_decode( $from_name, ENT_QUOTES ), ENT_COMPAT ) . " <{$para['from_address']}>";
 	$header  = 'From: ' . apply_filters( 'usces_filter_send_mail_from', $from, $para ) . "\r\n";
 	$header .= "Return-Path: {$para['return_path']}\r\n";
 
@@ -2195,13 +2250,15 @@ function _usces_send_mail( $para ) {
  *
  * @param array $para {
  *     The array of mail data.
- *     @type string $to_name      To name.
- *     @type string $to_address   To address.
- *     @type string $from_name    From name.
- *     @type string $from_address From address.
- *     @type string $return_path  Return path.
- *     @type string $subject      Subject.
- *     @type string $message      Message.
+ *     @type string $to_name       To name.
+ *     @type string $to_address    To address.
+ *     @type string $from_name     From name.
+ *     @type string $from_address  From address.
+ *     @type string $reply_name    Reply name.
+ *     @type string $reply_to      Reply address.
+ *     @type string $return_path   Return path.
+ *     @type string $subject       Subject.
+ *     @type string $message       Message.
  * }
  * @return bool
  */
@@ -2210,25 +2267,19 @@ function usces_send_mail( $para ) {
 
 	$from_name    = $para['from_name'];
 	$from_address = $para['from_address'];
+
 	if ( strpos( $para['from_address'], '..' ) !== false || strpos( $para['from_address'], '.@' ) !== false ) {
 		$fname = str_replace( strstr( $para['from_address'], '@' ), '', $para['from_address'] );
-		if ( '"' != substr( $fname, 0, 1 ) && '"' != substr( $fname, -1 ) ) {
+		if ( '"' !== substr( $fname, 0, 1 ) && '"' !== substr( $fname, -1 ) ) {
 			$para['from_address'] = str_replace( $fname, '"RFC_violation"', $para['from_address'] );
 			$from_name            = $para['from_name'] . '(' . $from_address . ')';
 		}
 	}
 	$from_name = html_entity_decode( $from_name, ENT_QUOTES );
 	$from_name = mb_encode_mimeheader( $from_name );
-	// $from = htmlspecialchars( html_entity_decode( $from_name, ENT_QUOTES ) );
-	// $para['from_name'] = $from;
-	$para['from_name'] = $from_name;
 
-	$usces->mail_para = $para;
-	add_action( 'phpmailer_init', 'usces_send_mail_init', 5 );
-
-	$subject     = html_entity_decode( $para['subject'], ENT_QUOTES );
-	$message     = $para['message'];
-	$attachments = isset( $para['attachments'] ) ? $para['attachments'] : array();
+	$para['from_name']   = $from_name;
+	$para['from']        = $from_address;
 
 	$mails     = explode( ',', $para['to_address'] );
 	$to_mailes = array();
@@ -2237,14 +2288,37 @@ function usces_send_mail( $para ) {
 			$to_mailes[] = $mail;
 		}
 	}
+
+	$usces->mail_para = $para;
+	add_action( 'phpmailer_init', 'usces_send_mail_init', 5 );
+
+	$subject     = html_entity_decode( $para['subject'], ENT_QUOTES );
+	$message     = $para['message'];
+	$attachments = isset( $para['attachments'] ) ? $para['attachments'] : array();
+
 	$res = false;
 	foreach ( $to_mailes as $to_maile ) {
 		if ( strpos( $to_maile, '..' ) !== false || strpos( $to_maile, '.@' ) !== false ) {
 			$headers = 'From: ' . $from_address . "\r\n";
 			if ( isset( $para['headers'] ) && ! empty( $para['headers'] ) ) {
-				$headers .= $para['headers'];
+				$header_lines     = explode( "\r\n", $para['headers'] );
+				$filtered_headers = array_filter(
+					$header_lines,
+					function( $line ) {
+						return stripos( $line, 'Reply-To:' ) !== 0;
+					}
+				);
+				$headers         .= implode( "\r\n", $filtered_headers ) . "\r\n";
 			}
-			$res     = @mb_send_mail( $to_maile, $subject, $message, $headers );
+			$reply_to_email = $usces->mail_para['reply_to'];
+			$reply_to_name  = $usces->mail_para['reply_name'];
+			if ( ! empty( $reply_to_name ) ) {
+				$new_reply_to = 'Reply-To: "' . $reply_to_name . '" <' . $reply_to_email . '>' . "\r\n";
+			} else {
+				$new_reply_to = 'Reply-To: ' . $reply_to_email . "\r\n";
+			}
+			$headers .= $new_reply_to;
+			$res      = @mb_send_mail( $to_maile, $subject, $message, $headers );
 		} elseif ( ! empty( $to_maile ) ) {
 			$headers = ( ! empty( $para['headers'] ) ) ? $para['headers'] : '';
 			$res     = @wp_mail( $to_maile, $subject, $message, $headers, $attachments );
@@ -2267,14 +2341,37 @@ function usces_send_mail( $para ) {
 function usces_send_mail_init( $phpmailer ) {
 	global $usces;
 
-	$phpmailer->Mailer   = 'mail';
-	$phpmailer->From     = $usces->mail_para['from_address'];
-	$phpmailer->FromName = apply_filters( 'usces_filter_send_mail_from', $usces->mail_para['from_name'], $usces->mail_para );
-	$phpmailer->Sender   = $usces->mail_para['from_address'];
+	$from_name = apply_filters( 'usces_filter_send_mail_from', $usces->mail_para['from_name'], $usces->mail_para );
 
+	$phpmailer->Mailer   = 'mail';
+	$phpmailer->From     = $usces->mail_para['from'];
+	$phpmailer->FromName = $from_name;
+	if ( ( isset( $usces->mail_para['reply_to'] ) && ! empty( $usces->mail_para['reply_to'] ) ) && ( isset( $usces->mail_para['reply_name'] ) && ! empty( $usces->mail_para['reply_name'] ) ) ) {
+		$phpmailer->ClearReplyTos();
+		$phpmailer->addReplyTo( $usces->mail_para['reply_to'], $usces->mail_para['reply_name'] );
+	}
+	if ( usces_is_html_mail() ) {
+		if ( 'text/html' !== trim( $phpmailer->ContentType ) ) {
+			$phpmailer->ContentType = 'text/html';
+			$phpmailer->Body        = wpautop( $phpmailer->Body );
+		}
+		$phpmailer->isHTML( true );
+	}
 	do_action( 'usces_filter_phpmailer_init', array( &$phpmailer ) );
 }
 
+/**
+ * Get first mail addrwess of order mail.
+ *
+ * @return string
+ */
+function usces_get_first_order_mail() {
+	global $usces;
+
+	$orders           = explode( ',', $usces->options['order_mail'] );
+	$first_order_mail = isset( $orders[0] ) ? $orders[0] : '';
+	return $first_order_mail;
+}
 /**
  * Address format
  *
@@ -2708,4 +2805,31 @@ function usces_mail_tax( $data ) {
 	$tax_str = apply_filters( 'usces_filter_mail_tax', $tax_str );
 
 	return wel_esc_script( $tax_str );
+}
+
+/**
+ * Attachable Attachment File Extension
+ *
+ * @param array $email_attach_file_extensions Setting values.
+ * @return array
+ */
+function wel_email_attach_file_extension( $email_attach_file_extensions ) {
+	if ( empty( $email_attach_file_extensions ) || ! is_array( $email_attach_file_extensions ) ) {
+		$email_attach_file_extension = array( 'jpg', 'png', 'pdf' );
+	} else {
+		$email_attach_file_extension = array();
+
+		$allowed_extensions = array_keys( get_allowed_mime_types() );
+		$extensions         = array();
+		foreach ( $allowed_extensions as $extension ) {
+			$extensions = array_merge( $extensions, explode( '|', $extension ) );
+		}
+		foreach ( (array) $email_attach_file_extensions as $extension ) {
+			if ( in_array( $extension, $extensions, true ) ) {
+				$email_attach_file_extension[] = $extension;
+			}
+		}
+	}
+
+	return $email_attach_file_extension;
 }

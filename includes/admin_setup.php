@@ -19,18 +19,34 @@
 <div class="inside">
 <table class="form_table">
 <?php
-if ( $this->display_mode ) :
-	?>
+$display_mode = array();
+if ( 'Promotionsale' === $this->options['display_mode'] ) {
+	$display_mode[0]['key']      = 'Promotionsale';
+	$display_mode[0]['label']    = $this->display_mode['Promotionsale'];
+	$display_mode[0]['checked']  = ' checked="checked"';
+	$display_mode[0]['disabled'] = '';
+	$display_mode[1]['key']      = 'Maintenancemode';
+	$display_mode[1]['label']    = $this->display_mode['Maintenancemode'];
+	$display_mode[1]['checked']  = '';
+	$display_mode[1]['disabled'] = ' disabled="disabled"';
+} else {
+	$display_mode[0]['key']      = 'Usualsale';
+	$display_mode[0]['label']    = $this->display_mode['Usualsale'];
+	$display_mode[0]['checked']  = ( 'Usualsale' === $this->options['display_mode'] ) ? ' checked="checked"' : '';
+	$display_mode[0]['disabled'] = '';
+	$display_mode[1]['key']      = 'Maintenancemode';
+	$display_mode[1]['label']    = $this->display_mode['Maintenancemode'];
+	$display_mode[1]['checked']  = ( 'Maintenancemode' === $this->options['display_mode'] ) ? ' checked="checked"' : '';
+	$display_mode[1]['disabled'] = '';
+}
+?>
 	<tr height="50">
 		<th><a style="cursor:pointer;" onclick="toggleVisibility('ex_display_mode');"><?php esc_html_e( 'Display Modes', 'usces' ); ?></a></th>
 	<?php
-	foreach ( (array) $this->display_mode as $key => $label ) :
-		if ( 'Promotionsale' == $key ) {
-			continue;
-		}
+	foreach ( (array) $display_mode as $dmode ) :
 		?>
-		<td width="10"><input name="display_mode" type="radio" id="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $key ); ?>"<?php checked( $this->options['display_mode'], $key ); ?> /></td>
-		<td width="100"><label for="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></label></td>
+		<td width="10"><input name="display_mode" type="radio" id="<?php echo esc_attr( $dmode['key'] ); ?>" value="<?php echo esc_attr( $dmode['key'] ); ?>"<?php echo esc_html( $dmode['checked'] ); ?><?php echo esc_html( $dmode['disabled'] ); ?> /></td>
+		<td width="100"><label for="<?php echo esc_attr( $dmode['key'] ); ?>"><?php echo esc_html( $dmode['label'] ); ?></label></td>
 		<?php
 	endforeach;
 	?>
@@ -39,7 +55,6 @@ if ( $this->display_mode ) :
 		<?php echo wp_kses_post( __( '<strong>Maintenance</strong> ---Showing  maintenance page. Administrater is able to see the page with normal display.', 'usces' ) ); ?></div>
 		</td>
 	</tr>
-<?php endif; ?>
 </table>
 <table class="form_table">
 	<tr>

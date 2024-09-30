@@ -534,7 +534,7 @@ class ItemData {
 
 				foreach ( $res as $key => $value ) {
 
-					$json = json_decode( $value, true );
+					$json = is_null( $value ) ? $value : json_decode( $value, true );
 
 					if ( 'itemPicts' === $key ) {
 						if ( 0 === strlen( $value ) ) {
@@ -542,6 +542,8 @@ class ItemData {
 						} else {
 							$item['itemPicts'] = explode( ';', $value );
 						}
+					} elseif ( 'itemCode' === $key || 'itemName' === $key ) {
+						$item[ $key ] = $value;
 					} elseif ( null !== $json ) {
 							$item[ $key ] = $json;
 					} else {
@@ -604,9 +606,15 @@ class ItemData {
 					$key = isset( $rows[ $keyflag ] ) ? $rows[ $keyflag ] : $rows['sort'];
 					$sku = array();
 					foreach ( $rows as $k => $v ) {
-						$json = json_decode( $v, true );
-						if ( null !== $json ) {
-							$sku[ $k ] = $json;
+						if ( 'advance' === $k ) {
+							$json = is_null( $v ) ? $v : json_decode( $v, true );
+							if ( null !== $json ) {
+								$sku[ $k ] = $json;
+							} else {
+								$sku[ $k ] = $v;
+							}
+						} elseif ( 'price' === $k || 'cprice' === $k ) {
+							$sku[ $k ] = floatval( $v );
 						} else {
 							$sku[ $k ] = $v;
 						}
@@ -691,8 +699,8 @@ class ItemData {
 					$key = isset( $rows[ $keyflag ] ) ? $rows[ $keyflag ] : $rows['sort'];
 					$opt = array();
 					foreach ( $rows as $k => $v ) {
-						$json = json_decode( $v, true );
-						if ( null !== $json ) {
+						$json = is_null( $v ) ? $v : json_decode( $v, true );
+						if ( null !== $json && ! is_numeric( $v ) ) {
 							$opt[ $k ] = $json;
 						} else {
 							$opt[ $k ] = $v;

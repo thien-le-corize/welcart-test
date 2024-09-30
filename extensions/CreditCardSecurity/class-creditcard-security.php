@@ -4,24 +4,28 @@
  *
  * @package Welcart
  */
+
+/**
+ * CreditCard Security Measures class
+ */
 class USCES_CREDITCARD_SECURITY {
 
 	/**
-	 * Option value.
+	 * Option value
 	 *
 	 * @var array
 	 */
 	public static $option;
 
 	/**
-	 * Default option value.
+	 * Default option value
 	 *
 	 * @var array
 	 */
 	public static $default_option;
 
 	/**
-	 * Construct.
+	 * Class Constructor
 	 */
 	public function __construct() {
 
@@ -35,13 +39,13 @@ class USCES_CREDITCARD_SECURITY {
 	}
 
 	/**
-	 * Initialize.
+	 * Initialize
 	 */
 	public function initialize_data() {
 
 		self::$default_option = array(
-			'time_frame'   => array( 15, 30, 60 ),
-			'set_count'    => array( 5, 10, 15, 20 ),
+			'time_frame'   => array( 15, 30, 60, 120 ),
+			'set_count'    => array( 2, 5, 10, 15, 20 ),
 			'lockout_time' => array( 1, 6, 12, 24 ),
 		);
 
@@ -55,13 +59,17 @@ class USCES_CREDITCARD_SECURITY {
 	}
 
 	/**
-	 * Save option value.
+	 * Save option value
+	 * init
 	 */
 	public function save_data() {
 		global $usces;
 
 		if ( isset( $_POST['usces_credit_security_option_update'] ) ) {
 			check_admin_referer( 'admin_system', 'wc_nonce' );
+			if ( ! current_user_can( 'wel_manage_setting' ) ) {
+				wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+			}
 
 			self::$option['active']       = ( isset( $_POST['credit_security_active'] ) ) ? (int) $_POST['credit_security_active'] : 1;
 			self::$option['time_frame']   = ( isset( $_POST['credit_security_time_frame'] ) ) ? (int) $_POST['credit_security_time_frame'] : self::$default_option['time_frame'][0];
@@ -75,7 +83,8 @@ class USCES_CREDITCARD_SECURITY {
 	}
 
 	/**
-	 * Setting form.
+	 * Setting form
+	 * usces_action_admin_system_extentions
 	 */
 	public function setting_form() {
 		$active = ( 1 === self::$option['active'] ) ? '<span class="running">' . __( 'Running', 'usces' ) . '</span>' : '<span class="stopped">' . __( 'Stopped', 'usces' ) . '</span>';
@@ -141,7 +150,7 @@ class USCES_CREDITCARD_SECURITY {
 	}
 
 	/**
-	 * Admin scripts.
+	 * Admin scripts
 	 * admin_print_footer_scripts
 	 */
 	public function admin_scripts() {

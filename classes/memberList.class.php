@@ -118,6 +118,7 @@ class WlcMemberList
         switch ($this->action){
 
             case 'searchOut':
+				check_admin_referer( 'member_list', 'wc_nonce' );
                 $this->SearchOut();
                 $res = $this->GetRows();
                 break;
@@ -147,6 +148,7 @@ class WlcMemberList
             case 'changeSort':
             case 'changePage':
             case 'refresh':
+				check_admin_referer( 'member_list', 'wc_nonce' );
             default:
                 $this->SearchIn();
                 $res = $this->GetRows();
@@ -231,10 +233,19 @@ class WlcMemberList
 
             $this->action = 'changeSort';
             $this->sortOldColumn = $this->sortColumn;
-            $this->sortColumn = str_replace('(', '', $_REQUEST['changeSort']);
-            $this->sortColumn = str_replace(',', '', $this->sortColumn);
+			// Validate sortColumn.
+			if ( in_array( $_REQUEST['changeSort'], array_keys( $this->columns ) ) ) {
+				$this->sortColumn = $_REQUEST['changeSort'];
+			} else {
+				$this->sortColumn = 'ID'; // default.
+			}
             $this->sortSwitchs = (isset($this->data_cookie['sortSwitchs'])) ? $this->data_cookie['sortSwitchs'] : $this->sortSwitchs;
-            $this->sortSwitchs[$this->sortColumn] = ('ASC' == $_REQUEST['switch']) ? 'ASC' : 'DESC';
+			// Validate sortSwitchs.
+			if (isset($_REQUEST['switch']) && in_array($_REQUEST['switch'], array('ASC', 'DESC'))) {
+				$this->sortSwitchs[$this->sortColumn] = $_REQUEST['switch'];
+			} else {
+				$this->sortSwitchs[$this->sortColumn] = 'DESC'; // default.
+			}
             $this->currentPage = (isset($this->data_cookie['currentPage'])) ? $this->data_cookie['currentPage'] : $this->currentPage;
             $this->userHeaderNames = (isset($this->data_cookie['userHeaderNames'])) ? $this->data_cookie['userHeaderNames'] : $this->userHeaderNames;
             $this->arr_search = (isset($this->data_cookie['arr_search'])) ? $this->data_cookie['arr_search'] : $this->arr_search;
@@ -583,8 +594,13 @@ class WlcMemberList
 
 			switch( $this->arr_search['member_word_term'][0] ){
 				case 'notcontain':
-					$wordterm0 = ' NOT LIKE %s';
-					$word0 = "%".$this->arr_search['member_word'][0]."%";
+					if ( 'rank' === $this->arr_search['member_column'][0] ) {
+						$wordterm0 = ' != %d';
+						$word0 = (int) $this->arr_search['member_word'][0];
+					} else {
+						$wordterm0 = ' NOT LIKE %s';
+						$word0 = "%".$this->arr_search['member_word'][0]."%";
+					}
 					break;
 				case 'equal':
 					$wordterm0 = ' = %s';
@@ -600,15 +616,25 @@ class WlcMemberList
 					break;
 				case 'contain':
 				default:
-					$wordterm0 = ' LIKE %s';
-					$word0 = "%".$this->arr_search['member_word'][0]."%";
+					if ( 'rank' === $this->arr_search['member_column'][0] ) {
+						$wordterm0 = ' = %d';
+						$word0 = (int) $this->arr_search['member_word'][0];
+					} else {
+						$wordterm0 = ' LIKE %s';
+						$word0 = "%".$this->arr_search['member_word'][0]."%";
+					}
 					break;
 			}
 
 			switch( $this->arr_search['member_word_term'][1] ){
 				case 'notcontain':
-					$wordterm1 = ' NOT LIKE %s';
-					$word1 = "%".$this->arr_search['member_word'][1]."%";
+					if ( 'rank' === $this->arr_search['member_column'][1] ) {
+						$wordterm1 = ' != %d';
+						$word1 = (int) $this->arr_search['member_word'][1];
+					} else {
+						$wordterm1 = ' NOT LIKE %s';
+						$word1 = "%".$this->arr_search['member_word'][1]."%";
+					}
 					break;
 				case 'equal':
 					$wordterm1 = ' = %s';
@@ -624,8 +650,13 @@ class WlcMemberList
 					break;
 				case 'contain':
 				default:
-					$wordterm1 = ' LIKE %s';
-					$word1 = "%".$this->arr_search['member_word'][1]."%";
+					if ( 'rank' === $this->arr_search['member_column'][1] ) {
+						$wordterm1 = ' = %d';
+						$word1 = (int) $this->arr_search['member_word'][1];
+					} else {
+						$wordterm1 = ' LIKE %s';
+						$word1 = "%".$this->arr_search['member_word'][1]."%";
+					}
 					break;
 			}
 
@@ -671,29 +702,41 @@ class WlcMemberList
 		$html = '';
 		$html .= '<ul class="clearfix">'."\n";
 		$html .= '<li class="rowsnum">' . $this->selectedRow . ' / ' . $this->totalRow . ' ' . __('cases', 'usces') . '</li>' . "\n";
-		if(($this->currentPage == 1) || ($this->selectedRow == 0)){
+		if ( ( 1 === $this->currentPage ) || ( 0 === $this->selectedRow ) ) {
 			$html .= '<li class="navigationStr">first&lt;&lt;</li>' . "\n";
 			$html .= '<li class="navigationStr">prev&lt;</li>'."\n";
-		}else{
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_memberlist&changePage=1">first&lt;&lt;</a></li>' . "\n";
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_memberlist&changePage=' . $this->previousPage . '">prev&lt;</a></li>'."\n";
+		} else {
+			$url       = admin_url( 'admin.php?page=usces_memberlist&changePage=1' );
+			$nonce_url = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+			$html     .= '<li class="navigationStr"><a href="' . esc_url( $nonce_url ) . '">first&lt;&lt;</a></li>' . "\n";
+
+			$url       = admin_url( 'admin.php?page=usces_memberlist&changePage=' . $this->previousPage );
+			$nonce_url = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+			$html     .= '<li class="navigationStr"><a href="' . esc_url( $nonce_url ) . '">prev&lt;</a></li>'."\n";
 		}
-		if($this->selectedRow > 0) {
+		if ( $this->selectedRow > 0 ) {
 			$box_count = count( $box );
-			for($i=0; $i<$box_count; $i++){
-				if($box[$i] == $this->currentPage){
-					$html .= '<li class="navigationButtonSelected"><span>' . $box[$i] . '</span></li>'."\n";
-				}else{
-					$html .= '<li class="navigationButton"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_memberlist&changePage=' . $box[$i] . '">' . $box[$i] . '</a></li>'."\n";
+			for ( $i = 0; $i < $box_count; $i ++ ) {
+				if ( $box[ $i ] == $this->currentPage ) {
+					$html .= '<li class="navigationButtonSelected"><span>' . $box[ $i ] . '</span></li>'."\n";
+				} else {
+					$url       = admin_url( 'admin.php?page=usces_memberlist&changePage=' . $box[ $i ] );
+					$nonce_url = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+					$html .= '<li class="navigationButton"><a href="' . esc_url( $nonce_url ) . '">' . $box[ $i ] . '</a></li>'."\n";
 				}
 			}
 		}
-		if(($this->currentPage == $this->lastPage) || ($this->selectedRow == 0)){
+		if ( ( $this->currentPage == $this->lastPage ) || ( 0 === $this->selectedRow ) ) {
 			$html .= '<li class="navigationStr">&gt;next</li>'."\n";
 			$html .= '<li class="navigationStr">&gt;&gt;last</li>'."\n";
-		}else{
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_memberlist&changePage=' . $this->nextPage . '">&gt;next</a></li>'."\n";
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_memberlist&changePage=' . $this->lastPage . '">&gt;&gt;last</a></li>'."\n";
+		} else {
+			$url       = admin_url( 'admin.php?page=usces_memberlist&changePage=' . $this->nextPage );
+			$nonce_url = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+			$html     .= '<li class="navigationStr"><a href="' . esc_url( $nonce_url ) . '">&gt;next</a></li>'."\n";
+
+			$url       = admin_url( 'admin.php?page=usces_memberlist&changePage=' . $this->lastPage );
+			$nonce_url = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+			$html     .= '<li class="navigationStr"><a href="' . esc_url( $nonce_url ) . '">&gt;&gt;last</a></li>'."\n";
 		}
 
 		$html .= '</ul>'."\n";
@@ -707,11 +750,11 @@ class WlcMemberList
 
 	function SetHeaders(){
 
-		foreach ($this->columns as $key => $value){
+		foreach ( $this->columns as $key => $value ) {
 			if( 'csod_' == substr($key, 0, 5) )
 				continue;
 
-			if($key == $this->sortColumn){
+			if ( $key == $this->sortColumn ) {
 				if( isset( $this->sortSwitchs[$key] ) && $this->sortSwitchs[$key] == 'ASC'){
 					$str = __('[ASC]', 'usces');
 					$switch = 'DESC';
@@ -719,10 +762,14 @@ class WlcMemberList
 					$str = __('[DESC]', 'usces');
 					$switch = 'ASC';
 				}
-				$this->headers[$key] = '<a href="' . site_url() . '/wp-admin/admin.php?page=usces_memberlist&changeSort=' . $key . '&switch=' . $switch . '"><span class="sortcolumn">' . $value . ' ' . $str . '</span></a>';
+				$url                   = admin_url( 'admin.php?page=usces_memberlist&changeSort=' . $key . '&switch=' . $switch );
+				$nonce_url             = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+				$this->headers[ $key ] = '<a href="' . esc_url( $nonce_url ) . '"><span class="sortcolumn">' . $value . ' ' . $str . '</span></a>';
 			}else{
 				$switch = isset( $this->sortSwitchs[$key] ) ? $this->sortSwitchs[$key] : 'DESC';
-				$this->headers[$key] = '<a href="' . site_url() . '/wp-admin/admin.php?page=usces_memberlist&changeSort=' . $key . '&switch=' . $switch . '"><span>' . $value . '</span></a>';
+				$url                   = admin_url( 'admin.php?page=usces_memberlist&changeSort=' . $key . '&switch=' . $switch );
+				$nonce_url             = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+				$this->headers[$key]   = '<a href="' . esc_url( $nonce_url ) . '"><span>' . $value . '</span></a>';
 			}
 		}
 	}

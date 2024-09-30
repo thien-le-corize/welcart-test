@@ -28,6 +28,8 @@ $member_status = $this->member_status;
 $member_country = $usces_settings['country'];
 $curent_url = urlencode(esc_url(USCES_ADMIN_URL . '?' . $_SERVER['QUERY_STRING']));
 
+$member_list_delete_link = ( isset( $this->options['system']['member_list_delete_link'] ) ) ? $this->options['system']['member_list_delete_link'] : 0;
+
 ?>
 <div class="wrap">
 <div class="usces_admin">
@@ -42,7 +44,11 @@ $curent_url = urlencode(esc_url(USCES_ADMIN_URL . '?' . $_SERVER['QUERY_STRING']
 <div class="usces_tablenav usces_tablenav_top">
 	<?php wel_esc_script_e( $dataTableNavigation ); ?>
 	<div id="searchVisiLink" class="screen-field"><?php _e('Show the Operation field', 'usces'); ?><span class="dashicons dashicons-arrow-down"></span></div>
-	<div class="refresh"><a href="<?php echo site_url('/wp-admin/admin.php?page=usces_memberlist&refresh'); ?>"><span class="dashicons dashicons-update"></span><?php _e('updates it to latest information', 'usces'); ?></a></div>
+	<?php
+	$url       = admin_url( 'admin.php?page=usces_memberlist&refresh' );
+	$nonce_url = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+	?>
+	<div class="refresh"><a href="<?php echo esc_url( $nonce_url ); ?>"><span class="dashicons dashicons-update"></span><?php _e('updates it to latest information', 'usces'); ?></a></div>
 </div>
 
 <div id="tablesearch" class="usces_tablesearch">
@@ -242,7 +248,11 @@ $curent_url = urlencode(esc_url(USCES_ADMIN_URL . '?' . $_SERVER['QUERY_STRING']
 		$list_header .= '<th scope="col">' . __('SKU code', 'usces' ) . '</th>' . "\n";
 		$list_header .= '<th scope="col">' . __('SKU name', 'usces' ) . '</th>' . "\n";
 	}
-	$list_header .= '<th scope="col">&nbsp;</th>';
+
+	if ( $member_list_delete_link ) {
+		$list_header .= '<th scope="col">&nbsp;</th>';
+	}
+
 ?>
 <thead>
 	<tr>
@@ -285,7 +295,7 @@ foreach ( (array)$rows as $array ) :
 		switch( $key ){
 
 			case 'ID':
-				$detail = '<td><a href="' . USCES_ADMIN_URL . '?page=usces_memberlist&member_action=edit&member_id=' . $value . '">' . $value . '</a></td>';
+				$detail = '<td><a href="' . USCES_ADMIN_URL . '?page=usces_memberlist&member_action=edit&member_id=' . $value . '&wc_nonce=' . wp_create_nonce( 'member_list' ) . '">' . $value . '</a></td>';
 				break;
 
 			case 'rank':
@@ -312,7 +322,10 @@ foreach ( (array)$rows as $array ) :
 		$list_detail .= apply_filters( 'usces_filter_memberlist_detail_value', $detail, $value, $key, $array['ID'] );
 
 	}
-	$list_detail .= '<td><a href="' . USCES_ADMIN_URL . '?page=usces_memberlist&member_action=delete&member_id=' . $array['ID'] . '&wc_nonce=' . wp_create_nonce( 'delete_member' ) . '" onclick="return deleteconfirm(\'' . $array['ID'] . '\');"><span style="color:#FF0000; font-size:9px;">' . __('Delete', 'usces') . '</span></a></td>';
+
+	if ( $member_list_delete_link ) {
+		$list_detail .= '<td><a href="' . USCES_ADMIN_URL . '?page=usces_memberlist&member_action=delete&member_id=' . $array['ID'] . '&wc_nonce=' . wp_create_nonce( 'delete_member' ) . '" onclick="return deleteconfirm(\'' . $array['ID'] . '\');"><span style="color:#FF0000; font-size:9px;">' . __('Delete', 'usces') . '</span></a></td>';
+	}
 ?>
 <tbody>
 	<tr<?php echo apply_filters('usces_filter_memberlist_detail_trclass', '', $array); ?>>
@@ -428,7 +441,8 @@ jQuery(document).ready(function($){
 				args += '&check['+$(this).val()+']=on';
 			}
 		});
-		location.href = "<?php echo USCES_ADMIN_URL; ?>?page=usces_memberlist&member_action=dlmembernewlist&noheader=true"+args+"&wc_nonce=<?php echo wp_create_nonce( 'dlmemberlist' ); ?>";
+		args += '&wc_nonce=' + $("#wc_nonce").val();
+		location.href = "<?php echo USCES_ADMIN_URL; ?>?page=usces_memberlist&member_action=dlmembernewlist&noheader=true"+args;
 	});
 	$('#dl_memberlist').click(function() {
 		$('#dlMemberListDialog').dialog('open');

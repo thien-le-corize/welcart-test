@@ -109,6 +109,10 @@ function wel_get_sku_by_id( $meta_id, $cache = true ) {
 		),
 		ARRAY_A
 	);
+	if ( ! $res ) {
+		return false;
+	}
+
 	$WelItem = new Welcart\ItemData( $res['post_id'], $cache );
 	return $WelItem->get_sku_by_id( $meta_id );
 }

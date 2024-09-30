@@ -56,7 +56,8 @@ class usces_cart {
 
 		$zaiko_id = $usces->getItemZaikoStatusId( $post_id, urldecode( $sku ) );
 		if ( false === $zaiko_id ) {
-			die( header( 'HTTP/1.0 400 Bad request' ) );
+			header( 'HTTP/1.0 400 Bad request' );
+			die();
 		}
 
 		$this->in_serialize( $post_id, $sku );
@@ -111,6 +112,11 @@ class usces_cart {
 			if ( ! is_array( $vs ) ) {
 				break;
 			}
+			
+			$res = apply_filters( 'usces_filter_upCart_check', '', $index, $vs );
+			if ( '' !== $res ) {
+				return $res;
+			}
 
 			$ids     = array_keys( $vs );
 			$post_id = $ids[0];
@@ -137,6 +143,8 @@ class usces_cart {
 
 		unset( $_SESSION['usces_entry']['order']['usedpoint'] );
 		do_action( 'usces_action_after_upCart' );
+
+		return false;
 	}
 
 	/**

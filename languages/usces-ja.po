@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Welcart e-Commerce\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/usc-e-shop\n"
 "POT-Creation-Date: 2020-10-19T15:20:12+09:00\n"
-"PO-Revision-Date: 2023-07-06 10:47+0900\n"
+"PO-Revision-Date: 2024-08-08 17:56+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ja\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.3.1\n"
+"X-Generator: Poedit 3.4.4\n"
 
 #. Plugin Name of the plugin
 msgid "Welcart e-Commerce"
@@ -26,8 +26,8 @@ msgid "Welcart builds the management system with a net shop on WordPress."
 msgstr "Welcart（ウェルカート）は WordPress に ECサイトを構築する、日本で生まれたプラグインです。"
 
 #. Author of the plugin
-msgid "Collne Inc."
-msgstr "コルネ株式会社"
+msgid "Welcart Inc."
+msgstr "株式会社Welcart"
 
 #. Author URI of the plugin
 msgid "http://www.collne.com/"
@@ -5955,6 +5955,12 @@ msgstr "Y年n月j日"
 msgid "There is no purchase history for this moment."
 msgstr "現在購入履歴はございません。"
 
+msgid "There is no purchase history during the period."
+msgstr "期間中の購入履歴はございません。"
+
+msgid "There is no purchase history."
+msgstr "購入履歴はございません。"
+
 #: functions/template_func.php:2579 includes/member_edit_form.php:205
 msgid "Purchase price"
 msgstr "購入金額"
@@ -10281,8 +10287,8 @@ msgstr "「支払方法ページへ」"
 msgid "Card name"
 msgstr "カード名義"
 
-msgid "(Alphabetic characters)"
-msgstr "(半角英字)"
+msgid "(Alphabetic characters only)"
+msgstr "(半角英字のみ)"
 
 msgid "Thank you for your use."
 msgstr "ご利用ありがとうございました。"
@@ -10752,6 +10758,12 @@ msgstr "検証で使用する秘密キーです。公開してはいけません
 msgid "Please enter the secret key."
 msgstr "シークレットキーを入力してください。"
 
+msgid "Score"
+msgstr "スコア"
+
+msgid "Set the threshold for scores returned by Google to determine whether to treat them as human. The closer the score is to 0.0, the more likely it is to be a bot, while a score closer to 1.0 indicates a higher likelihood of being human. The default value is set to 0.5."
+msgstr "Googleから返却されるスコアを、いくつ以上を人間として扱うかを設定します。0.0に近いほどbotの可能性が高く、1.0に近いほど人間の可能性が高いと判定します。初期値は0.5です。"
+
 msgid "Brute-force attack countermeasures"
 msgstr "ブルートフォース攻撃対策"
 
@@ -11022,6 +11034,12 @@ msgstr "この機能を利用するには、PayPal に Client ID を申請する
 
 msgid "Also need to use the Welcart membership system."
 msgstr "また、Welcart の会員システムの利用が必要です。"
+
+msgid "* The prefix must be at least one and no more than four single-byte uppercase alphabetic characters."
+msgstr "※プレフィクスは、半角英数大文字で1文字以上4文字以内で入力してください。"
+
+msgid "* Prefix"
+msgstr "※プレフィクス"
 
 msgid "Card Number"
 msgstr "カード番号"
@@ -11327,8 +11345,8 @@ msgstr "■個人情報の第三者提供"
 msgid "The following personal information, etc. collected from customers will be provided to the issuer of the card being used by the customer for the purpose of detecting and preventing fraudulent use by the card issuer."
 msgstr "お客様から収集した以下の個人情報等は、カード発行会社が行う不正利用検知・防止のために、お客様が利用されているカードの発行会社へ提供させていただきます。"
 
-msgid "\"Membership information held by the business\", \"IP address\", \"device information\", \"Information on the Internet usage environment\", and \"Billing address\"."
-msgstr "「事業者が保有する会員情報」、「IPアドレス」、「デバイス情報」、「インターネット利用環境に関する情報」、「請求書送付先住所」"
+msgid "\"Full name\", \"e-mail address\", \"Membership information held by the business\", \"IP address\", \"device information\", \"Information on the Internet usage environment\", and \"Billing address\"."
+msgstr "「氏名」、「email アドレス」、「事業者が保有する会員情報」、「IPアドレス」、「デバイス情報」、「インターネット利用環境に関する情報」、「請求書送付先住所」"
 
 msgid "If the issuer of the card you are using is located in a foreign country, these information may be transferred to the country to which such issuer belongs."
 msgstr "お客様が利用されているカードの発行会社が外国にある場合、これらの情報は当該発行会社が所属する国に移転される場合があります。"
@@ -11392,6 +11410,9 @@ msgstr "同意する"
 
 msgid "Disagree"
 msgstr "同意しない"
+
+msgid "* Use a space to separate the first and last name, and enter all characters in uppercase."
+msgstr "※スペースを使用して姓と名を区切り、全て大文字で入力してください。"
 
 #: classes\loglist.class.php
 msgid "Author"
@@ -11626,3 +11647,114 @@ msgstr "クレジットカード情報に誤りがあります。"
 
 msgid "Click <a href=\"%s\">here</a> to re-enter your credit card number.\"\""
 msgstr "カード番号を再入力する場合は、<a href=\"%s\">こちら</a>をクリックしてください。"
+
+msgid "When activated, inventory will increase or decrease in tandem with the addition or deletion of items in the order edit screen."
+msgstr "有効化すると受注編集画面で商品を追加削除すると在庫が連動して増減するようになります。"
+
+msgid "When activated, inventory will increase or decrease in tandem with the addition or deletion of products when performing a batch order update."
+msgstr "有効化すると受注一括更新を行った時に商品を追加削除すると在庫が連動して増減するようになります。"
+
+msgid "When activated, it will switch to the new order list."
+msgstr "有効化すると新しい受注リストに切り替わります。"
+
+msgid "When activated, it will switch to the new member list."
+msgstr "有効化すると新しい会員リストに切り替わります。"
+
+msgid "* Failed to update payment module."
+msgstr "※決済モジュールの更新に失敗しました"
+
+msgid "To the edit screen for this product."
+msgstr "この商品の編集画面に遷移します"
+
+msgid "The following plugins are outdated and will not function properly. Please update them immediately."
+msgstr "これらのプラグインはバージョンが古いため正常に動作しません。直ちに更新してください。"
+
+msgid "Delete link in the order list"
+msgstr "受注リストの「削除」リンク"
+
+msgid "Show/hide the \"Delete\" link in the order list"
+msgstr "受注リストの「削除」リンクの表示、非表示を切り替えます。"
+
+msgid "Delete link in the member list"
+msgstr "会員リストの「削除」リンク"
+
+msgid "Show/hide the \"Delete\" link in the member list"
+msgstr "会員リストの「削除」リンクの表示、非表示を切り替えます。"
+
+msgid "Security on membership"
+msgstr "会員に関するセキュリティ"
+
+msgid "Email verification for new registration"
+msgstr "新規登録時のメール認証"
+
+msgid "Email verification for editing information"
+msgstr "会員情報編集時のメール認証"
+
+msgid "When editing membership information, an email will be sent to the member's email address to confirm that the change is indeed made by the member. Membership information cannot be edited unless the authentication link is clicked."
+msgstr "会員情報を編集する際、会員ご本人による変更であることを確認するためのメールを、会員ご本人のメールアドレスに送信します。認証リンクがクリックされない限り、会員情報を編集することはできません。"
+
+msgid "Login Notification"
+msgstr "ログイン通知"
+
+msgid "An email will be sent to the member notifying them that they have logged in."
+msgstr "ログインがあったことを通知するメールを会員に送信します。"
+
+msgid "%s : Login Notification"
+msgstr "【%s】ログイン通知"
+
+msgid "There has been a login on your account. Please review the following information and if you are not familiar with it, please change your password for your own safety."
+msgstr "お客様のアカウントでログインがありました。以下の内容をご確認いただき、お心当たりがない場合、安全のためパスワードの変更をお願いいたします。"
+
+msgid "Login date and time"
+msgstr "ログイン日時"
+
+msgid "Identity verification is required to edit your membership information. Are you sure you want to send an authentication email to your registered email address?"
+msgstr "会員情報を編集するには本人認証が必要です。ご登録のメールアドレスに認証メールを送信してもよろしいですか？"
+
+msgid "Identity verification is required to register credit card information. Are you sure you want to send an authentication email to your registered email address?"
+msgstr "クレジットカード情報を登録するには本人認証が必要です。ご登録のメールアドレスに認証メールを送信してもよろしいですか？"
+
+msgid "Identity verification is required to change credit card information. Are you sure you want to send an authentication email to your registered email address?"
+msgstr "クレジットカード情報を変更するには本人認証が必要です。ご登録のメールアドレスに認証メールを送信してもよろしいですか？"
+
+msgid "Authentication email sent."
+msgstr "認証メールを送信しました"
+
+msgid "When updating important information, you will need to authenticate your identity by email."
+msgstr "重要な情報を更新する場合は、メールによる本人認証が必要となります。"
+
+msgid "You will receive an authentication email to your registered email address. Please click the URL in the body of the email to approve it."
+msgstr "登録されているメール宛に認証メールが届きますので、メール本文のURLをクリックして承認してください。"
+
+msgid "The URL for authentication expires in 15 minutes from now."
+msgstr "認証用のURLの有効期限は只今より15分です。"
+
+msgid "If the expiration date has passed, please click the menu again to send the authentication email."
+msgstr "有効期限が過ぎてしまった場合は、再度メニューをクリックして認証メールの送信を行ってください。"
+
+msgid "Identity Verification Email"
+msgstr "本人確認メール"
+
+msgid "This email is a verification email for updating your membership information at \"%s\"."
+msgstr "このメールは、「%s」での会員情報更新に伴う本人確認メールです。"
+
+msgid "By clicking on the URL below, your identity will be authenticated."
+msgstr "下記のURLをクリックすることで、本人であることが認証されます。"
+
+msgid "After authentication, My Page will be displayed, so please click the menu again to proceed."
+msgstr "認証後マイページが表示されますので、再度メニューをクリックして処理に進んでください。"
+
+msgid "Please note that this URL is valid until %s."
+msgstr "なお、このURLの有効期限は%sまでとなります。"
+
+msgid "Y-n-j G:i"
+msgstr "Y年n月j日G:i"
+
+msgid "Email Authentication Error"
+msgstr "メール認証エラー"
+
+msgid "Authentication by email has failed."
+msgstr "メールによる本人認証に失敗しました。"
+
+msgid "Authentication URL has expired or invalid access."
+msgstr "認証URLの有効期限が切れているか無効なアクセスです。"

@@ -67,12 +67,115 @@ function welcart_update_check() {
 	}
 	$plugins   = get_plugins();
 	$installed = array();
+	$update_required = array();
 	foreach ( $plugins as $path => $pv ) {
 
 		if ( array_key_exists( $pv['Name'], $wcproducts ) ) {
 			$slug               = $wcproducts[ $pv['Name'] ];
 			$fullpath           = USCES_WP_PLUGIN_DIR . '/' . $path;
 			$installed[ $slug ] = $fullpath;
+		}
+
+		if ( 'wcex_auto_delivery/wcex_auto_delivery.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.7.3', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_dlseller/wcex_dlseller.php' === $path ) {
+			if ( version_compare( $pv['Version'], '3.5.3', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_widget_cart/wcex_widget_cart.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.2.5', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_multiple_shipping/wcex_multiple_shipping.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.2.10', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_favorites/wcex_favorites.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.0.4', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_coupon/wcex_coupon.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.3.1', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_a8net/wcex_a8net.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.0.2', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_google_analytics_4/wcex_google_analytics_4.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.0.6', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_google_shopping/wcex_google_shopping.php' === $path ) {
+			if ( version_compare( $pv['Version'], '2.0.3', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_instagram_shopping/wcex_instagram_shopping.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.1.1', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_item_list_layout/wcex_item_list_layout.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.4.1', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		// if ( 'wcex_mailmaga/wcex_mailmaga.php' === $path ) {
+		// 	if ( version_compare( $pv['Version'], '1.0.8', '<' ) ) {
+		// 		$update_required[] = $pv['Name'];
+		// 	}
+		// }
+		if ( 'wcex_mobile/wcex_mobile.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.2.18', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_multiprice/wcex_multiprice.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.3.3', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_nextengine/wcex_nextengine.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.1.6', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_rakurakuzaiko/wcex_rakurakuzaiko.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.3.4', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_reports/wcex_reports.php' === $path ) {
+			if ( version_compare( $pv['Version'], '3.0.2', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_slide_showcase/wcex_slide_showcase.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.0.7', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+		if ( 'wcex_zaikorobot/wcex_zaikorobot.php' === $path ) {
+			if ( version_compare( $pv['Version'], '1.1.6', '<' ) ) {
+				$update_required[] = $pv['Name'];
+			}
+		}
+	}
+
+	if ( ! empty( $update_required ) ) {
+		if ( current_user_can( 'wel_manage_setting' ) ) {
+			usces_update_notice( $update_required );
 		}
 	}
 
@@ -89,9 +192,23 @@ function welcart_update_check() {
 
 		$json_path = USCES_UPDATE_INFO_URL . '/update_info/plugins/' . $slug . '.json';
 		$$slug     = Puc_v4_Factory::buildUpdateChecker( $json_path, $fullpath, $slug );
-	
+
 		add_filter(	'puc_manual_check_link-' . $slug, 'usces_manual_check_label' );
 	}
+}
+
+function usces_update_notice( $update_required ) {
+
+	add_action( 'admin_notices', function() use ( $update_required ) {
+		$notice  = '<div class="notice notice-warning is-dismissible">';
+		$notice .= '<p>';
+		$notice .= __( 'The following plugins are outdated and will not function properly. Please update them immediately.', 'usces' );
+		$notice .= '<br><a href="' . admin_url( 'plugins.php' ) . '">';
+		$notice .= implode( '<br>', $update_required );
+		$notice .= '</a></p>';
+		$notice .= '</div>';
+		echo $notice;
+	} );
 }
 
 function usces_manual_check_label( $label ) {

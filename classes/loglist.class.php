@@ -110,7 +110,7 @@ class Log_List_Table extends WP_List_Table {
 				'usces_orderlist',
 				__( 'Operation log', 'usces' ),
 				__( 'Operation log', 'usces' ),
-				'level_5',
+				'wel_manage_order',
 				'usces_loglist',
 				array( $log_list, 'display' )
 			);
@@ -238,7 +238,7 @@ class Log_List_Table extends WP_List_Table {
 		<div class="wrap" id="<?php echo esc_attr( $wrapper_ele_id ); ?>">
 			<div class="usces_admin">
 				<?php if ( $this->is_all_mode() ) : ?>
-					<h1>Welcart Management <?php _e( 'Operation log', 'usces' ); ?></h1>
+					<h1>Welcart Management <?php echo esc_html__( 'Operation log', 'usces' ); ?></h1>
 					<p class="version_info">Version <?php echo esc_html( USCES_VERSION ); ?></p>
 				<?php endif; ?>
 				<?php $this->start_form(); ?>
@@ -307,8 +307,9 @@ class Log_List_Table extends WP_List_Table {
 		</div><!-- metabox-prefs -->
 		<br class="clear">
 			<?php
+			// get_submit_button() returns an escaped HTML string, so direct echoing is safe here.
 			$button = get_submit_button( __( 'Apply' ), 'button button-primary', 'screen-options-apply', false );
-			echo $button; // already escaped.
+			echo $button; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			return ob_get_clean();
 		} else {
 			return $screen_settings;
@@ -580,18 +581,30 @@ class Log_List_Table extends WP_List_Table {
 	 * @return string $sql The SQL order clause.
 	 */
 	private function get_sql_order_clause() {
+		global $wpdb;
+
 		$sql     = '';
 		$orderby = filter_input( INPUT_GET, 'orderby' );
 		$order   = filter_input( INPUT_GET, 'order' );
 
 		if ( empty( $orderby ) ) {
 			$orderby = 'ID';
+		} else {
+			if ( ! array_key_exists( $orderby, $this->get_columns() ) ) {
+				$orderby = 'ID';
+			}
 		}
 
 		if ( empty( $order ) ) {
 			$order = 'DESC';
+		} else {
+			if ( 'DESC' !== strtoupper( $order ) && 'ASC' !== strtoupper( $order ) ) {
+				$order = 'DESC';
+			}
 		}
-		$sql = ' ORDER BY ' . $orderby . ' ' . $order;
+
+		$sql = $wpdb->prepare( ' ORDER BY %s %s', esc_sql( $orderby ), esc_sql( $order ) );
+		$sql = str_replace( "'", '', stripslashes( $sql ) );
 
 		return $sql;
 	}
@@ -604,6 +617,8 @@ class Log_List_Table extends WP_List_Table {
 	 * @return string $sql The SQL where clause.
 	 */
 	private function get_sql_where_clause() {
+		global $wpdb;
+
 		$sql = '';
 		if ( $this->is_all_mode() ) {
 			$screen    = filter_input( INPUT_GET, 'usces_screen' );
@@ -613,42 +628,39 @@ class Log_List_Table extends WP_List_Table {
 			$entity_id = filter_input( INPUT_GET, 'usces_entity_id' );
 			$where     = array();
 			if ( ! empty( $authors ) ) {
-				$authors = explode( ', ', trim( $authors, ', ' ) );
-				$authors = '"' . implode( '","', $authors ) . '"';
-				$where[] = 'author IN (' . $authors . ')';
+				$where[] = $wpdb->prepare( 'author = %s', esc_sql( $authors ) );
 			}
 
 			if ( ! empty( $action ) ) {
-				$where[] = 'action="' . $action . '"';
+				$where[] = $wpdb->prepare( 'action = %s', esc_sql( $action ) );
 			}
 
 			if ( ! empty( $screen ) ) {
-				$where[] = 'screen="' . $screen . '"';
+				$where[] = $wpdb->prepare( 'screen = %s', esc_sql( $screen ) );
 			}
 
 			if ( ! empty( $datetime ) ) {
 				$datetime = trim( $datetime );
-				$where[]  = 'datetime LIKE "' . $datetime . '%"';
+				$where[]  = $wpdb->prepare( 'datetime LIKE %s', esc_sql( $datetime ) . '%' );
 			}
 
 			if ( ! empty( $entity_id ) ) {
 				$entity_id = trim( $entity_id );
-				$where[]   = 'entity_id = "' . $entity_id . '"';
+				$where[]   = $wpdb->prepare( 'entity_id = %s', esc_sql( $entity_id ) );
 			}
 		} elseif ( $this->is_order_mode() ) {
-			$order_id      = $this->get_context_entity_id( 'order_id' );
-			$order_screens = '"' . implode( '","', $this->get_order_screen_ids() ) . '"';
-			$where[]       = 'screen IN (' . $order_screens . ')';
-			$where[]       = 'entity_id = "' . $order_id . '"';
+			$order_id = $this->get_context_entity_id( 'order_id' );
+			$where[]  = $wpdb->prepare( 'screen IN ( %s )', implode( "','", $this->get_order_screen_ids() ) );
+			$where[]  = $wpdb->prepare( 'entity_id = %s', esc_sql( $order_id ) );
 		} elseif ( $this->is_member_mode() ) {
-			$member_id      = $this->get_context_entity_id( 'member_id' );
-			$member_screens = '"' . implode( '","', $this->get_member_screen_ids() ) . '"';
-			$where[]        = 'screen IN (' . $member_screens . ')';
-			$where[]        = 'entity_id = "' . $member_id . '"';
+			$member_id = $this->get_context_entity_id( 'member_id' );
+			$where[]   = $wpdb->prepare( 'screen IN ( %s )', implode( "','", $this->get_member_screen_ids() ) );
+			$where[]   = $wpdb->prepare( 'entity_id = %s', esc_sql( $member_id ) );
 		}
 
 		if ( ! empty( $where ) ) {
 			$sql .= ' WHERE ' . implode( ' AND ', $where );
+			$sql  = stripslashes( $sql );
 		}
 
 		return $sql;
@@ -664,11 +676,12 @@ class Log_List_Table extends WP_List_Table {
 	 */
 	private function get_context_entity_id( $name ) {
 		$entity_id = filter_input( INPUT_GET, $name );
-		if ( empty( $order_id ) ) {
-			$order_id = ( ! empty( $_REQUEST[ $name ] ) ) ? sanitize_text_field( wp_unslash( $_REQUEST[ $name ] ) ) : '';
+
+		if ( empty( $entity_id ) ) {
+			$entity_id = filter_input( INPUT_POST, $name );
 		}
 
-		return $order_id;
+		return (int) $entity_id;
 	}
 
 	/**
@@ -725,7 +738,7 @@ class Log_List_Table extends WP_List_Table {
 	 * @return string $url The edit order link.
 	 */
 	private function get_edit_order_url( $order_id ) {
-		$url = USCES_ADMIN_URL . "?page=usces_orderlist&order_action=edit&order_id={$order_id}&wc_nonce=" . wp_create_nonce( 'order_list' );
+		$url = esc_url( USCES_ADMIN_URL . "?page=usces_orderlist&order_action=edit&order_id={$order_id}&wc_nonce=" . wp_create_nonce( 'order_edit' ) );
 		return $url;
 	}
 
@@ -738,7 +751,7 @@ class Log_List_Table extends WP_List_Table {
 	 * @return string $url The edit order link.
 	 */
 	private function get_edit_member_url( $member_id ) {
-		$url = USCES_ADMIN_URL . "?page=usces_memberlist&member_action=edit&member_id={$member_id}";
+		$url = esc_url( USCES_ADMIN_URL . "?page=usces_memberlist&member_action=edit&member_id={$member_id}&wc_nonce=" . wp_create_nonce( 'member_list' )  );
 		return $url;
 	}
 
@@ -1363,6 +1376,7 @@ class Log_List_Table extends WP_List_Table {
 						$( '.log-dialog-button' ).on( 'click', function () {
 							let a = '#' + $( this ).attr( 'for' );
 							$( a ).dialog( 'open' );
+							$( a ).find( 'input[type="radio"]:checked' ).focus();
 						} );
 					},
 					onChangeSelect: function ( name ) {

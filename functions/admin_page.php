@@ -1,12 +1,26 @@
 <?php
-function admin_prodauct_footer(){
-	switch( $_GET['page'] ){
+/**
+ * Admin Page Scripts.
+ *
+ * @package Welcart
+ */
+
+/**
+ * Admin scripts.
+ * admin_footer-welcart-shop_page_usces_itemnew
+ * admin_footer-welcart-shop_page_usces_itemedit
+ * admin_footer-welcart-shop_page_usces_initial
+ * admin_footer-welcart-shop_page_usces_cart
+ */
+function admin_prodauct_footer() {
+	$admin_page = ( isset( $_GET['page'] ) ) ? wp_unslash( $_GET['page'] ) : '';
+	switch ( $admin_page ) {
 		case 'usces_itemedit':
-			if( !isset($_GET['action']) || ( isset($_REQUEST['action']) && 'upload_register' == $_REQUEST['action'] ) ){
+			if ( ! isset( $_GET['action'] ) || ( isset( $_REQUEST['action'] ) && 'upload_register' == $_REQUEST['action'] ) ) {
 				break;
 			}
 		case 'usces_itemnew':
-?>
+			?>
 <script type="text/javascript">
 (function($) {
 
@@ -31,7 +45,7 @@ function admin_prodauct_footer(){
 					alert( data.message );
 					$('#itemCode').val('');
 				}
-				console.log(data);
+				// console.log(data);
 			}).fail(function( msg ){
 				console.log(msg);
 			});
@@ -73,64 +87,60 @@ function admin_prodauct_footer(){
 		var itemsku = $("input[name^='itemsku\[']");
 		var DeliveryMethod = $("input[name^='itemDeliveryMethod\[']");
 		var itemDivision = $("input[name='item_division']:checked").val();
-//		if (submit_event) {
-			if ( !itemDivision || 'shipped' == itemDivision ) {
-				if ( 0 == DeliveryMethod.length ) {
-					mes += "<?php _e("You can not choose the delivery method. Please complete the registration of shipping method than 'delivery setting' before product registration.", "usces"); ?><br />";
-				}
-				if ( ! $("input[name^='itemDeliveryMethod\[']:checked").length ) {
-					mes += '<?php _e("Delivery method has not been entered.", "usces"); ?><br />';
-					var eleLabelDeliveryMethod = $("label[for^='itemDeliveryMethod\[']");
-					eleLabelDeliveryMethod.css({'background-color': '#FFA'}).click(function(){
-						eleLabelDeliveryMethod.css({'background-color': '#FFF'});
-					});
-				}
+		if ( !itemDivision || 'shipped' == itemDivision ) {
+			if ( 0 == DeliveryMethod.length ) {
+				mes += "<?php esc_html_e( "You can not choose the delivery method. Please complete the registration of shipping method than 'delivery setting' before product registration.", 'usces' ); ?><br />";
 			}
-			if ( "" == itemCode ) {
-				mes += '<?php _e("Product code has not been entered.", "usces"); ?><br />';
-				$("#itemCode").css({'background-color': '#FFA'}).click(function(){
-					$(this).css({'background-color': '#FFF'});
+			if ( ! $("input[name^='itemDeliveryMethod\[']:checked").length ) {
+				mes += '<?php esc_html_e( 'Delivery method has not been entered.', 'usces' ); ?><br />';
+				var eleLabelDeliveryMethod = $("label[for^='itemDeliveryMethod\[']");
+				eleLabelDeliveryMethod.css({'background-color': '#FFA'}).click(function(){
+					eleLabelDeliveryMethod.css({'background-color': '#FFF'});
 				});
 			}
+		}
+		if ( "" == itemCode ) {
+			mes += '<?php esc_html_e( 'Product code has not been entered.', 'usces' ); ?><br />';
+			$("#itemCode").css({'background-color': '#FFA'}).click(function(){
+				$(this).css({'background-color': '#FFF'});
+			});
+		}
 
-			if ( "" == itemName ) {
-				mes += '<?php _e("Brand name has not been entered.", "usces"); ?><br />';
-				$("#itemName").css({'background-color': '#FFA'}).click(function(){
-					$(this).css({'background-color': '#FFF'});
-				});
-			}
-			<?php if ( defined( 'WCEX_SKU_SELECT' ) ) : ?>
-			if ( 0 == itemsku.length && ! $("#select_sku_switch").prop('checked') ) {
-			<?php else : ?>
-			if ( 0 == itemsku.length ) {
-			<?php endif; ?>
-				mes += '<?php _e("SKU is not registered.", "usces"); ?><br />';
-				$("#newskuname").css({'background-color': '#FFA'}).click(function(){
-					$(this).css({'background-color': '#FFF'});
-				});
-				$("#newskuprice").css({'background-color': '#FFA'}).click(function(){
-					$(this).css({'background-color': '#FFF'});
-				});
-			}
-			if ( '' != mes) {
-				$("#major-publishing-actions").append('<div id="usces_mess"></div>');
-				$('#ajax-loading').css({'visibility': 'hidden'});
-				$('#draft-ajax-loading').css({'visibility': 'hidden'});
-				$('#publish').removeClass('button-primary-disabled');
-				$('#save-post').removeClass('button-disabled');
-				$("#usces_mess").html(mes);
-				return false;
-			} else {
-				$('#usces_mess').fadeOut();
-				return true;
-			}
-//		} else {
-//			return true;
-//		}
+		if ( "" == itemName ) {
+			mes += '<?php esc_html_e( 'Brand name has not been entered.', 'usces' ); ?><br />';
+			$("#itemName").css({'background-color': '#FFA'}).click(function(){
+				$(this).css({'background-color': '#FFF'});
+			});
+		}
+		<?php if ( defined( 'WCEX_SKU_SELECT' ) ) : ?>
+		if ( 0 == itemsku.length && ! $("#select_sku_switch").prop('checked') ) {
+		<?php else : ?>
+		if ( 0 == itemsku.length ) {
+		<?php endif; ?>
+			mes += '<?php esc_html_e( 'SKU is not registered.', 'usces' ); ?><br />';
+			$("#newskuname").css({'background-color': '#FFA'}).click(function(){
+				$(this).css({'background-color': '#FFF'});
+			});
+			$("#newskuprice").css({'background-color': '#FFA'}).click(function(){
+				$(this).css({'background-color': '#FFF'});
+			});
+		}
+		if ( '' != mes ) {
+			$("#major-publishing-actions").append('<div id="usces_mess"></div>');
+			$('#ajax-loading').css({'visibility': 'hidden'});
+			$('#draft-ajax-loading').css({'visibility': 'hidden'});
+			$('#publish').removeClass('button-primary-disabled');
+			$('#save-post').removeClass('button-disabled');
+			$("#usces_mess").html(mes);
+			return false;
+		} else {
+			$('#usces_mess').fadeOut();
+			return true;
+		}
 	});
 
-	$('#itemName').blur( 
-		function() { 
+	$('#itemName').blur(
+		function() {
 			if ( $("#itemName").val().length == 0 ) return;
 			uscesItem.newdraft($('#itemName').val());
 	});
@@ -177,10 +187,10 @@ function admin_prodauct_footer(){
 	});
 })(jQuery);
 </script>
-<?php
+			<?php
 			break;
 		case 'usces_initial':
-?>
+			?>
 <script type="text/javascript">
 (function($) {
 	$('#option_form').submit(function(e) {
@@ -256,8 +266,8 @@ function admin_prodauct_footer(){
 		if( 0 < error ) {
 			$("#aniboxStatus").removeClass("none");
 			$("#aniboxStatus").addClass("error");
-			$("#info_image").attr("src", "<?php echo USCES_PLUGIN_URL; ?>/images/list_message_error.gif");
-			$("#info_massage").html("<?php _e('Data have deficiency.','usces'); ?>");
+			$("#info_image").attr("src", "<?php echo esc_url( USCES_PLUGIN_URL ); ?>/images/list_message_error.gif");
+			$("#info_massage").html("<?php _e( 'Data have deficiency.', 'usces' ); ?>");
 			$("#anibox").animate({ backgroundColor: "#FFE6E6" }, 2000);
 			return false;
 		} else {
@@ -327,10 +337,10 @@ function admin_prodauct_footer(){
 
 })(jQuery);
 </script>
-<?php
+			<?php
 			break;
 		case 'usces_cart':
-?>
+			?>
 <script type="text/javascript">
 (function($) {
 	$('#option_form').submit(function(e) {
@@ -394,8 +404,8 @@ function admin_prodauct_footer(){
 		if( 0 < error ) {
 			$("#aniboxStatus").removeClass("none");
 			$("#aniboxStatus").addClass("error");
-			$("#info_image").attr("src", "<?php echo USCES_PLUGIN_URL; ?>/images/list_message_error.gif");
-			$("#info_massage").html("<?php _e('Data have deficiency.','usces'); ?>");
+			$("#info_image").attr("src", "<?php echo esc_url( USCES_PLUGIN_URL ); ?>/images/list_message_error.gif");
+			$("#info_massage").html("<?php esc_html_e( 'Data have deficiency.', 'usces' ); ?>");
 			$("#anibox").animate({ backgroundColor: "#FFE6E6" }, 2000);
 			if( $.fn.jquery < "1.10" ) {
 				$('#uscestabs_cart').tabs("select", 0);
@@ -409,39 +419,50 @@ function admin_prodauct_footer(){
 	});
 })(jQuery);
 </script>
-<?php
+			<?php
 			break;
 	}
 }
 
-function admin_post_footer(){
-	switch( $GLOBALS['hook_suffix'] ){
+/**
+ * Admin scripts.
+ * admin_footer-post.php
+ * admin_footer-post-new.php
+ */
+function admin_post_footer() {
+	switch ( $GLOBALS['hook_suffix'] ) {
 		case 'post.php':
 		case 'post-new.php':
-			$categories = get_categories( array('child_of' => USCES_ITEM_CAT_PARENT_ID) );
-?>
+			$categories = get_categories( array( 'child_of' => USCES_ITEM_CAT_PARENT_ID ) );
+			?>
 <script type="text/javascript">
 (function($) {
-	$("#category-<?php echo USCES_ITEM_CAT_PARENT_ID ?>").remove();
-	$("#popular-category-<?php echo USCES_ITEM_CAT_PARENT_ID ?>").remove();
-	<?php
-			foreach ( $categories as $category ){
-	?>
+	$("#category-<?php echo esc_attr( USCES_ITEM_CAT_PARENT_ID ); ?>").remove();
+	$("#popular-category-<?php echo esc_attr( USCES_ITEM_CAT_PARENT_ID ); ?>").remove();
+			<?php foreach ( $categories as $category ) : ?>
 	$("#popular-category-<?php echo esc_attr( $category->term_id ); ?>").remove();
-	<?php
-			}
-	?>
+			<?php endforeach; ?>
 })(jQuery);
 </script>
-<?php
+			<?php
 			break;
 	}
 }
 
+/**
+ * Item data duplication.
+ *
+ * @param int $post_id Post ID.
+ * @return int Post ID after duplication.
+ */
 function usces_item_duplicate( $post_id ) {
 	global $wpdb;
 
-	if ( ! current_user_can( 'edit_posts' ) ) {
+	$nonce_action = 'duplicate_post_' . $post_id ;
+	if ( ! check_admin_referer( $nonce_action, '_wpnonce' ) ) {
+		wp_die( __( 'Sorry, you do not have the right to access this site.' ) );
+	}
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
 		wp_die( __( 'Sorry, you do not have the right to access this site.' ) );
 	}
 	if ( empty( $post_id ) ) {
@@ -506,14 +527,14 @@ function usces_item_duplicate( $post_id ) {
 		wel_add_opt_data( $newpost_id, $opt );
 	}
 
-	$query = $wpdb->prepare( "SELECT * FROM $wpdb->postmeta WHERE post_id = %d", $post_id );
+	$query     = $wpdb->prepare( "SELECT * FROM $wpdb->postmeta WHERE post_id = %d", $post_id );
 	$meta_data = $wpdb->get_results( $query );
 
 	if ( $meta_data ) {
 
 		$valstr = '';
 		foreach ( $meta_data as $data ) {
-			$valstr .= $wpdb->prepare("(%d, %s, %s),", $newpost_id, $data->meta_key, $data->meta_value). "\n";
+			$valstr .= $wpdb->prepare( "(%d, %s, %s),", $newpost_id, $data->meta_key, $data->meta_value ) . "\n";
 		}
 		$valstr = rtrim( $valstr, ",\n" );
 
@@ -525,10 +546,23 @@ function usces_item_duplicate( $post_id ) {
 
 	return $newpost_id;
 }
+
+/**
+ * Item data duplication.
+ * alias usces_item_duplicate()
+ *
+ * @param int $post_id Post ID.
+ * @return int Post ID after duplication.
+ */
 function usces_item_dupricate( $post_id ) {
 	return usces_item_duplicate( $post_id );
 }
 
+/**
+ * Bulk delete items.
+ *
+ * @param object $obj Item list object.
+ */
 function usces_all_delete_itemdata( &$obj ) {
 
 	if ( ! current_user_can( 'edit_posts' ) ) {
@@ -558,20 +592,27 @@ function usces_all_delete_itemdata( &$obj ) {
 	}
 }
 
-function usces_typenow(){
+/**
+ * Typenow.
+ */
+function usces_typenow() {
 	global $typenow;
-	if( isset($_GET['page']) && ('usces_itemedit' == $_GET['page'] || 'usces_itemnew' == $_GET['page']) )
+	if ( isset( $_GET['page'] ) && ( 'usces_itemedit' == $_GET['page'] || 'usces_itemnew' == $_GET['page'] ) ) {
 		$typenow = '';
-		
+	}
 }
 
-function usces_admin_notices(){
+/**
+ * Admin notices.
+ * unused
+ */
+function usces_admin_notices() {
 
 }
 
 /**
  * Field of Member admin page for release the card information update lock.
- * 
+ *
  * @since 2.5.8
  *
  * @param array $data Member data.
@@ -581,7 +622,7 @@ function usces_admin_notices(){
 function wel_release_card_update_lock_field( $data, $member_metas, $usces_member_history ) {
 
 	$lock_date = null;
-	foreach ( $member_metas as $meta) {
+	foreach ( $member_metas as $meta ) {
 		if ( isset( $meta['meta_key'] ) && 'settlement_action_lock' === $meta['meta_key'] ) {
 			$lock_date = $meta['meta_value'];
 			break;

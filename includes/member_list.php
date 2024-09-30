@@ -33,6 +33,9 @@ $csmb_meta = usces_has_custom_field_meta('member');
 $usces_opt_member = get_option('usces_opt_member');
 $chk_mem = (isset($usces_opt_member['chk_mem'])) ? $usces_opt_member['chk_mem'] : [];
 $applyform = usces_get_apply_addressform($this->options['system']['addressform']);
+
+$member_list_delete_link = ( isset( $this->options['system']['member_list_delete_link'] ) ) ? $this->options['system']['member_list_delete_link'] : 0;
+
 ?>
 <script type="text/javascript">
 function deleteconfirm(member_id){
@@ -109,7 +112,7 @@ jQuery(document).ready(function($){
 				args += '&check['+$(this).val()+']=on';
 			}
 		});
-		location.href = "<?php echo USCES_ADMIN_URL; ?>?page=usces_memberlist&member_action=dlmemberlist&noheader=true"+args+"&wc_nonce=<?php echo wp_create_nonce( 'dlmemberlist' ); ?>";
+		location.href = "<?php echo USCES_ADMIN_URL; ?>?page=usces_memberlist&member_action=dlmemberlist&noheader=true"+args+"&wc_nonce=<?php echo wp_create_nonce( 'post_member' ); ?>";
 	});
 	$('#dl_memberlist').click(function() {
 		$('#dlMemberListDialog').dialog('open');
@@ -181,14 +184,19 @@ jQuery(document).ready(function($){
 <?php foreach ( (array)$arr_header as $value ) : ?>
 		<th scope="col"><?php wel_esc_script_e( $value ); ?></th>
 <?php endforeach; ?>
-		<th scope="col">&nbsp;</th>
+
+<?php if ( $member_list_delete_link ) : ?>
+	<th scope="col">&nbsp;</th>
+<?php endif; ?>
+
+
 	</tr>
 <?php foreach ( (array)$rows as $array ) : ?>
 	<tr>
 	<?php foreach ( (array)$array as $key => $value ) : ?>
 		<?php if( WCUtils::is_blank($value) ) $value = '&nbsp;'; ?>
 		<?php if( $key == 'ID' ): ?>
-		<td><a href="<?php echo esc_url( USCES_ADMIN_URL . '?page=usces_memberlist&member_action=edit&member_id=' . $value ); ?>"><?php echo esc_html( $value ); ?></a></td>
+		<td><a href="<?php echo esc_url( USCES_ADMIN_URL . '?page=usces_memberlist&member_action=edit&member_id=' . $value . '&wc_nonce=' . wp_create_nonce( 'member_list' ) ); ?>"><?php echo esc_html( $value ); ?></a></td>
 		<?php elseif( $key == 'name' ): ?>
 		<td>
 		<?php
@@ -207,8 +215,12 @@ jQuery(document).ready(function($){
 		<td><?php echo esc_html($value); ?></td>
 		<?php endif; ?>
 <?php endforeach; ?>
+
+<?php if ( $member_list_delete_link ) : ?>
 	<td><a href="<?php echo esc_url( USCES_ADMIN_URL ); ?>?page=usces_memberlist&member_action=delete&member_id=<?php echo esc_html( $array['ID'] ); ?>&wc_nonce=<?php echo wp_create_nonce( 'delete_member' ); ?>" onclick="return deleteconfirm('<?php echo esc_js( $array['ID'] ); ?>');"><span style="color:#FF0000; font-size:9px;"><?php _e( 'Delete', 'usces' ); ?></span></a></td>
-	</tr>
+<?php endif; ?>
+
+</tr>
 <?php endforeach; ?>
 </table>
 

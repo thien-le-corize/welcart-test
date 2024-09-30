@@ -28,9 +28,9 @@ class USCES_DATALIST_UPGRADE {
 			add_action( 'init', array( $this, 'save_data' ) );
 
 			if ( self::$opts['orderlist_flag'] ) {
-				if ( isset( $_REQUEST['order_action'] ) && 'dlordernewlist' == $_REQUEST['order_action'] ) {
+				if ( isset( $_REQUEST['order_action'] ) && 'dlordernewlist' === wp_unslash( $_REQUEST['order_action'] ) ) {
 					add_action( 'admin_init', array( $this, 'download_order_list' ) );
-				} elseif ( isset( $_REQUEST['order_action'] ) && 'dlproductnewlist' == $_REQUEST['order_action'] ) {
+				} elseif ( isset( $_REQUEST['order_action'] ) && 'dlproductnewlist' === wp_unslash( $_REQUEST['order_action'] ) ) {
 					add_action( 'admin_init', array( $this, 'download_orderdetail_list' ) );
 				}
 				add_action( 'load-toplevel_page_usces_orderlist', 'usces_admin_order_list_hook' );
@@ -46,7 +46,7 @@ class USCES_DATALIST_UPGRADE {
 				add_filter( 'usces_filter_chk_ord_data_order', array( $this, 'self_filter_chk_ord_data_order' ), 30, 5 );
 			}
 			if ( self::$opts['memberlist_flag'] ) {
-				if ( isset( $_REQUEST['member_action'] ) && 'dlmembernewlist' == $_REQUEST['member_action'] ) {
+				if ( isset( $_REQUEST['member_action'] ) && 'dlmembernewlist' === wp_unslash( $_REQUEST['member_action'] ) ) {
 					add_action( 'admin_init', array( $this, 'download_member_list' ) );
 				}
 				add_action( 'load-welcart-management_page_usces_memberlist', 'usces_admin_member_list_hook' );
@@ -56,26 +56,29 @@ class USCES_DATALIST_UPGRADE {
 		}
 	}
 
+	/**
+	 * Print mail values
+	 */
 	public static function get_value_print_mail() {
 		return array(
-			'mail' => array(
+			'mail'  => array(
 				0 => array(
-					'label' => __("Don't send", 'usces'),
+					'label' => __( "Don't send", 'usces' ),
 					'alias' => '',
 				),
 				1 => array(
-					'label' => __('Send', 'usces'),
-					'alias' => __('Done', 'usces'),
+					'label' => __( 'Send', 'usces' ),
+					'alias' => __( 'Done', 'usces' ),
 				),
 			),
 			'print' => array(
 				0 => array(
-					'label' => __("Don't print", 'usces'),
+					'label' => __( "Don't print", 'usces' ),
 					'alias' => '',
 				),
 				1 => array(
-					'label' => __('Print', 'usces'),
-					'alias' => __('Done', 'usces'),
+					'label' => __( 'Print', 'usces' ),
+					'alias' => __( 'Done', 'usces' ),
 				),
 			),
 
@@ -105,6 +108,9 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_POST['usces_datalistup_option_update'] ) ) {
 
 			check_admin_referer( 'admin_system', 'wc_nonce' );
+			if ( ! current_user_can( 'wel_manage_setting' ) ) {
+				wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+			}
 
 			self::$opts['orderlist_flag']  = ( isset( $_POST['datalistup_orderlist_flag'] ) ) ? (int) $_POST['datalistup_orderlist_flag'] : 1;
 			self::$opts['memberlist_flag'] = ( isset( $_POST['datalistup_memberlist_flag'] ) ) ? (int) $_POST['datalistup_memberlist_flag'] : 1;
@@ -176,21 +182,22 @@ class USCES_DATALIST_UPGRADE {
 	public function download_member_list() {
 		global $wpdb, $usces, $usces_settings;
 
-		if ( ! usces_admin_user_can_download_list() ) {
-			exit();
+		if ( ! current_user_can( 'wel_manage_order' ) ) {
+			wp_die( __( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
 		}
+		check_admin_referer( 'member_list', 'wc_nonce' );
 
 		require_once USCES_PLUGIN_DIR . '/classes/memberList.class.php';
 
-		$DT            = new WlcMemberList();
-		$DT->pageLimit = 'off';
-		$arr_column    = $DT->get_column();
-		$res           = $DT->MakeTable();
-		$arr_search    = $DT->GetSearchs();
-		$rows          = $DT->rows;
+		$memberlist            = new WlcMemberList();
+		$memberlist->pageLimit = 'off';
+		$arr_column            = $memberlist->get_column();
+		$res                   = $memberlist->MakeTable();
+		$arr_search            = $memberlist->GetSearchs();
+		$rows                  = $memberlist->rows;
 
 		$ext = wp_unslash( $_REQUEST['ftype'] );
-		if ( 'csv' == $ext ) {
+		if ( 'csv' === $ext ) {
 			$table_h = '';
 			$table_f = '';
 			$tr_h    = '';
@@ -215,7 +222,7 @@ class USCES_DATALIST_UPGRADE {
 		$usces_opt_member['ftype_mem'] = $ext;
 		$chk_mem                       = array();
 		foreach ( $arr_column as $key => $label ) {
-			if ( 'csod_' == substr( $key, 0, 5 ) ) {
+			if ( 'csod_' === substr( $key, 0, 5 ) ) {
 				continue;
 			}
 			$chk_mem[ $key ] = ( isset( $_REQUEST['check'][ $key ] ) ) ? 1 : 0;
@@ -229,7 +236,7 @@ class USCES_DATALIST_UPGRADE {
 		$line    .= $tr_h;
 		$line_col = '';
 		foreach ( $arr_column as $key => $label ) {
-			if ( 'csod_' == substr( $key, 0, 5 ) ) {
+			if ( 'csod_' === substr( $key, 0, 5 ) ) {
 				continue;
 			}
 			if ( isset( $_REQUEST['check'][ $key ] ) ) {
@@ -248,10 +255,10 @@ class USCES_DATALIST_UPGRADE {
 			$line    .= $tr_h;
 			$line_row = '';
 			foreach ( $arr_column as $key => $label ) {
-				if ( 'csod_' == substr( $key, 0, 5 ) ) {
+				if ( 'csod_' === substr( $key, 0, 5 ) ) {
 					continue;
 				}
-				if ( 'csmb_' == substr( $key, 0, 5 ) ) {
+				if ( 'csmb_' === substr( $key, 0, 5 ) ) {
 					$multi_value = maybe_unserialize( $array[ $key ] );
 					if ( is_array( $multi_value ) ) {
 						$value = '';
@@ -288,22 +295,23 @@ class USCES_DATALIST_UPGRADE {
 	public function download_orderdetail_list() {
 		global $wpdb, $usces, $usces_settings;
 
-		if ( ! usces_admin_user_can_download_list() ) {
-			exit();
+		if ( ! current_user_can( 'wel_manage_order' ) ) {
+			wp_die( __( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
 		}
+		check_admin_referer( 'order_list', 'wc_nonce' );
 
 		require_once USCES_PLUGIN_DIR . '/classes/orderList2.class.php';
 
-		$all_column    = true;
-		$DT            = new WlcOrderList( $all_column );
-		$DT->pageLimit = 'off';
-		$arr_column    = $DT->get_column();
-		$res           = $DT->MakeTable();
-		$arr_search    = $DT->GetSearchs();
-		$rows          = $DT->rows;
+		$all_column           = true;
+		$orderlist            = new WlcOrderList( $all_column );
+		$orderlist->pageLimit = 'off';
+		$arr_column           = $orderlist->get_column();
+		$res                  = $orderlist->MakeTable();
+		$arr_search           = $orderlist->GetSearchs();
+		$rows                 = $orderlist->rows;
 
 		$ext = wp_unslash( $_REQUEST['ftype'] );
-		if ( 'csv' == $ext ) {
+		if ( 'csv' === $ext ) {
 			$table_h = '';
 			$table_f = '';
 			$tr_h    = '';
@@ -342,7 +350,7 @@ class USCES_DATALIST_UPGRADE {
 		$chk_pro['email']             = ( isset( $_REQUEST['check']['email'] ) ) ? 1 : 0;
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'name_pre' == $entry['position'] ) {
+				if ( 'name_pre' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$cscs_key             = 'cscs_' . $key;
 					$chk_pro[ $cscs_key ] = ( isset( $_REQUEST['check'][ $cscs_key ] ) ) ? 1 : 0;
@@ -350,12 +358,12 @@ class USCES_DATALIST_UPGRADE {
 			}
 		}
 		$chk_pro['name'] = ( isset( $_REQUEST['check']['name'] ) ) ? 1 : 0;
-		if ( 'JP' == $applyform ) {
+		if ( 'JP' === $applyform ) {
 			$chk_pro['kana'] = ( isset( $_REQUEST['check']['kana'] ) ) ? 1 : 0;
 		}
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'name_after' == $entry['position'] ) {
+				if ( 'name_after' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$cscs_key             = 'cscs_' . $key;
 					$chk_pro[ $cscs_key ] = ( isset( $_REQUEST['check'][ $cscs_key ] ) ) ? 1 : 0;
@@ -372,7 +380,7 @@ class USCES_DATALIST_UPGRADE {
 		$chk_pro['fax']      = ( isset( $_REQUEST['check']['fax'] ) ) ? 1 : 0;
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'fax_after' == $entry['position'] ) {
+				if ( 'fax_after' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$cscs_key             = 'cscs_' . $key;
 					$chk_pro[ $cscs_key ] = ( isset( $_REQUEST['check'][ $cscs_key ] ) ) ? 1 : 0;
@@ -382,7 +390,7 @@ class USCES_DATALIST_UPGRADE {
 		// --------------------------------------------------------------------------
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'name_pre' == $entry['position'] ) {
+				if ( 'name_pre' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$csde_key             = 'csde_' . $key;
 					$chk_pro[ $csde_key ] = ( isset( $_REQUEST['check'][ $csde_key ] ) ) ? 1 : 0;
@@ -390,12 +398,12 @@ class USCES_DATALIST_UPGRADE {
 			}
 		}
 		$chk_pro['delivery_name'] = ( isset( $_REQUEST['check']['delivery_name'] ) ) ? 1 : 0;
-		if ( 'JP' == $applyform ) {
+		if ( 'JP' === $applyform ) {
 			$chk_pro['delivery_kana'] = ( isset( $_REQUEST['check']['delivery_kana'] ) ) ? 1 : 0;
 		}
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'name_after' == $entry['position'] ) {
+				if ( 'name_after' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$csde_key             = 'csde_' . $key;
 					$chk_pro[ $csde_key ] = ( isset( $_REQUEST['check'][ $csde_key ] ) ) ? 1 : 0;
@@ -412,7 +420,7 @@ class USCES_DATALIST_UPGRADE {
 		$chk_pro['delivery_fax']      = ( isset( $_REQUEST['check']['delivery_fax'] ) ) ? 1 : 0;
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'fax_after' == $entry['position'] ) {
+				if ( 'fax_after' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$csde_key             = 'csde_' . $key;
 					$chk_pro[ $csde_key ] = ( isset( $_REQUEST['check'][ $csde_key ] ) ) ? 1 : 0;
@@ -455,8 +463,8 @@ class USCES_DATALIST_UPGRADE {
 				$chk_pro[ $csod_key ] = ( isset( $_REQUEST['check'][ $csod_key ] ) ) ? 1 : 0;
 			}
 		}
-		$usces_opt_order['chk_pro'] = apply_filters( 'usces_filter_chk_pro', $chk_pro );
-		update_option( 'usces_opt_order', $usces_opt_order );
+		// $usces_opt_order['chk_pro'] = apply_filters( 'usces_filter_chk_pro', $chk_pro );
+		// update_option( 'usces_opt_order', $usces_opt_order );
 
 		// ==========================================================================
 
@@ -498,7 +506,7 @@ class USCES_DATALIST_UPGRADE {
 		}
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'name_pre' == $entry['position'] ) {
+				if ( 'name_pre' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$cscs_key = 'cscs_' . $key;
 					if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -510,14 +518,14 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_REQUEST['check']['name'] ) ) {
 			$line_col .= $th_h . __( 'name', 'usces' ) . $th_f;
 		}
-		if ( 'JP' == $applyform ) {
+		if ( 'JP' === $applyform ) {
 			if ( isset( $_REQUEST['check']['kana'] ) ) {
 				$line_col .= $th_h . __( 'furigana', 'usces' ) . $th_f;
 			}
 		}
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'name_after' == $entry['position'] ) {
+				if ( 'name_after' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$cscs_key = 'cscs_' . $key;
 					if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -585,7 +593,7 @@ class USCES_DATALIST_UPGRADE {
 
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'fax_after' == $entry['position'] ) {
+				if ( 'fax_after' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$cscs_key = 'cscs_' . $key;
 					if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -598,7 +606,7 @@ class USCES_DATALIST_UPGRADE {
 		// --------------------------------------------------------------------------
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'name_pre' == $entry['position'] ) {
+				if ( 'name_pre' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$csde_key = 'csde_' . $key;
 					if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -610,14 +618,14 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_REQUEST['check']['delivery_name'] ) ) {
 			$line_col .= $th_h . __( 'Shipping Name', 'usces' ) . $th_f;
 		}
-		if ( 'JP' == $applyform ) {
+		if ( 'JP' === $applyform ) {
 			if ( isset( $_REQUEST['check']['delivery_kana'] ) ) {
 				$line_col .= $th_h . __( 'Shipping Furigana', 'usces' ) . $th_f;
 			}
 		}
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'name_after' == $entry['position'] ) {
+				if ( 'name_after' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$csde_key = 'csde_' . $key;
 					if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -685,7 +693,7 @@ class USCES_DATALIST_UPGRADE {
 
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'fax_after' == $entry['position'] ) {
+				if ( 'fax_after' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$csde_key = 'csde_' . $key;
 					if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -740,7 +748,7 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_REQUEST['check']['discount'] ) ) {
 			$line_col .= $th_h . __( 'Discount', 'usces' ) . $th_f;
 		}
-		if ( usces_is_tax_display() && 'products' == usces_get_tax_target() ) {
+		if ( usces_is_tax_display() && 'products' === usces_get_tax_target() ) {
 			if ( isset( $_REQUEST['check']['tax'] ) ) {
 				$line_col .= $th_h . usces_tax_label( array(), 'return' ) . $th_f;
 			}
@@ -765,7 +773,7 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_REQUEST['check']['cod_fee'] ) ) {
 			$line_col .= $th_h . apply_filters( 'usces_filter_cod_label', __( 'COD fee', 'usces' ) ) . $th_f;
 		}
-		if ( usces_is_tax_display() && 'products' != usces_get_tax_target() ) {
+		if ( usces_is_tax_display() && 'products' !== usces_get_tax_target() ) {
 			if ( isset( $_REQUEST['check']['tax'] ) ) {
 				$line_col .= $th_h . usces_tax_label( array(), 'return' ) . $th_f;
 			}
@@ -825,6 +833,7 @@ class USCES_DATALIST_UPGRADE {
 			$line_col .= $th_h . __( 'Administrator Note', 'usces' ) . $th_f;
 		}
 		$line_col = ltrim( $line_col, ',' );
+		$line_col = apply_filters( 'usces_filter_chk_pro_label_line_col', $line_col, $usces_opt_order );
 		$line    .= $line_col;
 		$line    .= apply_filters( 'usces_filter_chk_pro_label_detail', null, $usces_opt_order, $rows, $line_col );
 		$line    .= $tr_f . $lf;
@@ -875,7 +884,7 @@ class USCES_DATALIST_UPGRADE {
 				}
 				if ( ! empty( $cscs_meta ) ) {
 					foreach ( $cscs_meta as $key => $entry ) {
-						if ( 'name_pre' == $entry['position'] ) {
+						if ( 'name_pre' === $entry['position'] ) {
 							$name     = $entry['name'];
 							$cscs_key = 'cscs_' . $key;
 							if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -916,7 +925,7 @@ class USCES_DATALIST_UPGRADE {
 
 				if ( ! empty( $cscs_meta ) ) {
 					foreach ( $cscs_meta as $key => $entry ) {
-						if ( 'name_after' == $entry['position'] ) {
+						if ( 'name_after' === $entry['position'] ) {
 							$name     = $entry['name'];
 							$cscs_key = 'cscs_' . $key;
 							if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -999,7 +1008,7 @@ class USCES_DATALIST_UPGRADE {
 
 				if ( ! empty( $cscs_meta ) ) {
 					foreach ( $cscs_meta as $key => $entry ) {
-						if ( 'fax_after' == $entry['position'] ) {
+						if ( 'fax_after' === $entry['position'] ) {
 							$name     = $entry['name'];
 							$cscs_key = 'cscs_' . $key;
 							if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -1024,7 +1033,7 @@ class USCES_DATALIST_UPGRADE {
 				// ----------------------------------------------------------------------
 				if ( ! empty( $csde_meta ) ) {
 					foreach ( $csde_meta as $key => $entry ) {
-						if ( 'name_pre' == $entry['position'] ) {
+						if ( 'name_pre' === $entry['position'] ) {
 							$name     = $entry['name'];
 							$csde_key = 'csde_' . $key;
 							if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -1065,7 +1074,7 @@ class USCES_DATALIST_UPGRADE {
 
 				if ( ! empty( $csde_meta ) ) {
 					foreach ( $csde_meta as $key => $entry ) {
-						if ( 'name_after' == $entry['position'] ) {
+						if ( 'name_after' === $entry['position'] ) {
 							$name     = $entry['name'] . '</td>';
 							$csde_key = 'csde_' . $key;
 							if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -1147,7 +1156,7 @@ class USCES_DATALIST_UPGRADE {
 
 				if ( ! empty( $csde_meta ) ) {
 					foreach ( $csde_meta as $key => $entry ) {
-						if ( 'fax_after' == $entry['position'] ) {
+						if ( 'fax_after' === $entry['position'] ) {
 							$name     = $entry['name'];
 							$csde_key = 'csde_' . $key;
 							if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -1181,7 +1190,7 @@ class USCES_DATALIST_UPGRADE {
 				}
 				if ( isset( $_REQUEST['check']['delivery_method'] ) ) {
 					$delivery_method = '';
-					if ( strtoupper( $data['deli_method'] ) == '#NONE#' ) {
+					if ( '#NONE#' === strtoupper( $data['deli_method'] ) ) {
 						$delivery_method = __( 'No preference', 'usces' );
 					} else {
 						foreach ( (array) $usces->options['delivery_method'] as $dkey => $delivery ) {
@@ -1200,7 +1209,7 @@ class USCES_DATALIST_UPGRADE {
 					$line_row .= $td_h . $data['deli_time'] . $td_f;
 				}
 				if ( isset( $_REQUEST['check']['delidue_date'] ) ) {
-					$order_delidue_date = ( strtoupper( $data['delidue_date'] ) == '#NONE#' ) ? '' : $data['delidue_date'];
+					$order_delidue_date = ( '#NONE#' === strtoupper( $data['delidue_date'] ) ) ? '' : $data['delidue_date'];
 					$line_row          .= $td_h . $order_delidue_date . $td_f;
 				}
 				if ( isset( $_REQUEST['check']['status'] ) ) {
@@ -1233,10 +1242,10 @@ class USCES_DATALIST_UPGRADE {
 				if ( isset( $_REQUEST['check']['discount'] ) ) {
 					$line_row .= $td_h . usces_crform( $data['discount'], false, false, 'return', false ) . $td_f;
 				}
-				if ( usces_is_tax_display() && 'products' == usces_get_tax_target() ) {
+				if ( usces_is_tax_display() && 'products' === usces_get_tax_target() ) {
 					if ( $reduced_taxrate ) {
 						if ( isset( $_REQUEST['check']['tax'] ) ) {
-							if ( 'include' == usces_get_tax_mode() ) {
+							if ( 'include' === usces_get_tax_mode() ) {
 								$tax = $usces_tax->tax;
 							} else {
 								$tax = $data['tax'];
@@ -1257,7 +1266,7 @@ class USCES_DATALIST_UPGRADE {
 						}
 					} else {
 						if ( isset( $_REQUEST['check']['tax'] ) ) {
-							if ( 'include' == usces_get_tax_mode() ) {
+							if ( 'include' === usces_get_tax_mode() ) {
 								$materials = array(
 									'total_items_price' => $data['item_total_price'],
 									'discount'          => $data['discount'],
@@ -1292,10 +1301,10 @@ class USCES_DATALIST_UPGRADE {
 				if ( isset( $_REQUEST['check']['cod_fee'] ) ) {
 					$line_row .= $td_h . usces_crform( $data['cod_fee'], false, false, 'return', false ) . $td_f;
 				}
-				if ( usces_is_tax_display() && 'products' != usces_get_tax_target() ) {
+				if ( usces_is_tax_display() && 'products' !== usces_get_tax_target() ) {
 					if ( $reduced_taxrate ) {
 						if ( isset( $_REQUEST['check']['tax'] ) ) {
-							if ( 'include' == usces_get_tax_mode() ) {
+							if ( 'include' === usces_get_tax_mode() ) {
 								$tax = $usces_tax->tax;
 							} else {
 								$tax = $data['tax'];
@@ -1316,7 +1325,7 @@ class USCES_DATALIST_UPGRADE {
 						}
 					} else {
 						if ( isset( $_REQUEST['check']['tax'] ) ) {
-							if ( 'include' == usces_get_tax_mode() ) {
+							if ( 'include' === usces_get_tax_mode() ) {
 								$materials = array(
 									'total_items_price' => $data['item_total_price'],
 									'discount'          => $data['discount'],
@@ -1442,22 +1451,23 @@ class USCES_DATALIST_UPGRADE {
 	public function download_order_list() {
 		global $wpdb, $usces, $usces_settings;
 
-		if ( ! usces_admin_user_can_download_list() ) {
-			exit();
+		if ( ! current_user_can( 'wel_manage_order' ) ) {
+			wp_die( __( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
 		}
+		check_admin_referer( 'order_list', 'wc_nonce' );
 
 		require_once USCES_PLUGIN_DIR . '/classes/orderList2.class.php';
 
-		$all_column    = true;
-		$DT            = new WlcOrderList( $all_column );
-		$DT->pageLimit = 'off';
-		$arr_column    = $DT->get_column();
-		$res           = $DT->MakeTable();
-		$arr_search    = $DT->GetSearchs();
-		$rows          = $DT->rows;
+		$all_column           = true;
+		$orderlist            = new WlcOrderList( $all_column );
+		$orderlist->pageLimit = 'off';
+		$arr_column           = $orderlist->get_column();
+		$res                  = $orderlist->MakeTable();
+		$arr_search           = $orderlist->GetSearchs();
+		$rows                 = $orderlist->rows;
 
-		$ext = $_REQUEST['ftype'];
-		if ( 'csv' == $ext ) {
+		$ext = wp_unslash( $_REQUEST['ftype'] );
+		if ( 'csv' === $ext ) {
 			$table_h = '';
 			$table_f = '';
 			$tr_h    = '';
@@ -1495,7 +1505,7 @@ class USCES_DATALIST_UPGRADE {
 		$chk_ord['email']             = ( isset( $_REQUEST['check']['email'] ) ) ? 1 : 0;
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'name_pre' == $entry['position'] ) {
+				if ( 'name_pre' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$cscs_key             = 'cscs_' . $key;
 					$chk_ord[ $cscs_key ] = ( isset( $_REQUEST['check'][ $cscs_key ] ) ) ? 1 : 0;
@@ -1503,12 +1513,12 @@ class USCES_DATALIST_UPGRADE {
 			}
 		}
 		$chk_ord['name'] = ( isset( $_REQUEST['check']['name'] ) ) ? 1 : 0;
-		if ( 'JP' == $applyform ) {
+		if ( 'JP' === $applyform ) {
 			$chk_ord['kana'] = ( isset( $_REQUEST['check']['kana'] ) ) ? 1 : 0;
 		}
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'name_after' == $entry['position'] ) {
+				if ( 'name_after' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$cscs_key             = 'cscs_' . $key;
 					$chk_ord[ $cscs_key ] = ( isset( $_REQUEST['check'][ $cscs_key ] ) ) ? 1 : 0;
@@ -1525,7 +1535,7 @@ class USCES_DATALIST_UPGRADE {
 		$chk_ord['fax']      = ( isset( $_REQUEST['check']['fax'] ) ) ? 1 : 0;
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'fax_after' == $entry['position'] ) {
+				if ( 'fax_after' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$cscs_key             = 'cscs_' . $key;
 					$chk_ord[ $cscs_key ] = ( isset( $_REQUEST['check'][ $cscs_key ] ) ) ? 1 : 0;
@@ -1535,7 +1545,7 @@ class USCES_DATALIST_UPGRADE {
 		// --------------------------------------------------------------------------
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'name_pre' == $entry['position'] ) {
+				if ( 'name_pre' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$csde_key             = 'csde_' . $key;
 					$chk_ord[ $csde_key ] = ( isset( $_REQUEST['check'][ $csde_key ] ) ) ? 1 : 0;
@@ -1543,12 +1553,12 @@ class USCES_DATALIST_UPGRADE {
 			}
 		}
 		$chk_ord['delivery_name'] = ( isset( $_REQUEST['check']['delivery_name'] ) ) ? 1 : 0;
-		if ( 'JP' == $applyform ) {
+		if ( 'JP' === $applyform ) {
 			$chk_ord['delivery_kana'] = ( isset( $_REQUEST['check']['delivery_kana'] ) ) ? 1 : 0;
 		}
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'name_after' == $entry['position'] ) {
+				if ( 'name_after' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$csde_key             = 'csde_' . $key;
 					$chk_ord[ $csde_key ] = ( isset( $_REQUEST['check'][ $csde_key ] ) ) ? 1 : 0;
@@ -1565,7 +1575,7 @@ class USCES_DATALIST_UPGRADE {
 		$chk_ord['delivery_fax']      = ( isset( $_REQUEST['check']['delivery_fax'] ) ) ? 1 : 0;
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'fax_after' == $entry['position'] ) {
+				if ( 'fax_after' === $entry['position'] ) {
 					$name                 = $entry['name'];
 					$csde_key             = 'csde_' . $key;
 					$chk_ord[ $csde_key ] = ( isset( $_REQUEST['check'][ $csde_key ] ) ) ? 1 : 0;
@@ -1641,7 +1651,7 @@ class USCES_DATALIST_UPGRADE {
 		}
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'name_pre' == $entry['position'] ) {
+				if ( 'name_pre' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$cscs_key = 'cscs_' . $key;
 					if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -1653,14 +1663,14 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_REQUEST['check']['name'] ) ) {
 			$line_col .= $th_h . __( 'name', 'usces' ) . $th_f;
 		}
-		if ( 'JP' == $applyform ) {
+		if ( 'JP' === $applyform ) {
 			if ( isset( $_REQUEST['check']['kana'] ) ) {
 				$line_col .= $th_h . __( 'furigana', 'usces' ) . $th_f;
 			}
 		}
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'name_after' == $entry['position'] ) {
+				if ( 'name_after' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$cscs_key = 'cscs_' . $key;
 					if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -1728,7 +1738,7 @@ class USCES_DATALIST_UPGRADE {
 
 		if ( ! empty( $cscs_meta ) ) {
 			foreach ( $cscs_meta as $key => $entry ) {
-				if ( 'fax_after' == $entry['position'] ) {
+				if ( 'fax_after' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$cscs_key = 'cscs_' . $key;
 					if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -1741,7 +1751,7 @@ class USCES_DATALIST_UPGRADE {
 		// --------------------------------------------------------------------------
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'name_pre' == $entry['position'] ) {
+				if ( 'name_pre' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$csde_key = 'csde_' . $key;
 					if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -1753,14 +1763,14 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_REQUEST['check']['delivery_name'] ) ) {
 			$line_col .= $th_h . __( 'Shipping Name', 'usces' ) . $th_f;
 		}
-		if ( 'JP' == $applyform ) {
+		if ( 'JP' === $applyform ) {
 			if ( isset( $_REQUEST['check']['delivery_kana'] ) ) {
 				$line_col .= $th_h . __( 'Shipping Furigana', 'usces' ) . $th_f;
 			}
 		}
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'name_after' == $entry['position'] ) {
+				if ( 'name_after' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$csde_key = 'csde_' . $key;
 					if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -1828,7 +1838,7 @@ class USCES_DATALIST_UPGRADE {
 
 		if ( ! empty( $csde_meta ) ) {
 			foreach ( $csde_meta as $key => $entry ) {
-				if ( 'fax_after' == $entry['position'] ) {
+				if ( 'fax_after' === $entry['position'] ) {
 					$name     = $entry['name'];
 					$csde_key = 'csde_' . $key;
 					if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -1883,7 +1893,7 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_REQUEST['check']['discount'] ) ) {
 			$line_col .= $th_h . __( 'Discount', 'usces' ) . $th_f;
 		}
-		if ( usces_is_tax_display() && 'products' == usces_get_tax_target() ) {
+		if ( usces_is_tax_display() && 'products' === usces_get_tax_target() ) {
 			if ( isset( $_REQUEST['check']['tax'] ) ) {
 				$line_col .= $th_h . usces_tax_label( array(), 'return' ) . $th_f;
 			}
@@ -1908,7 +1918,7 @@ class USCES_DATALIST_UPGRADE {
 		if ( isset( $_REQUEST['check']['cod_fee'] ) ) {
 			$line_col .= $th_h . apply_filters( 'usces_filter_cod_label', __( 'COD fee', 'usces' ) ) . $th_f;
 		}
-		if ( usces_is_tax_display() && 'products' != usces_get_tax_target() ) {
+		if ( usces_is_tax_display() && 'products' !== usces_get_tax_target() ) {
 			if ( isset( $_REQUEST['check']['tax'] ) ) {
 				$line_col .= $th_h . usces_tax_label( array(), 'return' ) . $th_f;
 			}
@@ -1943,6 +1953,7 @@ class USCES_DATALIST_UPGRADE {
 			$line_col .= $th_h . __( 'Administrator Note', 'usces' ) . $th_f;
 		}
 		$line_col = ltrim( $line_col, ',' );
+		$line_col = apply_filters( 'usces_filter_chk_ord_label_line_col', $line_col, $usces_opt_order );
 		$line    .= $line_col;
 		$line    .= apply_filters( 'usces_filter_chk_ord_label_order', null, $usces_opt_order, $rows, $line_col );
 		$line    .= $tr_f . $lf;
@@ -1989,7 +2000,7 @@ class USCES_DATALIST_UPGRADE {
 			}
 			if ( ! empty( $cscs_meta ) ) {
 				foreach ( $cscs_meta as $key => $entry ) {
-					if ( 'name_pre' == $entry['position'] ) {
+					if ( 'name_pre' === $entry['position'] ) {
 						$name     = $entry['name'];
 						$cscs_key = 'cscs_' . $key;
 						if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -2030,7 +2041,7 @@ class USCES_DATALIST_UPGRADE {
 
 			if ( ! empty( $cscs_meta ) ) {
 				foreach ( $cscs_meta as $key => $entry ) {
-					if ( 'name_after' == $entry['position'] ) {
+					if ( 'name_after' === $entry['position'] ) {
 						$name     = $entry['name'];
 						$cscs_key = 'cscs_' . $key;
 						if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -2113,7 +2124,7 @@ class USCES_DATALIST_UPGRADE {
 
 			if ( ! empty( $cscs_meta ) ) {
 				foreach ( $cscs_meta as $key => $entry ) {
-					if ( 'fax_after' == $entry['position'] ) {
+					if ( 'fax_after' === $entry['position'] ) {
 						$name     = $entry['name'];
 						$cscs_key = 'cscs_' . $key;
 						if ( isset( $_REQUEST['check'][ $cscs_key ] ) ) {
@@ -2138,7 +2149,7 @@ class USCES_DATALIST_UPGRADE {
 			// ----------------------------------------------------------------------
 			if ( ! empty( $csde_meta ) ) {
 				foreach ( $csde_meta as $key => $entry ) {
-					if ( 'name_pre' == $entry['position'] ) {
+					if ( 'name_pre' === $entry['position'] ) {
 						$name     = $entry['name'];
 						$csde_key = 'csde_' . $key;
 						if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -2179,7 +2190,7 @@ class USCES_DATALIST_UPGRADE {
 
 			if ( ! empty( $csde_meta ) ) {
 				foreach ( $csde_meta as $key => $entry ) {
-					if ( 'name_after' == $entry['position'] ) {
+					if ( 'name_after' === $entry['position'] ) {
 						$name     = $entry['name'] . '</td>';
 						$csde_key = 'csde_' . $key;
 						if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -2261,7 +2272,7 @@ class USCES_DATALIST_UPGRADE {
 
 			if ( ! empty( $csde_meta ) ) {
 				foreach ( $csde_meta as $key => $entry ) {
-					if ( 'fax_after' == $entry['position'] ) {
+					if ( 'fax_after' === $entry['position'] ) {
 						$name     = $entry['name'];
 						$csde_key = 'csde_' . $key;
 						if ( isset( $_REQUEST['check'][ $csde_key ] ) ) {
@@ -2295,7 +2306,7 @@ class USCES_DATALIST_UPGRADE {
 			}
 			if ( isset( $_REQUEST['check']['delivery_method'] ) ) {
 				$delivery_method = '';
-				if ( strtoupper( $data['deli_method'] ) == '#NONE#' ) {
+				if ( '#NONE#' === strtoupper( $data['deli_method'] ) ) {
 					$delivery_method = __( 'No preference', 'usces' );
 				} else {
 					foreach ( (array) $usces->options['delivery_method'] as $dkey => $delivery ) {
@@ -2314,7 +2325,7 @@ class USCES_DATALIST_UPGRADE {
 				$line_row .= $td_h . $data['deli_time'] . $td_f;
 			}
 			if ( isset( $_REQUEST['check']['delidue_date'] ) ) {
-				$order_delidue_date = ( strtoupper( $data['delidue_date'] ) == '#NONE#' ) ? '' : $data['delidue_date'];
+				$order_delidue_date = ( '#NONE#' === strtoupper( $data['delidue_date'] ) ) ? '' : $data['delidue_date'];
 				$line_row          .= $td_h . $order_delidue_date . $td_f;
 			}
 			if ( isset( $_REQUEST['check']['status'] ) ) {
@@ -2347,10 +2358,10 @@ class USCES_DATALIST_UPGRADE {
 			if ( isset( $_REQUEST['check']['discount'] ) ) {
 				$line_row .= $td_h . usces_crform( $data['discount'], false, false, 'return', false ) . $td_f;
 			}
-			if ( usces_is_tax_display() && 'products' == usces_get_tax_target() ) {
+			if ( usces_is_tax_display() && 'products' === usces_get_tax_target() ) {
 				if ( $reduced_taxrate ) {
 					if ( isset( $_REQUEST['check']['tax'] ) ) {
-						if ( 'include' == usces_get_tax_mode() ) {
+						if ( 'include' === usces_get_tax_mode() ) {
 							$tax = $usces_tax->tax;
 						} else {
 							$tax = $data['tax'];
@@ -2371,7 +2382,7 @@ class USCES_DATALIST_UPGRADE {
 					}
 				} else {
 					if ( isset( $_REQUEST['check']['tax'] ) ) {
-						if ( 'include' == usces_get_tax_mode() ) {
+						if ( 'include' === usces_get_tax_mode() ) {
 							$materials = array(
 								'total_items_price' => $data['item_total_price'],
 								'discount'          => $data['discount'],
@@ -2406,10 +2417,10 @@ class USCES_DATALIST_UPGRADE {
 			if ( isset( $_REQUEST['check']['cod_fee'] ) ) {
 				$line_row .= $td_h . usces_crform( $data['cod_fee'], false, false, 'return', false ) . $td_f;
 			}
-			if ( usces_is_tax_display() && 'products' != usces_get_tax_target() ) {
+			if ( usces_is_tax_display() && 'products' !== usces_get_tax_target() ) {
 				if ( $reduced_taxrate ) {
 					if ( isset( $_REQUEST['check']['tax'] ) ) {
-						if ( 'include' == usces_get_tax_mode() ) {
+						if ( 'include' === usces_get_tax_mode() ) {
 							$tax = $usces_tax->tax;
 						} else {
 							$tax = $data['tax'];
@@ -2430,7 +2441,7 @@ class USCES_DATALIST_UPGRADE {
 					}
 				} else {
 					if ( isset( $_REQUEST['check']['tax'] ) ) {
-						if ( 'include' == usces_get_tax_mode() ) {
+						if ( 'include' === usces_get_tax_mode() ) {
 							$materials = array(
 								'total_items_price' => $data['item_total_price'],
 								'discount'          => $data['discount'],
@@ -2488,6 +2499,7 @@ class USCES_DATALIST_UPGRADE {
 				$line_row .= $td_h . usces_entity_decode( $data['admin_memo'], $ext ) . $td_f;
 			}
 			$line_row = preg_replace( "/\n,/", "\n", ltrim( $line_row, ',' ) );
+			$line_row = apply_filters( 'usces_filter_chk_ord_data_detail_line_row', $line_row, $usces_opt_order, $data );
 			$line    .= $line_row;
 			$line    .= apply_filters( 'usces_filter_chk_ord_data_order', null, $usces_opt_order, $order_id, $data, $line_row );
 			$line    .= $tr_f . $lf;
@@ -2506,39 +2518,51 @@ class USCES_DATALIST_UPGRADE {
 
 	/**
 	 * Action view checkbox product order.
+	 *
+	 * @param array $chk_pro Output check.
 	 */
 	public function self_action_chk_pro_order( $chk_pro ) {
 		$arr_mail_print_fields = get_option( 'usces_order_mail_print_fields' );
 		foreach ( $arr_mail_print_fields as $key => $value ) {
-			$checked = usces_checked($chk_pro, $key, 'return' );
-			echo '<label for="chk_pro['.$key.']"><input type="checkbox" class="check_pro" id="chk_pro['.$key.']" value="'.$key.'"'.$checked.' />'.esc_attr($value['label']).'</label>'."\n";
+			$checked = usces_checked( $chk_pro, $key, 'return' );
+			echo '<label for="chk_pro[' . $key . ']"><input type="checkbox" class="check_pro" id="chk_pro[' . $key . ']" value="' . $key . '"' . $checked . ' />' . esc_attr( $value['label'] ) . '</label>' . "\n";
 		}
 	}
 
 	/**
 	 * Action view checkbox order.
+	 *
+	 * @param array $chk_ord Output check.
 	 */
 	public function self_action_chk_ord_order( $chk_ord ) {
 		$arr_mail_print_fields = get_option( 'usces_order_mail_print_fields' );
 		foreach ( $arr_mail_print_fields as $key => $value ) {
-			$checked = usces_checked($chk_ord, $key, 'return' );
-			echo '<label for="chk_ord['.$key.']"><input type="checkbox" class="check_order" id="chk_ord['.$key.']" value="'.$key.'"'.$checked.' />'. esc_attr($value['label']).'</label>'."\n";
+			$checked = usces_checked( $chk_ord, $key, 'return' );
+			echo '<label for="chk_ord[' . $key . ']"><input type="checkbox" class="check_order" id="chk_ord[' . $key . ']" value="' . $key . '"' . $checked . ' />' . esc_attr( $value['label'] ) . '</label>' . "\n";
 		}
 	}
 
 	/**
 	 * Filter checkbox product order.
+	 *
+	 * @param array $chk_pro Output check.
+	 * @return array
 	 */
 	public function self_filter_chk_pro( $chk_pro ) {
 		$arr_mail_print_fields = get_option( 'usces_order_mail_print_fields' );
 		foreach ( $arr_mail_print_fields as $key => $value ) {
-			$chk_pro[$key]  = ( isset( $_REQUEST['check'][$key] ) ) ? 1 : 0;
+			$chk_pro[ $key ]  = ( isset( $_REQUEST['check'][ $key ] ) ) ? 1 : 0;
 		}
 		return $chk_pro;
 	}
 
 	/**
 	 * Filter checkbox product label order.
+	 *
+	 * @param string $other Unused.
+	 * @param array  $usces_opt_order Output check.
+	 * @param array  $rows Order data.
+	 * @return string
 	 */
 	public function self_filter_chk_pro_label_order( $other, $usces_opt_order, $rows ) {
 		$th_h                  = ',"';
@@ -2546,7 +2570,7 @@ class USCES_DATALIST_UPGRADE {
 		$line_col              = $other;
 		$arr_mail_print_fields = get_option( 'usces_order_mail_print_fields' );
 		foreach ( $arr_mail_print_fields as $key => $value ) {
-			if ( isset( $_REQUEST['check'][$key] ) ) {
+			if ( isset( $_REQUEST['check'][ $key ] ) ) {
 				$line_col .= $th_h . $value['label'] . $th_f;
 			}
 		}
@@ -2555,6 +2579,13 @@ class USCES_DATALIST_UPGRADE {
 
 	/**
 	 * Filter checkbox product data order.
+	 *
+	 * @param string $other Unused.
+	 * @param array  $usces_opt_order Output check.
+	 * @param int    $order_id Order ID.
+	 * @param array  $data Order data.
+	 * @param array  $cart_row Cart data.
+	 * @return string
 	 */
 	public function self_filter_chk_pro_data_order( $other, $usces_opt_order, $order_id, $data, $cart_row ) {
 		$td_h                  = ',"';
@@ -2567,8 +2598,8 @@ class USCES_DATALIST_UPGRADE {
 			$a_order_check = array();
 		}
 		foreach ( $arr_mail_print_fields as $key => $value ) {
-			if ( isset( $_REQUEST['check'][$key] ) && isset( $arr_mail_print_status[$value['type']] ) ) {
-				$type_mps = $arr_mail_print_status[$value['type']];
+			if ( isset( $_REQUEST['check'][ $key ] ) && isset( $arr_mail_print_status[ $value['type'] ] ) ) {
+				$type_mps = $arr_mail_print_status[ $value['type'] ];
 				if ( in_array( $key, $a_order_check ) ) {
 					$line_row .= $td_h . $type_mps[1]['alias'] . $td_f;
 				} else {
@@ -2581,17 +2612,26 @@ class USCES_DATALIST_UPGRADE {
 
 	/**
 	 * Filter checkbox order.
+	 *
+	 * @param array $chk_ord Output check.
+	 * @return array
 	 */
 	public function self_filter_chk_ord( $chk_ord ) {
 		$arr_mail_print_fields = get_option( 'usces_order_mail_print_fields' );
 		foreach ( $arr_mail_print_fields as $key => $value ) {
-			$chk_ord[$key]  = ( isset( $_REQUEST['check'][$key] ) ) ? 1 : 0;
+			$chk_ord[ $key ]  = ( isset( $_REQUEST['check'][ $key ] ) ) ? 1 : 0;
 		}
 		return $chk_ord;
 	}
 
 	/**
 	 * Filter checkbox label order.
+	 *
+	 * @param string $other Unused.
+	 * @param array  $usces_opt_order Output check.
+	 * @param array  $rows Order data.
+	 * @param string $line_col Line.
+	 * @return string
 	 */
 	public function self_filter_chk_ord_label_order( $other, $usces_opt_order, $rows, $line_col ) {
 		$th_h                  = ',"';
@@ -2599,7 +2639,7 @@ class USCES_DATALIST_UPGRADE {
 		$line_col              = $other;
 		$arr_mail_print_fields = get_option( 'usces_order_mail_print_fields' );
 		foreach ( $arr_mail_print_fields as $key => $value ) {
-			if ( isset( $_REQUEST['check'][$key] ) ) {
+			if ( isset( $_REQUEST['check'][ $key ] ) ) {
 				$line_col .= $th_h . $value['label'] . $th_f;
 			}
 		}
@@ -2608,6 +2648,13 @@ class USCES_DATALIST_UPGRADE {
 
 	/**
 	 * Filter checkbox data order.
+	 *
+	 * @param string $other Unused.
+	 * @param array  $usces_opt_order Output check.
+	 * @param int    $order_id Order ID.
+	 * @param array  $data Order data.
+	 * @param string $cart_row Cart data.
+	 * @return string
 	 */
 	public function self_filter_chk_ord_data_order( $other, $usces_opt_order, $order_id, $data, $cart_row ) {
 		$td_h                  = ',"';
@@ -2621,8 +2668,8 @@ class USCES_DATALIST_UPGRADE {
 		}
 		if ( !empty( $arr_mail_print_fields ) ) {
 			foreach ( $arr_mail_print_fields as $key => $value ) {
-				if ( isset( $_REQUEST['check'][$key] ) && isset( $arr_mail_print_status[$value['type']] ) ) {
-					$type_mps = $arr_mail_print_status[$value['type']];
+				if ( isset( $_REQUEST['check'][ $key ] ) && isset( $arr_mail_print_status[ $value['type'] ] ) ) {
+					$type_mps = $arr_mail_print_status[ $value['type'] ];
 					if ( in_array( $key, $a_order_check ) ) {
 						$line_row .= $td_h . $type_mps[1]['alias'] . $td_f;
 					} else {

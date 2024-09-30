@@ -9,6 +9,7 @@
 global $usces_settings;
 
 require_once USCES_PLUGIN_DIR . '/classes/orderList2.class.php';
+
 // phpcs:disable
 $DT         = new WlcOrderList();
 $arr_column = $DT->get_column();
@@ -34,6 +35,9 @@ $management_status = apply_filters( 'usces_filter_management_status', get_option
 $usces_country     = $usces_settings['country'];
 $pref              = array();
 $target_market     = $this->options['system']['target_market'];
+
+$order_list_delete_link = ( isset( $this->options['system']['order_list_delete_link'] ) ) ? $this->options['system']['order_list_delete_link'] : 0;
+
 foreach ( (array) $target_market as $country ) {
 	$prefs       = get_usces_states( $country );
 	$prefs_count = count( $prefs );
@@ -101,6 +105,7 @@ if ( 0 == $period['period'] ) {
 $delivery_method = ( isset( $this->options['delivery_method'] ) ) ? $this->options['delivery_method'] : array();
 
 $arr_mail_print_status = USCES_DATALIST_UPGRADE::get_value_print_mail();
+
 ?>
 <div class="wrap">
 <div class="usces_admin">
@@ -130,7 +135,11 @@ $arr_mail_print_status = USCES_DATALIST_UPGRADE::get_value_print_mail();
 <div class="usces_tablenav usces_tablenav_top">
 	<?php wel_esc_script_e( $dataTableNavigation ); ?>
 	<div id="searchVisiLink" class="screen-field"><?php esc_html_e( 'Show the Operation field', 'usces' ); ?><span class="dashicons dashicons-arrow-down"></span></div>
-	<div class="refresh"><a href="<?php echo esc_url( admin_url( 'admin.php?page=usces_orderlist&refresh' ) ); ?>"><span class="dashicons dashicons-update"></span><?php esc_html_e( 'updates it to latest information', 'usces' ); ?></a></div>
+	<?php
+		$url       = admin_url( 'admin.php?page=usces_orderlist&refresh' );
+		$nonce_url = wp_nonce_url( $url, 'order_list', 'wc_nonce' );
+	?>
+	<div class="refresh"><a href="<?php echo esc_url( $nonce_url ); ?>"><span class="dashicons dashicons-update"></span><?php esc_html_e( 'updates it to latest information', 'usces' ); ?></a></div>
 </div>
 
 <div id="tablesearch" class="usces_tablesearch">
@@ -161,6 +170,7 @@ foreach ( (array) $arr_column as $key => $value ) :
 						<option value="<?php echo esc_attr( $key ); ?>"<?php echo esc_attr( $selected ).$attr_mail_print; ?>><?php echo esc_html( $value ); ?></option>
 	<?php
 endforeach;
+$arr_search['order_term'] = ( isset( $arr_search['order_term'] ) ) ? $arr_search['order_term'] : 'AND';
 ?>
 					</select>
 					<span id="searchorderword_0">
@@ -198,6 +208,7 @@ foreach ( (array) $arr_column as $key => $value ) :
 						<option value="<?php echo esc_attr( $key ); ?>"<?php echo esc_attr( $selected ).$attr_mail_print; ?>><?php echo esc_html( $value ); ?></option>
 	<?php
 endforeach;
+$arr_search['product_term'] = ( isset( $arr_search['product_term'] ) ) ? $arr_search['product_term'] : 'AND';
 ?>
 					</select>
 					<span id="searchorderword_1">
@@ -321,8 +332,8 @@ foreach ( (array) $arr_header as $key => $value ) {
 }
 
 $usces_serchproduct_column = array( 'item_code', 'item_name', 'sku_code', 'sku_name', 'item_option' );
-if ( ( in_array( $arr_search['product_column'][0], $usces_serchproduct_column ) && $arr_search['product_word'][0] != '' )
-	|| ( in_array( $arr_search['product_column'][1], $usces_serchproduct_column ) && $arr_search['product_word'][1] != '' ) )
+if ( ( isset( $arr_search['product_column'] ) && in_array( $arr_search['product_column'][0], $usces_serchproduct_column ) && $arr_search['product_word'][0] != '' )
+	|| ( isset( $arr_search['product_column'] ) && in_array( $arr_search['product_column'][1], $usces_serchproduct_column ) && $arr_search['product_word'][1] != '' ) )
 {
 	$list_header .= '<th scope="col">' . __( 'item code', 'usces' ) . '</th>';
 	$list_header .= '<th scope="col">' . __( 'item name', 'usces' ) . '</th>';
@@ -332,7 +343,10 @@ if ( ( in_array( $arr_search['product_column'][0], $usces_serchproduct_column ) 
 	$list_header .= '<th scope="col">' . __( 'option value', 'usces' ) . '</th>';
 }
 
-$list_header .= '<th scope="col">&nbsp;</th>';
+if ( $order_list_delete_link ) {
+	$list_header .= '<th scope="col">&nbsp;</th>';
+}
+
 ?>
 	<thead>
 	<tr>
@@ -374,7 +388,7 @@ foreach ( (array) $rows as $data ) :
 
 			case 'ID':
 			case 'deco_id':
-				$detail = '<td><a href="' . USCES_ADMIN_URL . '?page=usces_orderlist&order_action=edit&order_id=' . $data['ID'] . '&wc_nonce=' . wp_create_nonce( 'order_list' ) . '">' . esc_html( $value ) . '</a></td>';
+				$detail = '<td><a href="' . USCES_ADMIN_URL . '?page=usces_orderlist&order_action=edit&order_id=' . $data['ID'] . '&wc_nonce=' . wp_create_nonce( 'order_edit' ) . '">' . esc_html( $value ) . '</a></td>';
 				break;
 
 			case 'reg_id':
@@ -538,17 +552,32 @@ foreach ( (array) $rows as $data ) :
 				break;
 
 			case 'tracking_number':
-				$delivery_company_url = '';
-
 				if ( ! empty( $data['tracking_number'] ) ) {
-					$delivery_company     = $this->get_order_meta_value( 'delivery_company', $data['ID'] );
-					$delivery_company_url = usces_get_delivery_company_url( $delivery_company, $value );
-				}
-
-				if ( ! empty( $delivery_company_url ) ) {
-					$detail = '<td><a href="' . esc_url( $delivery_company_url ) . '" target="_blank">' . esc_html( $data['tracking_number'] ) . '</a></td>';
-				} else if ( ! empty( $data['tracking_number'] ) ) {
-					$detail = '<td>' . esc_html( $data['tracking_number'] ) . '</td>';
+					$delivery_company = $this->get_order_meta_value( 'delivery_company', $data['ID'] );
+					if ( false !== strpos( $data['tracking_number'], ',' ) ) {
+						$tracking_number = explode( ',', $data['tracking_number'] );
+						$br              = '';
+						$detail          = '<td>';
+						foreach ( $tracking_number as $n ) {
+							$delivery_company_url = ( ! empty( $n ) ) ? usces_get_delivery_company_url( $delivery_company, $n ) : '';
+							if ( ! empty( $delivery_company_url ) ) {
+								$detail .= $br . '<a href="' . esc_url( $delivery_company_url ) . '" target="_blank">' . esc_html( $n ) . '</a>';
+							} elseif ( ! empty( $n ) ) {
+								$detail .= $br . esc_html( $n );
+							}
+							$br = '<br>';
+						}
+						$detail .= '</td>';
+					} else {
+						$delivery_company_url = usces_get_delivery_company_url( $delivery_company, $value );
+						if ( ! empty( $delivery_company_url ) ) {
+							$detail = '<td><a href="' . esc_url( $delivery_company_url ) . '" target="_blank">' . esc_html( $data['tracking_number'] ) . '</a></td>';
+						} elseif ( ! empty( $data['tracking_number'] ) ) {
+							$detail = '<td>' . esc_html( $data['tracking_number'] ) . '</td>';
+						} else {
+							$detail = '<td>' . esc_html( $value ) . '</td>';
+						}
+					}
 				} else {
 					$detail = '<td>' . esc_html( $value ) . '</td>';
 				}
@@ -574,7 +603,10 @@ foreach ( (array) $rows as $data ) :
 		$list_detail .= apply_filters( 'usces_filter_orderlist_detail_value', $detail, $value, $key, $data['ID'] );
 	}
 
-	$list_detail .= '<td><a href="' . USCES_ADMIN_URL . '?page=usces_orderlist&order_action=delete&order_id=' . $data['ID'] . '&wc_nonce=' . wp_create_nonce( 'order_list' ) . '" onclick="return deleteconfirm(\'' . $data['ID'] . '\' );"><span style="color:#FF0000; font-size:9px;">' . __( 'Delete', 'usces' ) . '</span></a></td>';
+	if ( $order_list_delete_link ) {
+		$list_detail .= '<td><a href="' . USCES_ADMIN_URL . '?page=usces_orderlist&order_action=delete&order_id=' . $data['ID'] . '&wc_nonce=' . wp_create_nonce( 'order_list' ) . '" onclick="return deleteconfirm(\'' . $data['ID'] . '\' );"><span style="color:#FF0000; font-size:9px;">' . __( 'Delete', 'usces' ) . '</span></a></td>';
+	}
+
 	if ( defined( 'WCEX_AUTO_DELIVERY' ) && version_compare( WCEX_AUTO_DELIVERY_VERSION, '1.4.0', '>=' ) ) {
 		$trclass = ( ! empty( $data['reg_parent_id'] ) ) ? ' class="regular_parent_order"' : '';
 	} else {
@@ -1292,21 +1324,22 @@ endforeach;
 				html += '<option value="<?php echo esc_attr($k_pm); ?>"<?php echo esc_attr( $rselected ); ?>><?php echo esc_html( $v_pm['alias'] ); ?></option>';
 <?php
 	endforeach;
-?>
+	$orderword1 = isset( $arr_search['order_word'][1] ) ? $arr_search['order_word'][1] : '';
+	$order_word_term1 = isset( $arr_search['order_word_term'][1] ) ? $arr_search['order_word_term'][1] : '';
+	?>
 				}
 				html += '</select>';
 
 			} else {
-
-				html = '<input name="search[order_word][1]" type="text" value="'+ (!(is_change) ? "<?php echo esc_attr( $arr_search['order_word'][1] ); ?>" : "") +'" class="regular-text" maxlength="50" />';
+				html = '<input name="search[order_word][1]" type="text" value="'+ (!(is_change) ? "<?php echo esc_attr( $orderword1 ); ?>" : "") +'" class="regular-text" maxlength="50" />';
 			}
 
 			html += '<select name="search[order_word_term][1]" class="termselect">';
-			html += '<option value="contain"<?php echo ( 'contain' == $arr_search['order_word_term'][1] ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'Contain', 'usces' ); ?></option>';
-			html += '<option value="notcontain"<?php echo ( 'notcontain' == $arr_search['order_word_term'][1] ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'Not Contain', 'usces' ); ?></option>';
-			html += '<option value="equal"<?php echo ( 'equal' == $arr_search['order_word_term'][1] ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'Equal', 'usces' ); ?></option>';
-			html += '<option value="morethan"<?php echo ( 'morethan' == $arr_search['order_word_term'][1] ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'More than', 'usces' ); ?></option>';
-			html += '<option value="lessthan"<?php echo ( 'lessthan' == $arr_search['order_word_term'][1] ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'Less than', 'usces' ); ?></option>';
+			html += '<option value="contain"<?php echo ( 'contain' == $order_word_term1 ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'Contain', 'usces' ); ?></option>';
+			html += '<option value="notcontain"<?php echo ( 'notcontain' == $order_word_term1 ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'Not Contain', 'usces' ); ?></option>';
+			html += '<option value="equal"<?php echo ( 'equal' == $order_word_term1 ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'Equal', 'usces' ); ?></option>';
+			html += '<option value="morethan"<?php echo ( 'morethan' == $order_word_term1 ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'More than', 'usces' ); ?></option>';
+			html += '<option value="lessthan"<?php echo ( 'lessthan' == $order_word_term1 ? ' selected="selected"' : '' ); ?>><?php esc_html_e( 'Less than', 'usces' ); ?></option>';
 			html += '</select>';
 
 			$("#searchorderword_1").html( html );
@@ -1315,6 +1348,11 @@ endforeach;
 		change_product_search_field_0 :function (){
 			var html = '';
 			var column = $("#searchproductselect_0").val();
+			<?php
+				$arr_search['product_word'][0] = isset( $arr_search['product_word'][0] ) ? $arr_search['product_word'][0] : '';
+				$arr_search['option_word'][0] = isset( $arr_search['option_word'][0] ) ? $arr_search['option_word'][0] : '';
+				$arr_search['product_word_term'][0] = isset( $arr_search['product_word_term'][0] ) ? $arr_search['product_word_term'][0] : '';
+			?>
 
 			if( column == 'item_option' ) {
 
@@ -1338,6 +1376,11 @@ endforeach;
 		change_product_search_field_1 :function (){
 			var html = '';
 			var column = $("#searchproductselect_1").val();
+			<?php
+				$arr_search['product_word'][1] = isset( $arr_search['product_word'][1] ) ? $arr_search['product_word'][1] : '';
+				$arr_search['option_word'][1] = isset( $arr_search['option_word'][1] ) ? $arr_search['option_word'][1] : '';
+				$arr_search['product_word_term'][1] = isset( $arr_search['product_word_term'][1] ) ? $arr_search['product_word_term'][1] : '';
+			?>
 
 			if( column == 'item_option' ) {
 
@@ -1584,6 +1627,7 @@ $data_cookie['arr_search']         = $DT->arr_search;
 				args += '&check['+$(this).val()+']=on';
 			}
 		});
+		args += '&wc_nonce=' + $("#wc_nonce").val();
 		location.href = "<?php echo esc_url( USCES_ADMIN_URL ); ?>?page=usces_orderlist&order_action=dlproductnewlist&noheader=true"+args;
 	});
 	$('#dl_productlist').click(function() {
@@ -1612,6 +1656,7 @@ $data_cookie['arr_search']         = $DT->arr_search;
 				args += '&check['+$(this).val()+']=on';
 			}
 		});
+		args += '&wc_nonce=' + $("#wc_nonce").val();
 		location.href = "<?php echo esc_url( USCES_ADMIN_URL ); ?>?page=usces_orderlist&order_action=dlordernewlist&noheader=true"+args;
 	});
 	$('#dl_orderlist').click(function() {

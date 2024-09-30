@@ -23,6 +23,7 @@ class usc_e_shop
 		global $wpdb, $post, $usces_settings, $usces_states;
 
 		usces_add_role();
+		usces_add_capabilites();
 
 		do_action('usces_construct');
 
@@ -149,6 +150,9 @@ class usc_e_shop
 		if(!isset($this->options['system']['csv_category_format'])) $this->options['system']['csv_category_format'] = 0;
 		if(!isset($this->options['system']['settlement_backup'])) $this->options['system']['settlement_backup'] = 0;
 		if(!isset($this->options['system']['settlement_notice'])) $this->options['system']['settlement_notice'] = 0;
+		if ( ! isset( $this->options['system']['order_list_delete_link'] ) ) $this->options['system']['order_list_delete_link'] = 0;
+		if ( ! isset( $this->options['system']['member_list_delete_link'] ) ) $this->options['system']['member_list_delete_link'] = 0;
+
 		$this->options['system']['base_country'] = usces_get_base_country();
 		if(!isset($this->options['province'])) $this->options['province'][$this->options['system']['base_country']] = $usces_states[$this->options['system']['base_country']];
 		if(!isset($this->options['system']['pointreduction'])) $this->options['system']['pointreduction'] = usces_get_pointreduction($this->options['system']['currency']);
@@ -478,25 +482,25 @@ class usc_e_shop
 	/******************************************************************************/
 	function add_pages() {
 
-		add_menu_page( 'Welcart Shop', 'Welcart Shop', 'level_2', USCES_PLUGIN_BASENAME, array($this, 'admin_top_page'), 'dashicons-cart', '3.0011060' );
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('Home','usces'), __('Home','usces'), 'level_2', USCES_PLUGIN_BASENAME, array($this, 'admin_top_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('Master Items','usces'), __('Master Items','usces'), 'level_2', 'usces_itemedit', array($this, 'item_master_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('Add New Item','usces'), __('Add New Item','usces'), 'level_2', 'usces_itemnew', array($this, 'item_master_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('General Setting','usces'), __('General Setting','usces'), 'level_6', 'usces_initial', array($this, 'admin_setup_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('Business Days Setting','usces'), __('Business Days Setting','usces'), 'level_6', 'usces_schedule', array($this, 'admin_schedule_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('Shipping Setting','usces'), __('Shipping Setting','usces'), 'level_6', 'usces_delivery', array($this, 'admin_delivery_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('E-mail Setting','usces'), __('E-mail Setting','usces'), 'level_6', 'usces_mail', array($this, 'admin_mail_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('Cart Page Setting','usces'), __('Cart Page Setting','usces'), 'level_6', 'usces_cart', array($this, 'admin_cart_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('Member Page Setting','usces'), __('Member Page Setting','usces'), 'level_6', 'usces_member', array($this, 'admin_member_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('System Setting','usces'), __('System Setting','usces'), 'administrator', 'usces_system', array($this, 'admin_system_page'));
-		add_submenu_page(USCES_PLUGIN_BASENAME, __('Settlement Setting','usces'), __('Settlement Setting','usces'), 'administrator', 'usces_settlement', array($this, 'admin_settlement_page'));
+		add_menu_page( 'Welcart Shop', 'Welcart Shop', 'wel_publish_products', USCES_PLUGIN_BASENAME, array($this, 'admin_top_page'), 'dashicons-cart', '3.0011060' );
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('Home','usces'), __('Home','usces'), 'wel_publish_products', USCES_PLUGIN_BASENAME, array($this, 'admin_top_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('Master Items','usces'), __('Master Items','usces'), 'wel_publish_products', 'usces_itemedit', array($this, 'item_master_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('Add New Item','usces'), __('Add New Item','usces'), 'wel_publish_products', 'usces_itemnew', array($this, 'item_master_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('General Setting','usces'), __('General Setting','usces'), 'wel_manage_setting', 'usces_initial', array($this, 'admin_setup_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('Business Days Setting','usces'), __('Business Days Setting','usces'), 'wel_manage_setting', 'usces_schedule', array($this, 'admin_schedule_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('Shipping Setting','usces'), __('Shipping Setting','usces'), 'wel_manage_setting', 'usces_delivery', array($this, 'admin_delivery_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('E-mail Setting','usces'), __('E-mail Setting','usces'), 'wel_manage_setting', 'usces_mail', array($this, 'admin_mail_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('Cart Page Setting','usces'), __('Cart Page Setting','usces'), 'wel_manage_setting', 'usces_cart', array($this, 'admin_cart_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('Member Page Setting','usces'), __('Member Page Setting','usces'), 'wel_manage_setting', 'usces_member', array($this, 'admin_member_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('System Setting','usces'), __('System Setting','usces'), 'wel_manage_setting', 'usces_system', array($this, 'admin_system_page'));
+		add_submenu_page(USCES_PLUGIN_BASENAME, __('Settlement Setting','usces'), __('Settlement Setting','usces'), 'wel_manage_setting', 'usces_settlement', array($this, 'admin_settlement_page'));
 		do_action('usces_action_shop_admin_menue');
 
-		add_menu_page( 'Welcart Management', 'Welcart Management', 'level_5', 'usces_orderlist', array($this, 'order_list_page'), 'dashicons-cart', '3.0011070' );
-		add_submenu_page('usces_orderlist', __('Order List','usces'), __('Order List','usces'), 'level_5', 'usces_orderlist', array($this, 'order_list_page'));
-		add_submenu_page('usces_orderlist', __('New Order or Estimate','usces'), __('New Order or Estimate','usces'), 'level_5', 'usces_ordernew', array($this, 'order_list_page'));
-		add_submenu_page('usces_orderlist', __('List of Members','usces'), __('List of Members','usces'), 'level_5', 'usces_memberlist', array($this, 'member_list_page'));
-		add_submenu_page('usces_orderlist', __('New Membership Registration','usces'), __('New Membership Registration','usces'), 'level_5', 'usces_membernew', array($this, 'member_list_page'));
+		add_menu_page( 'Welcart Management', 'Welcart Management', 'wel_manage_order', 'usces_orderlist', array($this, 'order_list_page'), 'dashicons-cart', '3.0011070' );
+		add_submenu_page('usces_orderlist', __('Order List','usces'), __('Order List','usces'), 'wel_manage_order', 'usces_orderlist', array($this, 'order_list_page'));
+		add_submenu_page('usces_orderlist', __('New Order or Estimate','usces'), __('New Order or Estimate','usces'), 'wel_manage_order', 'usces_ordernew', array($this, 'order_list_page'));
+		add_submenu_page('usces_orderlist', __('List of Members','usces'), __('List of Members','usces'), 'wel_manage_order', 'usces_memberlist', array($this, 'member_list_page'));
+		add_submenu_page('usces_orderlist', __('New Membership Registration','usces'), __('New Membership Registration','usces'), 'wel_manage_order', 'usces_membernew', array($this, 'member_list_page'));
 		Log_List_Table::add_submenu_page();
 		do_action('usces_action_management_admin_menue');
 	}
@@ -539,7 +543,7 @@ class usc_e_shop
 	}
 
 	/* order list page */
-	function order_list_page() {
+	function order_list_page() {	
 		$order_edit_form = apply_filters( 'usces_admin_order_edit_form', USCES_PLUGIN_DIR . '/includes/order_edit_form.php' );
 		$order_list = apply_filters( 'usces_admin_order_list', USCES_PLUGIN_DIR . '/includes/order_list.php' );
 
@@ -556,21 +560,24 @@ class usc_e_shop
 		Log_List_Table::add_order_meta_box( $order_action );
 		switch ($order_action) {
 			case 'dlproductlist':
+				check_admin_referer( 'order_list', 'wc_nonce' );
 				usces_download_product_list();
 				break;
 			case 'dlorderlist':
+				check_admin_referer( 'order_list', 'wc_nonce' );
 				usces_download_order_list();
 				break;
 			case 'dlsettlementerrorlog':
+				check_admin_referer( 'order_list', 'wc_nonce' );
 				usces_download_settlement_error_log();
 				break;
 			case 'editpost':
-				check_admin_referer( 'order_edit', 'wc_nonce' );				
+				check_admin_referer( 'order_edit', 'wc_nonce' );
 				$logger = Logger::start( $_REQUEST['order_id'], 'orderedit', 'update' );
 				do_action('usces_pre_update_orderdata', $_REQUEST['order_id']);
 				$res = usces_update_orderdata();
 				if ( 1 === $res ) {
-					$backtolist = ( empty($_POST['usces_referer']) || false !== strpos( $_POST['usces_referer'], 'order_action=editpost' ) ) ? admin_url('admin.php?page=usces_orderlist&returnList=1') : esc_url(stripslashes( $_POST['usces_referer'] ));
+					$backtolist = ( empty($_POST['usces_referer']) || false !== strpos( $_POST['usces_referer'], 'order_action=editpost' ) ) ? admin_url('admin.php?page=usces_orderlist&returnList=1&wc_nonce=' . wp_create_nonce( 'order_list' ) ) : esc_url(stripslashes( $_POST['usces_referer'] ));
 					$this->set_action_status('success', __('order date is updated','usces').' <a href="'.$backtolist.'">'.__('back to the summary','usces').'</a>');
 				} elseif ( 0 === $res ) {
 					$this->set_action_status('none', '');
@@ -642,6 +649,7 @@ class usc_e_shop
 		Log_List_Table::add_member_meta_box( $member_action );
 		switch ($member_action) {
 			case 'dlmemberlist':
+				check_admin_referer( 'post_member', 'wc_nonce' );
 				usces_download_member_list();
 				break;
 			case 'editpost':
@@ -685,7 +693,10 @@ class usc_e_shop
 				require_once($member_edit_form);
 				break;
 			case 'new':
+				require_once($member_edit_form);
+				break;
 			case 'edit':
+				check_admin_referer( 'member_list', 'wc_nonce');
 				require_once($member_edit_form);
 				break;
 			case 'delete':
@@ -729,12 +740,15 @@ class usc_e_shop
 
 	/* Shop Top Page */
 	function admin_top_page() {
-		$action = filter_input( INPUT_GET, 'wel_action', FILTER_SANITIZE_STRING, FILTER_REQUIRE_SCALAR );
+		$action = filter_input( INPUT_GET, 'wel_action', FILTER_DEFAULT, FILTER_REQUIRE_SCALAR );
 		if ( ! wel_need_to_update_db() ) {
 			$action = '';
 		}
 		switch ( $action ) {
 			case 'update_db':
+				if ( ! current_user_can( 'wel_manage_setting' ) ) {
+					wp_die(__('You do not have sufficient permissions to access this page.'));
+				}
 				check_admin_referer( 'wel_update_database', '_welnonce' );
 				require_once( USCES_PLUGIN_DIR . '/includes/database/db-progress-screen.php' );
 				break;
@@ -876,7 +890,7 @@ class usc_e_shop
 			check_admin_referer( 'admin_mail', 'wc_nonce' );
 			$_POST = $this->stripslashes_deep_post( $_POST );
 
-			$mail_othermail = get_option( 'usces_mail_othermail' );
+			$mail_othermail = get_option( 'usces_mail_othermail', array() );
 			foreach ( $_POST['title'] as $key => $value ) {
 				$value = wel_esc_script( $value );
 				if ( 'othermail' == $key ) {
@@ -947,6 +961,8 @@ class usc_e_shop
 			check_admin_referer( 'admin_mail', 'wc_nonce' );
 			$_POST = $this->stripslashes_deep_post( $_POST );
 
+			$email_attach_file_extension = wel_email_attach_file_extension( explode( ',', trim( wel_esc_script( $_POST['email_attach_file_extension'] ) ) ) );
+
 			$this->options['smtp_hostname']               = esc_html( trim( $_POST['smtp_hostname'] ) );
 			$this->options['newmem_admin_mail']           = (int) $_POST['newmem_admin_mail'];
 			$this->options['updmem_admin_mail']           = (int) $_POST['updmem_admin_mail'];
@@ -955,7 +971,7 @@ class usc_e_shop
 			$this->options['delmem_customer_mail']        = (int) $_POST['delmem_customer_mail'];
 			$this->options['put_customer_name']           = (int) $_POST['put_customer_name'];
 			$this->options['email_attach_feature']        = (int) $_POST['email_attach_feature'];
-			$this->options['email_attach_file_extension'] = trim( wel_esc_script( $_POST['email_attach_file_extension'] ) );
+			$this->options['email_attach_file_extension'] = implode( ',', $email_attach_file_extension );
 			$this->options['email_attach_file_size']      = (int) $_POST['email_attach_file_size'];
 			$this->options['add_html_email_option']       = (int) $_POST['add_html_email_option'];
 			update_option( 'usces', $this->options );
@@ -967,7 +983,7 @@ class usc_e_shop
 			check_admin_referer( 'admin_mail', 'wc_nonce' );
 			$_POST = $this->stripslashes_deep_post( $_POST );
 
-			$mail_thankyou = get_option( 'usces_mail_thankyou' );
+			$mail_thankyou = get_option( 'usces_mail_thankyou', array() );
 			if ( WCUtils::is_blank( $_POST['title']['thankyou'] ) ) {
 				if ( empty( $mail_thankyou['title'] ) && isset( $this->options['mail_default']['title']['thankyou'] ) ) {
 					$mail_thankyou['title'] = $this->options['mail_default']['title']['thankyou'];
@@ -997,7 +1013,7 @@ class usc_e_shop
 			}
 			update_option( 'usces_mail_thankyou', $mail_thankyou );
 
-			$mail_order = get_option( 'usces_mail_order' );
+			$mail_order = get_option( 'usces_mail_order', array() );
 			if ( WCUtils::is_blank( $_POST['title']['order'] ) ) {
 				if ( empty( $mail_order['title'] ) && isset( $this->options['mail_default']['title']['order'] ) ) {
 					$mail_order['title'] = $this->options['mail_default']['title']['order'];
@@ -1027,7 +1043,7 @@ class usc_e_shop
 			}
 			update_option( 'usces_mail_order', $mail_order );
 
-			$mail_inquiry = get_option( 'usces_mail_inquiry' );
+			$mail_inquiry = get_option( 'usces_mail_inquiry', array() );
 			if ( WCUtils::is_blank( $_POST['title']['inquiry'] ) ) {
 				if ( empty( $mail_inquiry['title'] ) && isset( $this->options['mail_default']['title']['inquiry'] ) ) {
 					$mail_inquiry['title'] = $this->options['mail_default']['title']['inquiry'];
@@ -1057,7 +1073,7 @@ class usc_e_shop
 			}
 			update_option( 'usces_mail_inquiry', $mail_inquiry );
 
-			$mail_membercomp = get_option( 'usces_mail_membercomp' );
+			$mail_membercomp = get_option( 'usces_mail_membercomp', array() );
 			if ( WCUtils::is_blank( $_POST['title']['membercomp'] ) ) {
 				if ( empty( $mail_membercomp['title'] ) && isset( $this->options['mail_default']['title']['membercomp'] ) ) {
 					$mail_membercomp['title'] = $this->options['mail_default']['title']['membercomp'];
@@ -1094,7 +1110,7 @@ class usc_e_shop
 			check_admin_referer( 'admin_mail', 'wc_nonce' );
 			$_POST = $this->stripslashes_deep_post( $_POST );
 
-			$mail_completionmail = get_option( 'usces_mail_completionmail' );
+			$mail_completionmail = get_option( 'usces_mail_completionmail', array() );
 			if ( WCUtils::is_blank( $_POST['title']['completionmail'] ) ) {
 				if ( empty( $mail_completionmail['title'] ) && isset( $this->options['mail_default']['title']['completionmail'] ) ) {
 					$mail_completionmail['title'] = $this->options['mail_default']['title']['completionmail'];
@@ -1124,7 +1140,7 @@ class usc_e_shop
 			}
 			update_option( 'usces_mail_completionmail', $mail_completionmail );
 
-			$mail_ordermail = get_option( 'usces_mail_ordermail' );
+			$mail_ordermail = get_option( 'usces_mail_ordermail', array() );
 			if ( WCUtils::is_blank( $_POST['title']['ordermail'] ) ) {
 				if ( empty( $mail_ordermail['title'] ) && isset( $this->options['mail_default']['title']['ordermail'] ) ) {
 					$mail_ordermail['title'] = $this->options['mail_default']['title']['ordermail'];
@@ -1154,7 +1170,7 @@ class usc_e_shop
 			}
 			update_option( 'usces_mail_ordermail', $mail_ordermail );
 
-			$mail_changemail = get_option( 'usces_mail_changemail' );
+			$mail_changemail = get_option( 'usces_mail_changemail', array() );
 			if ( WCUtils::is_blank( $_POST['title']['changemail'] ) ) {
 				if ( empty( $mail_changemail['title'] ) && isset( $this->options['mail_default']['title']['changemail'] ) ) {
 					$mail_changemail['title'] = $this->options['mail_default']['title']['changemail'];
@@ -1184,7 +1200,7 @@ class usc_e_shop
 			}
 			update_option( 'usces_mail_changemail', $mail_changemail );
 
-			$mail_receiptmail = get_option( 'usces_mail_receiptmail' );
+			$mail_receiptmail = get_option( 'usces_mail_receiptmail', array() );
 			if ( WCUtils::is_blank( $_POST['title']['receiptmail'] ) ) {
 				if ( empty( $mail_receiptmail['title'] ) && isset( $this->options['mail_default']['title']['receiptmail'] ) ) {
 					$mail_receiptmail['title'] = $this->options['mail_default']['title']['receiptmail'];
@@ -1214,7 +1230,7 @@ class usc_e_shop
 			}
 			update_option( 'usces_mail_receiptmail', $mail_receiptmail );
 
-			$mail_mitumorimail = get_option( 'usces_mail_mitumorimail' );
+			$mail_mitumorimail = get_option( 'usces_mail_mitumorimail', array() );
 			if ( WCUtils::is_blank( $_POST['title']['mitumorimail'] ) ) {
 				if ( empty( $mail_mitumorimail['title'] ) && isset( $this->options['mail_default']['title']['mitumorimail'] ) ) {
 					$mail_mitumorimail['title'] = $this->options['mail_default']['title']['mitumorimail'];
@@ -1244,7 +1260,7 @@ class usc_e_shop
 			}
 			update_option( 'usces_mail_mitumorimail', $mail_mitumorimail );
 
-			$mail_cancelmail = get_option( 'usces_mail_cancelmail' );
+			$mail_cancelmail = get_option( 'usces_mail_cancelmail', array() );
 			if ( WCUtils::is_blank( $_POST['title']['cancelmail'] ) ) {
 				if ( empty( $mail_cancelmail['title'] ) && isset( $this->options['mail_default']['title']['cancelmail'] ) ) {
 					$mail_cancelmail['title'] = $this->options['mail_default']['title']['cancelmail'];
@@ -1427,6 +1443,8 @@ class usc_e_shop
 			$this->options['system']['csv_category_format'] = ( isset($_POST['csv_category_format']) ) ? (int)$_POST['csv_category_format'] : 0;
 			$this->options['system']['settlement_backup'] = ( isset($_POST['settlement_backup']) ) ? (int)$_POST['settlement_backup'] : 0;
 			$this->options['system']['settlement_notice'] = ( isset($_POST['settlement_notice']) ) ? (int)$_POST['settlement_notice'] : 0;
+			$this->options['system']['order_list_delete_link'] = ( isset($_POST['order_list_delete_link']) ) ? (int)$_POST['order_list_delete_link'] : 0;
+			$this->options['system']['member_list_delete_link'] = ( isset($_POST['member_list_delete_link']) ) ? (int)$_POST['member_list_delete_link'] : 0;
 
 			if($action_status != '') {
 				$this->action_status = 'error';
@@ -1510,7 +1528,7 @@ class usc_e_shop
 			switch ( $_POST['acting'] ) {
 				case 'settlement_selected':
 					if ( isset( $_POST['settlement_selected'] ) ) {
-						$settlement_selected = explode( ',', $_POST['settlement_selected'] );
+						$settlement_selected = explode( ',', sanitize_text_field( wp_unslash( $_POST['settlement_selected'] ) ) );
 						$payments            = usces_get_system_option( 'usces_payment_method', 'settlement' );
 						$acting_payments     = array();
 						foreach ( (array) $payments as $key => $payment ) {
@@ -1524,7 +1542,13 @@ class usc_e_shop
 							}
 						}
 						$acting_payments      = array_unique( $acting_payments );
-						$available_settlement = get_option( 'usces_available_settlement' );
+						$available_settlement = get_option( 'usces_available_settlement', array() );
+						$available            = array_keys( $available_settlement );
+						foreach ( (array) $settlement_selected as $settlement ) {
+							if ( ! empty( $settlement ) && ! in_array( $settlement, $available ) ) {
+								$mes .= __( '* Failed to update payment module.', 'usces' ) . '<br />';
+							}
+						}
 						foreach ( (array) $acting_payments as $payment ) {
 							if ( ! in_array( $payment, $settlement_selected ) ) {
 								$settlement_name = $available_settlement[ $payment ];
@@ -1533,7 +1557,7 @@ class usc_e_shop
 						}
 						if ( WCUtils::is_blank( $mes ) ) {
 							$unavailable_activate = 0;
-							$unavailable_payments = apply_filters( 'usces_filter_unavailable_payments', get_option( 'usces_unavailable_settlement' ) );
+							$unavailable_payments = apply_filters( 'usces_filter_unavailable_payments', get_option( 'usces_unavailable_settlement', array() ) );
 							foreach ( (array) $unavailable_payments as $payment ) {
 								if ( in_array( $payment, $settlement_selected ) ) {
 									$unavailable_activate++;
@@ -2382,7 +2406,7 @@ class usc_e_shop
 		</script>
 <?php
 		endif;
-}
+	}
 
 	function main() {
 		global $wpdb, $wp_locale, $wp_version, $post_ID;
@@ -2591,6 +2615,8 @@ class usc_e_shop
 		}
 
 		if( isset($_REQUEST['order_action']) && $_REQUEST['order_action'] == 'pdfout' ){
+			check_admin_referer( 'order_edit', 'wc_nonce' );
+
 			$oid = filter_input( INPUT_GET, 'order_id' );
 			if ( ! is_user_logged_in() ) {
 				$this->get_current_member();
@@ -2621,7 +2647,7 @@ class usc_e_shop
 			if( is_array($value) ){
 				$value = $this->stripslashes_deep_post( $value );
 			}else{
-				$value = usces_erase_emoji( stripslashes($value) );
+				$value = is_null( $value ) ? $value : usces_erase_emoji( stripslashes( $value ) );
 			}
 			$res[$key] = $value;
 		}
@@ -2931,8 +2957,10 @@ class usc_e_shop
 	function upButton(){
 		global $wp_query;
 		$this->page = 'cart';
-		$this->cart->upCart();
-		$this->error_message = $this->zaiko_check();
+		$this->error_message = $this->cart->upCart();
+		if ( empty( $this->error_message ) ) {
+			$this->error_message = $this->zaiko_check();
+		}
 		add_action('the_post', array($this, 'action_cartFilter'));
 		add_filter('yoast-ga-push-after-pageview', 'usces_trackPageview_cart');
 		add_action('template_redirect', array($this, 'template_redirect'));
@@ -3005,6 +3033,7 @@ class usc_e_shop
 			exit;
 		}
 		if($this->member_login() == 'member') {
+			do_action( 'usces_action_member_customer_logined' ) ;
 			$this->cart->entry();
 			// $this->error_message = has_custom_customer_field_essential();
 			if( WCUtils::is_blank($this->error_message) ){
@@ -3044,8 +3073,8 @@ class usc_e_shop
 			$res = $this->regist_member();
 		} else {
 			// return back page register and show message.
-			$this->error_message = __( 'Failed to register member. Please try again.', 'usces' );
-			$res = trim( $_POST['member_regmode'] );
+			$this->error_message = apply_filters( 'usces_filter_check_verify_recaptcha_message', __( 'Failed to register member. Please try again.', 'usces' ), 'reganddeliveryinfo' );
+			$res                 = trim( $_POST['member_regmode'] );
 		}
 
 		if( $res == 'newcompletion' ){
@@ -3074,7 +3103,7 @@ class usc_e_shop
 			$this->error_message = $this->customer_check();
 		} else {
 			// return back page register and show message.
-			$this->error_message = __( 'Could not send successfully. Please try again.', 'usces' );
+			$this->error_message = apply_filters( 'usces_filter_check_verify_recaptcha_message', __( 'Could not send successfully. Please try again.', 'usces' ), 'deliveryinfo' );
 		}
 
 		if( WCUtils::is_blank($this->error_message) ){
@@ -3107,8 +3136,16 @@ class usc_e_shop
 			exit;
 		}
 
-		$this->cart->entry();
-		$this->error_message = $this->zaiko_check();
+		$check_verify_recaptcha = $this->verifyGoogleRecapcha();
+		if ( $check_verify_recaptcha ) {
+			// continue process.
+			$this->cart->entry();
+			$this->error_message = $this->zaiko_check();
+		} else {
+			// return back page register and show message.
+			$this->error_message = apply_filters( 'usces_filter_check_verify_recaptcha_message', __( 'Could not send successfully. Please try again.', 'usces' ), 'confirm' );
+		}
+
 		if( $this->error_message != '' ){
 			$this->page = 'cart';
 			add_filter('yoast-ga-push-after-pageview', 'usces_trackPageview_cart');
@@ -3116,7 +3153,18 @@ class usc_e_shop
 			add_action('template_redirect', array($this, 'template_redirect'));
 			return;
 		}
-
+/*
+		$referrer      = wp_get_referer();
+		$site_url      = parse_url( home_url(), PHP_URL_HOST );
+		$referrer_host = parse_url( $referrer, PHP_URL_HOST );
+		if ( false === $referrer || $referrer_host !== $site_url ) {
+			$this->page = 'cart';
+			add_filter( 'yoast-ga-push-after-pageview', 'usces_trackPageview_cart' );
+			add_action( 'the_post', array( $this, 'action_cartFilter' ) );
+			add_action( 'template_redirect', array( $this, 'template_redirect' ) );
+			return;
+		}
+*/
 		$this->set_reserve_pre_order_id();
 		if(isset($_POST['confirm'])){
 			$this->error_message = $this->delivery_check();
@@ -3327,8 +3375,8 @@ class usc_e_shop
 			$res = $this->regist_member();
 		} else {
 			// return back page register and show message.
-			$this->error_message = __( 'Failed to register member. Please try again.', 'usces' );
-			$res = trim( $_POST['member_regmode'] );
+			$this->error_message = apply_filters( 'usces_filter_check_verify_recaptcha_message', __( 'Failed to register member. Please try again.', 'usces' ), 'regmember' );
+			$res                 = trim( $_POST['member_regmode'] );
 		}
 
 		if( 'editmemberform' == $res ){
@@ -3358,6 +3406,8 @@ class usc_e_shop
 		}elseif( 'newcompletion' == $res ){
 			$this->page = 'newcompletion';
 			add_filter('yoast-ga-push-after-pageview', 'usces_trackPageview_newcompletion');
+		} elseif ( 'updatememberform' == $res ) {
+			$this->page = 'member_edit';
 		}else{
 			$this->page = $res;
 		}
@@ -3493,18 +3543,16 @@ class usc_e_shop
 
 	function verifyGoogleRecapcha(){
 		//check google re-captcha v3
-		$option = get_option('usces_ex');
+		$option   = get_option('usces_ex');
+		$is_human = true;
 		if ( isset( $option['system']['google_recaptcha']['status'] ) && $option['system']['google_recaptcha']['status'] && ! ( empty( $option['system']['google_recaptcha']['site_key'] ) ) && ! ( empty( $option['system']['google_recaptcha']['secret_key'] ) ) ) {
-			$is_human = false;
 			if ( isset( $_POST['recaptcha_response'] ) ) {
 				$secret   = isset( $option['system']['google_recaptcha']['secret_key'] ) ? $option['system']['google_recaptcha']['secret_key'] : '';
 				$token    = trim( $_POST['recaptcha_response'] );
 				$is_human = $this->google_recaptcha_v3_response( $token, $secret );
 			}
-			return $is_human;
 		}
-
-		return true;
+		return $is_human;
 	}
 	
 	/**
@@ -3516,10 +3564,12 @@ class usc_e_shop
 	 * @return boolean $is_human.
 	 */
 	function google_recaptcha_v3_response( $token, $secret ) {
-		$is_human = false;
+		$is_human = true;
 		if ( empty( $token ) || empty( $secret ) ) {
 			return $is_human;
 		}
+		$option    = get_option('usces_ex');
+		$threshold = isset( $option['system']['google_recaptcha']['score'] ) ? $option['system']['google_recaptcha']['score'] : 0.5; 
 
 		$endpoint = 'https://www.google.com/recaptcha/api/siteverify';
 		$request  = array(
@@ -3531,21 +3581,32 @@ class usc_e_shop
 
 		$response = wp_remote_post( esc_url_raw( $endpoint ), $request );
 
-		if ( 200 != wp_remote_retrieve_response_code( $response ) ) {
+		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			update_option( 'usces_recaptcha_condition', 'response_NG' );
 			return $is_human;
+		} else {
+			update_option( 'usces_recaptcha_condition', 'response_OK' );
 		}
 
 		$response_body = wp_remote_retrieve_body( $response );
 		$response_body = json_decode( $response_body, true );
 
 		$action = isset( $response_body['action'] ) ? $response_body['action'] : '';
-		if ( ! $response_body['success'] || ! in_array( $action, array( 'create_new_member', 'customer_order_page', 'member_register_settlement', 'member_update_settlement' ) ) ) {
+		$actions = array(
+			'create_new_member',
+			'customer_order_page',
+			'delivery_order_page',
+			'member_register_settlement',
+			'member_update_settlement'
+		);
+		if ( ! $response_body['success'] || ! in_array( $action, $actions ) ) {
+			update_option( 'usces_recaptcha_condition', 'response_ERROR' );
 			return $is_human;
+		} else {
+			update_option( 'usces_recaptcha_condition', 'response_OK' );
 		}
 		$score     = isset( $response_body['score'] ) ? $response_body['score'] : 0;
-		$threshold = 0.50; // default usually 0.50.
 		$is_human  = $threshold <= $score;
-
 		return $is_human;
 	}
 
@@ -3555,12 +3616,12 @@ class usc_e_shop
 	function goDefaultPage(){
 		global $post;
 
-		if( $post->ID == USCES_CART_NUMBER ) {
+		if( is_object( $post ) && null !== $post && (int) $post->ID === (int) USCES_CART_NUMBER ) {
 
 			$this->page = 'cart';
 			add_filter('the_content', array($this, 'filter_cartContent'),20);
 
-		}else if( $post->ID == USCES_MEMBER_NUMBER ) {
+		} elseif ( is_object( $post ) && null !== $post && (int) $post->ID === (int) USCES_MEMBER_NUMBER ) {
 
 			$this->page = 'member';
 
@@ -3893,7 +3954,7 @@ class usc_e_shop
 			$this->error_message = $error_mes;
 			return $mode;
 
-		} elseif ( $_POST['member_regmode'] == 'editmemberform' ) {
+		} elseif ( $_POST['member_regmode'] == 'editmemberform' || $_POST['member_regmode'] == 'updatememberform' ) {
 
 			$this->get_current_member();
 			$mem_id = $this->current_member['id'];
@@ -3969,7 +4030,8 @@ class usc_e_shop
 				usces_send_updmembermail( $user );
 
 				$this->get_current_member();
-				return 'editmemberform';
+				// return 'editmemberform';
+				return $mode;
 
 			} else {
 				$this->error_message = __('Error:failure in update', 'usces');
@@ -4364,7 +4426,7 @@ class usc_e_shop
 
             if ( empty($member) ) {
                 $rateLimiter->saveLoginFailed();
-                $this->current_member['email'] = htmlspecialchars($email);
+                $this->current_member['email'] = htmlspecialchars( $email, ENT_COMPAT );
                 $this->error_message = __('<b>Error:</b> Your E-mail or password is incorrect.', 'usces');
                 return 'login';
             } else {
@@ -4476,7 +4538,7 @@ class usc_e_shop
 		$query = $wpdb->prepare("SELECT * FROM $member_table WHERE mem_email = %s AND mem_pass = %s", $email, $pass);
 		$member = $wpdb->get_row( $query, ARRAY_A );
 		if ( empty($member) ) {
-			$this->current_member['email'] = htmlspecialchars($email);
+			$this->current_member['email'] = htmlspecialchars( $email, ENT_COMPAT );
 			$this->error_message = __('<b>Error:</b> Password is not correct.', 'usces');
 			return 'login';
 		} else {
@@ -4510,6 +4572,7 @@ class usc_e_shop
 	}
 
 	function member_logout() {
+		do_action( 'usces_action_before_logout' );
 		$cookie = $this->get_cookie();
 		$cookie['name'] = '';
 		$cookie['rme'] = '';
@@ -4964,15 +5027,17 @@ class usc_e_shop
 		$mes = '';
 		$usces_member_old = $_SESSION['usces_member'];
 		foreach ( $_POST['member'] as $key => $vlue ) {
-			if( 'password1' !== $key && 'password2' !== $key ){
+			if( 'password1' !== $key && 'password2' !== $key && 'mailaddress2' !== $key ){
 				$_SESSION['usces_member'][$key] = trim($vlue);
 			}
 		}
-		if( $_POST['member_regmode'] == 'newmemberform' || ($_POST['member_regmode'] === 'editmemberform' && !( WCUtils::is_blank($_POST['member']['password1']) && WCUtils::is_blank($_POST['member']['password2']))) ){
+		if ( $_POST['member_regmode'] == 'newmemberform' ||
+			( $_POST['member_regmode'] === 'editmemberform' && ! ( WCUtils::is_blank( $_POST['member']['password1'] ) && WCUtils::is_blank( $_POST['member']['password2'] ) ) ) ||
+			( $_POST['member_regmode'] === 'updatememberform' && ! ( WCUtils::is_blank( $_POST['member']['password1'] ) && WCUtils::is_blank( $_POST['member']['password2'] ) ) ) ) {
 			$mes = $this->get_pwd_errors($_POST['member']['password1']);
 		}
 
-		if ( $_POST['member_regmode'] == 'editmemberform' ) {
+		if ( $_POST['member_regmode'] == 'editmemberform' || $_POST['member_regmode'] == 'updatememberform' ) {
 			if ( trim($_POST['member']['password1']) != trim($_POST['member']['password2']) ) {
 				$mes .= __('Password confirm does not match.', 'usces') . "<br />";
 			}
@@ -4984,6 +5049,18 @@ class usc_e_shop
 				$id = $this->check_member_email( $_POST['member']['mailaddress1'] );
 				if( !empty( $id ) && $id != $mem_id ) {
 					$mes .= __( 'This e-mail address can not be registered.', 'usces' ) . "<br />";
+				} else {
+					if ( isset( $_POST['member']['mailaddress2'] ) ) {
+						if ( WCUtils::is_blank( $_POST['member']['mailaddress2'] )  ) {
+							if ( $usces_member_old['mailaddress1'] !== $_POST['member']['mailaddress1'] ) {
+								$mes .= __( 'e-mail address is not correct', 'usces' ) . '<br />';
+							}
+						} else {
+							if ( trim( $_POST['member']['mailaddress1'] ) != trim( $_POST['member']['mailaddress2'] ) ) {
+								$mes .= __( 'e-mail address is not correct', 'usces' ) . '<br />';
+							}
+						}
+					}
 				}
 			}
 		} else if ( $_POST['member_regmode'] == 'newmemberform' ){
@@ -5050,7 +5127,7 @@ class usc_e_shop
 			$mes .= __('Please input a phone number with a half size number.', 'usces') . "<br />";
 		}
 
-		if( $_POST['member_regmode'] !== 'editmemberform' && isset( $this->options['agree_member']) && 'activate' === $this->options['agree_member'] ){
+		if ( $_POST['member_regmode'] !== 'editmemberform' && $_POST['member_regmode'] !== 'updatememberform' && isset( $this->options['agree_member'] ) && 'activate' === $this->options['agree_member'] ) {
 			if( !isset($_POST['agree_member_check']) ){
 				$mes .= __('Please accept the membership agreement.', 'usces') . "<br />";
 			}
@@ -5058,7 +5135,7 @@ class usc_e_shop
 
 		$mes = apply_filters('usces_filter_member_check', $mes);
 
-		if ( $_POST['member_regmode'] == 'editmemberform' && '' != $mes ) {
+		if ( ( $_POST['member_regmode'] == 'editmemberform' || $_POST['member_regmode'] == 'updatememberform' ) && '' != $mes ) {
 			$_SESSION['usces_member'] = $usces_member_old;
 		}
 
@@ -5523,7 +5600,7 @@ class usc_e_shop
 
 	function display_cart() {
 		if($this->cart->num_row() > 0) {
-			include (USCES_PLUGIN_DIR . '/includes/cart_table.php');
+			// include (USCES_PLUGIN_DIR . '/includes/cart_table.php');
 		} else {
 			echo "<div class='no_cart'>" . __('There are no items in your cart.', 'usces') . "</div>\n";
 		}
@@ -5531,7 +5608,7 @@ class usc_e_shop
 
 	function display_cart_confirm() {
 		if($this->cart->num_row() > 0) {
-			include (USCES_PLUGIN_DIR . '/includes/cart_confirm.php');
+			// include (USCES_PLUGIN_DIR . '/includes/cart_confirm.php');
 		} else {
 			echo "<div class='no_cart'>" . __('There are no items in your cart.', 'usces') . "</div>\n";
 		}
@@ -5876,7 +5953,7 @@ class usc_e_shop
 				name VARCHAR( 250 ) NULL ,
 				cprice DECIMAL( 10, 2 ) NULL , 
 				price DECIMAL( 10, 2 ) NULL , 
-				unit VARCHAR( 100 ) NULL ,
+				unit TEXT NULL ,
 				stocknum VARCHAR( 50 ) NULL ,
 				stock INT( 5 ) NULL ,
 				gp INT( 2 ) NULL ,
@@ -6257,7 +6334,7 @@ class usc_e_shop
 				name VARCHAR( 250 ) NULL ,
 				cprice DECIMAL( 10, 2 ) NULL , 
 				price DECIMAL( 10, 2 ) NULL , 
-				unit VARCHAR( 100 ) NULL ,
+				unit TEXT NULL ,
 				stocknum VARCHAR( 50 ) NULL ,
 				stock INT( 5 ) NULL ,
 				gp INT( 2 ) NULL ,
@@ -6431,69 +6508,46 @@ class usc_e_shop
 		$target_market = $this->options['system']['target_market'];
 
 		$update_shipping_charge = false;
-		$shipping_charge = isset($this->options['shipping_charge']) ? $this->options['shipping_charge'] : array();
-		$shipping_charge_count = ( $shipping_charge && is_array( $shipping_charge ) ) ? count( $shipping_charge ) : 0;
-		foreach( (array)$target_market as $tm ) {
-			for( $i = 0; $i < $shipping_charge_count; $i++ ) {
-				if( isset($shipping_charge[$i]['country']) and $shipping_charge[$i]['country'] == $tm ) {
-					foreach( $shipping_charge[$i]['value'] as $pref => $value ) {
-						$shipping_charge[$i][$tm][$pref] = $value;
+		$shipping_charge        = isset( $this->options['shipping_charge'] ) ? $this->options['shipping_charge'] : array();
+		$shipping_charge_count  = ( $shipping_charge && is_array( $shipping_charge ) ) ? count( $shipping_charge ) : 0;
+		foreach ( (array) $target_market as $tm ) {
+			for ( $i = 0; $i < $shipping_charge_count; $i++ ) {
+				if ( isset( $shipping_charge[ $i ]['country'] ) && $shipping_charge[ $i ]['country'] == $tm ) {
+					foreach ( $shipping_charge[ $i ]['value'] as $pref => $value ) {
+						$shipping_charge[ $i ][ $tm ][$pref] = $value;
 					}
-					unset($shipping_charge[$i]['country']);
-					unset($shipping_charge[$i]['value']);
+					unset( $shipping_charge[ $i ]['country'] );
+					unset( $shipping_charge[ $i ]['value'] );
 					$update_shipping_charge = true;
 				}
 			}
 		}
-		if( $update_shipping_charge ) $this->options['shipping_charge'] = $shipping_charge;
+		if ( $update_shipping_charge ) {
+			$this->options['shipping_charge'] = $shipping_charge;
+		}
 
 		$update_delivery_days = false;
-		$delivery_days = isset($this->options['delivery_days']) ? $this->options['delivery_days'] : array();
-		$delivery_days_count = ( $delivery_days && is_array( $delivery_days ) ) ? count( $delivery_days ) : 0;
-		foreach( (array)$target_market as $tm ) {
-			for( $i = 0; $i < $delivery_days_count; $i++ ) {
-				if( isset($delivery_days[$i]['country']) and $delivery_days[$i]['country'] == $tm ) {
-					foreach( $delivery_days[$i]['value'] as $pref => $value ) {
-						$delivery_days[$i][$tm][$pref] = $value;
+		$delivery_days        = isset( $this->options['delivery_days'] ) ? $this->options['delivery_days'] : array();
+		$delivery_days_count  = ( $delivery_days && is_array( $delivery_days ) ) ? count( $delivery_days ) : 0;
+		foreach ( (array) $target_market as $tm ) {
+			for ( $i = 0; $i < $delivery_days_count; $i++ ) {
+				if ( isset( $delivery_days[ $i ]['country'] ) && $delivery_days[ $i ]['country'] == $tm ) {
+					foreach ( $delivery_days[ $i ]['value'] as $pref => $value ) {
+						$delivery_days[ $i ][ $tm ][ $pref ] = $value;
 					}
-					unset($delivery_days[$i]['country']);
-					unset($delivery_days[$i]['value']);
+					unset( $delivery_days[ $i ]['country'] );
+					unset( $delivery_days[ $i ]['value'] );
 					$update_delivery_days = true;
 				}
 			}
 		}
-		if( $update_delivery_days ) $this->options['delivery_days'] = $delivery_days;
-
-		$update_acting_settings_paydesign = false;
-		if( isset($this->options['acting_settings']['digitalcheck']['card_activate']) and 'on' == $this->options['acting_settings']['digitalcheck']['card_activate'] ) {
-			$pos = strpos( $this->options['acting_settings']['digitalcheck']['send_url_card'], 'paydesign' );
-			if( $pos === false ) {
-				$this->options['acting_settings']['digitalcheck']['send_url_card'] = "https://www.paydesign.jp/settle/settle3/bp3.dll";
-				$this->payment_structure['acting_digitalcheck_card'] = 'カード決済（メタップスペイメント）';
-				$update_acting_settings_paydesign = true;
-			}
-			if( isset($this->options['acting_settings']['digitalcheck']['card_user_id']) and 'on' == $this->options['acting_settings']['digitalcheck']['card_user_id'] ) {
-				$pos = strpos( $this->options['acting_settings']['digitalcheck']['send_url_user_id'], 'paydesign' );
-				if( $pos === false ) {
-					$this->options['acting_settings']['digitalcheck']['send_url_user_id'] = "https://www.paydesign.jp/settle/settlex/credit2.dll";
-					$update_acting_settings_paydesign = true;
-				}
-			}
-		}
-		if( isset($this->options['acting_settings']['digitalcheck']['conv_activate']) and 'on' == $this->options['acting_settings']['digitalcheck']['conv_activate'] ) {
-			$pos = strpos( $this->options['acting_settings']['digitalcheck']['send_url_conv'], 'paydesign' );
-			if( $pos === false ) {
-				$this->options['acting_settings']['digitalcheck']['send_url_conv'] = "https://www.paydesign.jp/settle/settle3/bp3.dll";
-				$this->payment_structure['acting_digitalcheck_conv'] = 'コンビニ決済（メタップスペイメント）';
-				$update_acting_settings_paydesign = true;
-			}
+		if ( $update_delivery_days ) {
+			$this->options['delivery_days'] = $delivery_days;
 		}
 
-		if( $update_shipping_charge or $update_delivery_days or $update_acting_settings_paydesign )
+		if ( $update_shipping_charge || $update_delivery_days ) {
 			update_option( 'usces', $this->options );
-
-		if( $update_acting_settings_paydesign )
-			update_option( 'usces_payment_structure', $this->payment_structure );
+		}
 	}
 
 	function get_item_cat_ids(){
@@ -7126,354 +7180,432 @@ class usc_e_shop
 
 	}
 
-	function acting_processing( $acting_flg, $post_query, $acting_status ) {
+	/**
+	 * 決済処理
+	 *
+	 * @param string $acting_flg Payment type.
+	 * @param array $post_query Post data.
+	 * @param string $acting_status Status.
+	 * @return mixed
+	 */
+	public function acting_processing( $acting_flg, $post_query, $acting_status ) {
 		global $wpdb;
-		$entry = $this->cart->get_entry();
-		$delim = apply_filters( 'usces_filter_delim', $this->delim );
-		$acting_flg = trim($acting_flg);
 
-		if( empty($acting_flg) ) return 'error';
+		$entry      = $this->cart->get_entry();
+		$delim      = apply_filters( 'usces_filter_delim', $this->delim );
+		$acting_flg = trim( $acting_flg );
 
-		if($acting_flg == 'paypal.php'){
+		if ( empty( $acting_flg ) ) {
+			return 'error';
+		}
 
-		}else if($acting_flg == 'epsilon.php'){
-			if( !file_exists($this->options['settlement_path'] . $acting_flg) )
-				return 'error';
+		if ( 'paypal.php' == $acting_flg ) {
 
-			if ( $this->use_ssl ) {
-				$redirect = str_replace('http://', 'https://', USCES_CART_URL);
-			}else{
-				$redirect = USCES_CART_URL;
-			}
-			usces_log('epsilon card entry data (acting_processing) : '.print_r($entry, true), 'acting_transaction.log');
-			$post_query .= '&settlement=epsilon&redirect_url=' . urlencode($redirect);
-			$post_query = $delim . ltrim($post_query, '&');
-			header("location: " . $redirect . $post_query);
-			exit;
+		} elseif ( 'epsilon.php' == $acting_flg ) {
 
-		} else if( $acting_flg == 'acting_paypal_ec' ) {
-			$acting_opts = $this->options['acting_settings']['paypal'];
+		} elseif ( 'acting_paypal_ec' == $acting_flg ) {
+			$acting_opts  = $this->options['acting_settings']['paypal'];
 			$addroverride = '1';
-			if( isset( $_POST['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] ) ) {
-				if( 'US' == $_POST['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] || 'CA' == $_POST['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] ) $addroverride = '0';
+			if ( isset( $_POST['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] ) ) {
+				if ( 'US' == $_POST['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] || 'CA' == $_POST['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] ) {
+					$addroverride = '0';
+				}
 			} else {
 				$addroverride = '0';
 			}
 			$rand = ( isset( $_POST['PAYMENTREQUEST_0_CUSTOM'] ) ) ? $_POST['PAYMENTREQUEST_0_CUSTOM'] : '(empty key)';
 
 			$nvpstr  = $post_query;
-			$nvpstr .= '&ADDROVERRIDE='.$addroverride;
-			$nvpstr .= '&PAYMENTREQUEST_0_PAYMENTACTION='.apply_filters( 'usces_filter_paypal_ec_paymentaction', 'Sale' );
+			$nvpstr .= '&ADDROVERRIDE=' . $addroverride;
+			$nvpstr .= '&PAYMENTREQUEST_0_PAYMENTACTION=' . apply_filters( 'usces_filter_paypal_ec_paymentaction', 'Sale' );
 
-			//The returnURL is the location where buyers return to when a payment has been succesfully authorized.
-			$nvpstr .= '&RETURNURL='.urlencode( USCES_CART_URL.$delim.'acting=paypal_ec&acting_return=1' );
+			// The returnURL is the location where buyers return to when a payment has been succesfully authorized.
+			$nvpstr .= '&RETURNURL=' . urlencode( USCES_CART_URL . $delim . 'acting=paypal_ec&acting_return=1' );
 
-			//The cancelURL is the location buyers are sent to when they hit the cancel button during authorization of payment during the PayPal flow
-			$cancelurl = urlencode( USCES_CART_URL.$delim.'confirm=1' );
-			$pos = strpos( $post_query, 'paypal_from_cart' );
-			if( false !== $pos ) {
+			// The cancelURL is the location buyers are sent to when they hit the cancel button during authorization of payment during the PayPal flow.
+			$cancelurl = urlencode( USCES_CART_URL . $delim . 'confirm=1' );
+			$pos       = strpos( $post_query, 'paypal_from_cart' );
+			if ( false !== $pos ) {
 				$cancelurl = urlencode( USCES_CART_URL );
 			}
-			$nvpstr .= '&CANCELURL='.apply_filters( 'usces_filter_paypal_ec_cancelurl', $cancelurl, $post_query );
+			$nvpstr .= '&CANCELURL=' . apply_filters( 'usces_filter_paypal_ec_cancelurl', $cancelurl, $post_query );
 
-			$nvpstr .= '&PAYMENTREQUEST_0_NOTIFYURL='.urlencode( USCES_PAYPAL_NOTIFY_URL );
+			$nvpstr .= '&PAYMENTREQUEST_0_NOTIFYURL=' . urlencode( USCES_PAYPAL_NOTIFY_URL );
 
-			//Seamless checkout
-			if( isset( $_SESSION['liwpp']['token'] ) && !empty( $_SESSION['liwpp']['token'] ) ) {
-				$nvpstr .= '&IDENTITYACCESSTOKEN='.$_SESSION['liwpp']['token'];
+			// Seamless checkout.
+			if ( isset( $_SESSION['liwpp']['token'] ) && ! empty( $_SESSION['liwpp']['token'] ) ) {
+				$nvpstr .= '&IDENTITYACCESSTOKEN=' . $_SESSION['liwpp']['token'];
 			}
 
 			$this->paypal->setMethod( 'SetExpressCheckout' );
 			$this->paypal->setData( $nvpstr );
-			$res = $this->paypal->doExpressCheckout();
+			$res      = $this->paypal->doExpressCheckout();
 			$resArray = $this->paypal->getResponse();
-			$ack = strtoupper( $resArray["ACK"] );
-			if( $ack == "SUCCESS" || $ack == "SUCCESSWITHWARNING" ) {
-				$token = urldecode( $resArray["TOKEN"] );
-				$payPalURL = $acting_opts['paypal_url'].'?cmd=_express-checkout&token='.$token.'&useraction=commit';
-				header( "Location: ".$payPalURL );
+			$ack      = strtoupper( $resArray['ACK'] );
+			if ( 'SUCCESS' == $ack || 'SUCCESSWITHWARNING' == $ack ) {
+				$token     = urldecode( $resArray['TOKEN'] );
+				$payPalURL = $acting_opts['paypal_url'] . '?cmd=_express-checkout&token=' . $token . '&useraction=commit';
+				header( 'Location: ' . $payPalURL );
 
 			} else {
-				//Display a user friendly Error on the page using any of the following error information returned by PayPal
-				$ErrorCode = urldecode( $resArray["L_ERRORCODE0"] );
-				$ErrorShortMsg = urldecode( $resArray["L_SHORTMESSAGE0"] );
-				$ErrorLongMsg = urldecode( $resArray["L_LONGMESSAGE0"] );
-				$ErrorSeverityCode = urldecode( $resArray["L_SEVERITYCODE0"] );
-				usces_log( 'PayPal : SetExpressCheckout API call failed. Error Code:['.$ErrorCode.'] Error Severity Code:['.$ErrorSeverityCode.'] Short Error Message:'.$ErrorShortMsg.' Detailed Error Message:'.$ErrorLongMsg, 'acting_transaction.log' );
-				$log = array( 'acting'=>'paypal_ec', 'key'=>$rand, 'result'=>$ack, 'data'=>$resArray );
+				// Display a user friendly Error on the page using any of the following error information returned by PayPal.
+				$ErrorCode         = urldecode( $resArray['L_ERRORCODE0'] );
+				$ErrorShortMsg     = urldecode( $resArray['L_SHORTMESSAGE0'] );
+				$ErrorLongMsg      = urldecode( $resArray['L_LONGMESSAGE0'] );
+				$ErrorSeverityCode = urldecode( $resArray['L_SEVERITYCODE0'] );
+				usces_log( 'PayPal : SetExpressCheckout API call failed. Error Code:[' . $ErrorCode . '] Error Severity Code:[' . $ErrorSeverityCode . '] Short Error Message:' . $ErrorShortMsg . ' Detailed Error Message:' . $ErrorLongMsg, 'acting_transaction.log' );
+				$log = array(
+					'acting' => 'paypal_ec',
+					'key'    => $rand,
+					'result' => $ack,
+					'data'   => $resArray,
+				);
 				usces_save_order_acting_error( $log );
-				header( "Location: ".USCES_CART_URL.$delim.'acting=paypal_ec&acting_return=0' );
+				header( 'Location: ' . USCES_CART_URL . $delim . 'acting=paypal_ec&acting_return=0' );
 			}
 			exit;
 
-		} elseif( $acting_flg == 'acting_telecom_edy' ) {
-			$table_meta_name = $wpdb->prefix."usces_order_meta";
-			$value = array();
-			$value['usces_cart'] = $_SESSION['usces_cart'];
-			$value['usces_entry'] = $_SESSION['usces_entry'];
+		} elseif ( 'acting_telecom_edy' == $acting_flg ) { /* テレコムクレジット Edy決済 */
+			$table_meta_name       = $wpdb->prefix . 'usces_order_meta';
+			$value                 = array();
+			$value['usces_cart']   = $_SESSION['usces_cart'];
+			$value['usces_entry']  = $_SESSION['usces_entry'];
 			$value['usces_member'] = $_SESSION['usces_member'];
-			$mvalue = serialize( $value );
-			$mquery = $wpdb->prepare( "INSERT INTO $table_meta_name (order_id, meta_key, meta_value) VALUES (%d, %s, %s)", $_POST['option'], $_POST['option'], $mvalue );
-			$res = $wpdb->query( $mquery );
+			$mvalue                = serialize( $value );
+			$mquery                = $wpdb->prepare( "INSERT INTO $table_meta_name (order_id, meta_key, meta_value) VALUES (%d, %s, %s)", $_POST['option'], $_POST['option'], $mvalue );
+			$res                   = $wpdb->query( $mquery );
 
 			unset( $_SESSION['usces_cart'] );
 			unset( $_SESSION['usces_entry'] );
 
 			$acting_opts = $this->options['acting_settings']['telecom'];
-			header( "location: ".$acting_opts['send_url_edy'].'?acting=telecom_edy'.$post_query );
+			header( 'location: ' . $acting_opts['send_url_edy'] . '?acting=telecom_edy' . $post_query );
 			exit;
 
-		} else if( $acting_flg == 'acting_digitalcheck_card' ) {
+		} elseif ( 'acting_digitalcheck_card' == $acting_flg ) { /* メタップスペイメント カード決済（旧デジタルチェック、旧ペイデザイン） */
 			$acting_opts = $this->options['acting_settings']['digitalcheck'];
-			$interface = parse_url($acting_opts['send_url_user_id']);
-			$kakutei = ( empty($acting_opts['card_kakutei']) ) ? '0' : $acting_opts['card_kakutei'];
+			$interface   = parse_url( $acting_opts['send_url_user_id'] );
+			$kakutei     = ( empty( $acting_opts['card_kakutei'] ) ) ? '0' : $acting_opts['card_kakutei'];
 
-			$vars  = 'IP='.$acting_opts['card_ip'];
-			$vars .= '&PASS='.$acting_opts['card_pass'];
-			$vars .= '&IP_USER_ID='.$_POST['IP_USER_ID'];
-			$vars .= '&SID='.$_POST['SID'];
-			$vars .= '&STORE=51';
-			$vars .= '&N1='.$_POST['N1'];
-			$vars .= '&K1='.$_POST['K1'];
-			$vars .= '&KAKUTEI='.$kakutei;
-			$vars .= '&FUKA='.$acting_flg;
+			$params = array(
+				'IP'         => $acting_opts['card_ip'],
+				'PASS'       => $acting_opts['card_pass'],
+				'SID'        => $_POST['SID'],
+				'IP_USER_ID' => $_POST['IP_USER_ID'],
+				'N1'         => $_POST['N1'],
+				'K1'         => $_POST['K1'],
+				'FUKA'       => $acting_flg,
+				'KAKUTEI'    => $kakutei,
+			);
+			$vars  = http_build_query( $params );
 
-			$header  = "POST ".$interface['path']." HTTP/1.1\r\n";
-			$header .= "Host: ".$_SERVER['HTTP_HOST']."\r\n";
+			$header  = 'POST ' . $interface['path'] . " HTTP/1.1\r\n";
+			$header .= 'Host: ' . $interface['host'] . "\r\n";
 			$header .= "User-Agent: PHP Script\r\n";
 			$header .= "Content-Type: application/x-www-form-urlencoded\r\n";
-			$header .= "Content-Length: ".strlen($vars)."\r\n";
+			$header .= 'Content-Length: ' . strlen( $vars ) . "\r\n";
 			$header .= "Connection: close\r\n\r\n";
 			$header .= $vars;
-			$fp = @stream_socket_client( 'tlsv1.2://'.$interface['host'].':443', $errno, $errstr, 30 );
-			if( !$fp ){
-				usces_log( 'digitalcheck card : TLS(v1.2) Error', 'acting_transaction.log' );
-				$fp = fsockopen('ssl://'.$interface['host'],443,$errno,$errstr,30);
-				if( !$fp ){
-					usces_log('digitalcheck card : SSL Error', 'acting_transaction.log');
-					$log = array( 'acting'=>'digitalcheck_card', 'key'=>$_POST['SID'], 'result'=>'SSL/TLS ERROR ('.$errno.')', 'data'=>array($errstr) );
-					usces_save_order_acting_error( $log );
-					header( "location: ".USCES_CART_URL.$delim.'acting=digitalcheck_card&acting_return=0' );
-				}
+
+			$fp = @stream_socket_client( 'tlsv1.2://' . $interface['host'] . ':443', $errno, $errstr, 30 );
+			if ( ! $fp ) {
+				// usces_log( 'digitalcheck card : TLS(v1.2) Error', 'acting_transaction.log' );
+				$log = array(
+					'acting' => 'digitalcheck_card',
+					'key'    => $_POST['SID'],
+					'result' => 'SSL/TLS ERROR (' . $errno . ')',
+					'data'   => array( $errstr ),
+				);
+				usces_save_order_acting_error( $log );
+				wp_redirect(
+					add_query_arg(
+						array(
+							'acting'        => 'digitalcheck_card',
+							'acting_return' => 0,
+						),
+						USCES_CART_URL
+					)
+				);
+				exit();
 			}
 
-			if( $fp ) {
+			if ( $fp ) {
 				fwrite( $fp, $header );
-				$page = '';
-				while( !feof($fp) ) {
+				$headerdone = false;
+				$page       = '';
+				while ( ! feof( $fp ) ) {
 					$line = fgets( $fp, 1024 );
-					if( strcmp($line, "\r\n") == 0 ) {
+					if ( 0 == strcmp( $line, "\r\n" ) ) {
 						$headerdone = true;
-					} elseif( $headerdone ) {
+					} elseif ( $headerdone ) {
 						$page .= $line;
 					}
 				}
-				fclose($fp);
-				$lines = explode("\n", $page);
-				if( false !== strpos( $lines[0], 'OK') ) {
-					usces_log('digitalcheck card entry data (acting_processing) : '.print_r($entry, true), 'acting_transaction.log');
-					$args = '&SID='.$_POST['SID'].'&FUKA='.$acting_flg;
-					header( "location: ".USCES_CART_URL.$delim.'acting=digitalcheck_card&acting_return=1'.$args );
+				fclose( $fp );
+				$lines = explode( "\n", $page );
+				if ( false !== strpos( $lines[0], 'OK' ) ) {
+					// usces_log( 'digitalcheck card entry data (acting_processing) : ' . print_r( $entry, true ), 'acting_transaction.log');
+					wp_redirect(
+						add_query_arg(
+							array(
+								'acting'        => 'digitalcheck_card',
+								'acting_return' => 1,
+								'SID'           => $_POST['SID'],
+								'FUKA'          => $acting_flg,
+							),
+							USCES_CART_URL
+						)
+					);
+					exit();
 				} else {
-					usces_log('digitalcheck card : Certification Error : '.$page, 'acting_transaction.log');
-					$log = array( 'acting'=>'digitalcheck_card', 'key'=>$_POST['SID'], 'result'=>'CERTIFICATION ERROR', 'data'=>$lines );
+					// usces_log( 'digitalcheck card : Certification Error : ' . $page, 'acting_transaction.log' );
+					$log = array(
+						'acting' => 'digitalcheck_card',
+						'key'    => $_POST['SID'],
+						'result' => 'CERTIFICATION ERROR',
+						'data'   => $lines,
+					);
 					usces_save_order_acting_error( $log );
-					header( "location: ".USCES_CART_URL.$delim.'acting=digitalcheck_card&acting_return=0' );
+					wp_redirect(
+						add_query_arg(
+							array(
+								'acting'        => 'digitalcheck_card',
+								'acting_return' => 0,
+							),
+							USCES_CART_URL
+						)
+					);
+					exit();
 				}
 			}
-			exit;
-		} else if( $acting_flg == 'acting_digitalcheck_conv' ) {
-			if( isset($_REQUEST['STORE']) and '99' != $_REQUEST['STORE'] ) {
+			exit();
+
+		} elseif ( 'acting_digitalcheck_conv' == $acting_flg ) { /* メタップスペイメント コンビニ決済（旧デジタルチェック、旧ペイデザイン） */
+			if ( isset( $_REQUEST['STORE'] ) && '99' != $_REQUEST['STORE'] ) {
 				$res = $this->order_processing();
-				if( 'ordercompletion' == $res ) {
-					$table_meta_name = $wpdb->prefix."usces_order_meta";
-					$mquery = $wpdb->prepare("SELECT order_id FROM $table_meta_name WHERE meta_key = %s AND meta_value = %s", 'SID', $_REQUEST['SID'] );
-					$order_id = $wpdb->get_var($mquery);
-					if( $order_id ) {
-						$data = array( "settltment_status" => __("Failure",'usces'), "settltment_errmsg" => __("Settlement was not completed.",'usces') );
+				if ( 'ordercompletion' == $res ) {
+					$table_meta_name = $wpdb->prefix . 'usces_order_meta';
+					$mquery          = $wpdb->prepare( "SELECT order_id FROM $table_meta_name WHERE meta_key = %s AND meta_value = %s", 'SID', $_REQUEST['SID'] );
+					$order_id        = $wpdb->get_var( $mquery );
+					if ( $order_id ) {
+						$data = array(
+							'settltment_status' => __( 'Failure', 'usces' ),
+							'settltment_errmsg' => __( 'Settlement was not completed.', 'usces' ),
+						);
 						$this->set_order_meta_value( 'acting_digitalcheck_conv', serialize( $data ), $order_id );
 						$this->set_order_meta_value( 'wc_trans_id', $_REQUEST['SID'], $order_id );
 					}
 					$this->cart->crear_cart();
 					$acting_opts = $this->options['acting_settings']['digitalcheck'];
-					header( "location: ".$acting_opts['send_url_conv'].'?acting=digitalcheck_conv'.$post_query );
+					header( 'location: ' . $acting_opts['send_url_conv'] . '?acting=digitalcheck_conv' . $post_query );
 					exit;
 				} else {
-					usces_log('digitalcheck conv : order processing error', 'acting_transaction.log');
-					$log = array( 'acting'=>'digitalcheck_conv', 'key'=>$_REQUEST['SID'], 'result'=>'ORDER DATA REGISTERED ERROR', 'data'=>$_REQUEST );
+					// usces_log( 'digitalcheck conv : order processing error', 'acting_transaction.log' );
+					$log = array(
+						'acting' => 'digitalcheck_conv',
+						'key'    => $_REQUEST['SID'],
+						'result' => 'ORDER DATA REGISTERED ERROR',
+						'data'   => $_REQUEST,
+					);
 					usces_save_order_acting_error( $log );
-					header( "location: ".USCES_CART_URL.$delim.'acting=digitalcheck_conv&acting_return=0' );
+					header( 'location: ' . USCES_CART_URL . $delim . 'acting=digitalcheck_conv&acting_return=0' );
+					exit;
 				}
 			} else {
 				$acting_opts = $this->options['acting_settings']['digitalcheck'];
-				header( "location: ".$acting_opts['send_url_conv'].'?acting=digitalcheck_conv'.$post_query );
+				header( 'location: ' . $acting_opts['send_url_conv'] . '?acting=digitalcheck_conv' . $post_query );
 				exit;
 			}
 
-		} else if( $acting_flg == 'acting_veritrans_card' or $acting_flg == 'acting_veritrans_conv' ) {
-			$acting_opts = $this->options['acting_settings']['veritrans'];
-			$acting = substr( $acting_flg, 7 );
+		} elseif ( 'acting_veritrans_card' == $acting_flg || 'acting_veritrans_conv' == $acting_flg ) { /* ベリトランス カード決済・コンビニ決済 */
+			$acting_opts        = $this->options['acting_settings']['veritrans'];
+			$acting             = substr( $acting_flg, 7 );
 			$dummy_payment_flag = ( 'public' == $acting_opts['ope'] ) ? '0' : '1';
-			$order_id = isset( $_POST['ORDER_ID'] ) ? $_POST['ORDER_ID'] : '';
-			$regist_url = ( defined('VERITRANS_SHA2_TEST') ) ? "https://sair.veritrans.co.jp/web/commodityRegist.action" : $acting_opts['regist_url'];
-			$url = parse_url( $regist_url );
-			$path = empty($url['path']) ? '/' : $url['path'];
+			$order_id           = isset( $_POST['ORDER_ID'] ) ? $_POST['ORDER_ID'] : '';
+			$regist_url         = ( defined('VERITRANS_SHA2_TEST') ) ? 'https://sair.veritrans.co.jp/web/commodityRegist.action' : $acting_opts['regist_url'];
+			$url                = parse_url( $regist_url );
+			$path               = empty( $url['path'] ) ? '/' : $url['path'];
 
 			$postdata = $post_query;
-			if( 'acting_veritrans_card' == $acting_flg ) {
+			if ( 'acting_veritrans_card' == $acting_flg ) {
 				$card_capture_flag = ( 'capture' == $acting_opts['card_capture_flag'] ) ? '1' : '0';
-				$postdata .= '&CARD_CAPTURE_FLAG='.$card_capture_flag;
+				$postdata         .= '&CARD_CAPTURE_FLAG=' . $card_capture_flag;
 			}
-			if( 'acting_veritrans_conv' == $acting_flg ) {
-				$postdata .= '&NAME1='.urlencode( mb_substr( mb_convert_kana( $entry['customer']['name1'], 'ASKV', 'UTF-8' ), 0, 10, 'UTF-8' ) );
-				$postdata .= '&NAME2='.urlencode( mb_substr( mb_convert_kana( $entry['customer']['name2'], 'ASKV', 'UTF-8' ), 0, 10, 'UTF-8' ) );
-				if( !empty($entry['customer']['name3']) ) {
+			if ( 'acting_veritrans_conv' == $acting_flg ) {
+				$postdata .= '&NAME1=' . urlencode( mb_substr( mb_convert_kana( $entry['customer']['name1'], 'ASKV', 'UTF-8' ), 0, 10, 'UTF-8' ) );
+				$postdata .= '&NAME2=' . urlencode( mb_substr( mb_convert_kana( $entry['customer']['name2'], 'ASKV', 'UTF-8' ), 0, 10, 'UTF-8' ) );
+				if ( ! empty( $entry['customer']['name3'] ) ) {
 					$kana1 = mb_substr( mb_convert_kana( $entry['customer']['name3'], 'ASKV', 'UTF-8' ), 0, 10, 'UTF-8' );
 					mb_regex_encoding( 'UTF-8' );
-					if( mb_ereg("^[ア-ン゛゜ァ-ォャ-ョー]+$", $kana1) )
-						$postdata .= '&KANA1='.urlencode( $kana1 );
+					if ( mb_ereg( "^[ア-ン゛゜ァ-ォャ-ョー]+$", $kana1 ) ) {
+						$postdata .= '&KANA1=' . urlencode( $kana1 );
+					}
 				}
-				if( !empty($entry['customer']['name4']) ) {
+				if ( ! empty( $entry['customer']['name4'] ) ) {
 					$kana2 = mb_substr( mb_convert_kana( $entry['customer']['name4'], 'ASKV', 'UTF-8' ), 0, 10, 'UTF-8' );
 					mb_regex_encoding( 'UTF-8' );
-					if( mb_ereg("^[ア-ン゛゜ァ-ォャ-ョー]+$", $kana2) )
+					if ( mb_ereg( "^[ア-ン゛゜ァ-ォャ-ョー]+$", $kana2 ) ) {
 						$postdata .= '&KANA2='.urlencode( $kana2 );
+					}
 				}
-				$postdata .= '&TELEPHONE_NO='.str_replace( '-', '', $entry['customer']['tel'] );
-				if( 1 < (int)$acting_opts['conv_timelimit'] and (int)$acting_opts['conv_timelimit'] <= 60 ) {
-					$timelimit = date( 'Ymd', strtotime('+'.$acting_opts['conv_timelimit'].' days') );
-					$postdata .= '&TIMELIMIT_OF_PAYMENT='.$timelimit;
+				$postdata .= '&TELEPHONE_NO=' . str_replace( '-', '', $entry['customer']['tel'] );
+				if ( 1 < (int) $acting_opts['conv_timelimit'] && (int) $acting_opts['conv_timelimit'] <= 60 ) {
+					$timelimit = date( 'Ymd', strtotime( '+' . $acting_opts['conv_timelimit'] . ' days' ) );
+					$postdata .= '&TIMELIMIT_OF_PAYMENT=' . $timelimit;
 				}
 			}
-			if( 'on' == $acting_opts['mailaddress'] ) {
-				$postdata .= '&MAILADDRESS='.$entry['customer']['mailaddress1'];
+			if ( 'on' == $acting_opts['mailaddress'] ) {
+				$postdata .= '&MAILADDRESS=' . $entry['customer']['mailaddress1'];
 			}
-			$postdata .= '&MERCHANT_ID='.$acting_opts['merchant_id'];
-			$postdata .= '&SESSION_ID='.session_id();
-			$postdata .= '&FINISH_PAYMENT_RETURN_URL='.urlencode( USCES_CART_URL.$delim.'acting='.$acting.'&acting_return=1&result=1' );
-			$postdata .= '&UNFINISH_PAYMENT_RETURN_URL='.urlencode( USCES_CART_URL.$delim.'acting='.$acting.'&confirm=1' );
-			$postdata .= '&ERROR_PAYMENT_RETURN_URL='.urlencode( USCES_CART_URL.$delim.'acting='.$acting.'&acting_return=0' );
-			$postdata .= '&FINISH_PAYMENT_ACCESS_URL='.urlencode( USCES_CART_URL.$delim.'acting='.$acting );
-			$postdata .= '&DUMMY_PAYMENT_FLAG='.$dummy_payment_flag;
+			$postdata .= '&MERCHANT_ID=' . $acting_opts['merchant_id'];
+			$postdata .= '&SESSION_ID=' . session_id();
+			$postdata .= '&FINISH_PAYMENT_RETURN_URL=' . urlencode( USCES_CART_URL . $delim . 'acting=' . $acting . '&acting_return=1&result=1' );
+			$postdata .= '&UNFINISH_PAYMENT_RETURN_URL=' . urlencode( USCES_CART_URL . $delim. 'acting=' . $acting . '&confirm=1' );
+			$postdata .= '&ERROR_PAYMENT_RETURN_URL=' . urlencode( USCES_CART_URL . $delim . 'acting=' . $acting . '&acting_return=0' );
+			$postdata .= '&FINISH_PAYMENT_ACCESS_URL=' . urlencode( USCES_CART_URL . $delim . 'acting=' . $acting );
+			$postdata .= '&DUMMY_PAYMENT_FLAG=' . $dummy_payment_flag;
 
 			$postlength = strlen( $postdata );
 
-			$request  = "POST ".$path." HTTP/1.1"."\r\n";
-			$request .= "Host: ".$url['host']."\r\n";
-			$request .= "User-Agent: HttpRequest Powered by ".phpversion()."\r\n";
-			$request .= "Connection: close"."\r\n";
-			$request .= "Accept-Language: ja"."\r\n";
-			$request .= "Content-Type: application/x-www-form-urlencoded"."\r\n";
-			$request .= "Content-Length: ".$postlength."\r\n\r\n";
+			$request  = 'POST ' . $path . ' HTTP/1.1' . "\r\n";
+			$request .= 'Host: ' . $url['host'] . "\r\n";
+			$request .= 'User-Agent: HttpRequest Powered by ' . phpversion() . "\r\n";
+			$request .= 'Connection: close' . "\r\n";
+			$request .= 'Accept-Language: ja' . "\r\n";
+			$request .= 'Content-Type: application/x-www-form-urlencoded' . "\r\n";
+			$request .= 'Content-Length: ' . $postlength . "\r\n\r\n";
 			$request .= $postdata;
 
-			$code = 0;
-			$resBody = "";
-			$con = @stream_socket_client( 'tlsv1.2://'.$url['host'].':443', $errno, $errstr, 30 );
-			if( !$con ) {
+			$code    = 0;
+			$resBody = '';
+			$con     = @stream_socket_client( 'tlsv1.2://' . $url['host'] . ':443', $errno, $errstr, 30 );
+			if ( ! $con ) {
 				usces_log( 'Veritrans : TLS(v1.2) Error', 'acting_transaction.log' );
-				$con = @fsockopen( 'ssl://'.$url['host'], 443, $errno, $errstr, 30 );
-				if( !$con ) {
+				$con = @fsockopen( 'ssl://' . $url['host'], 443, $errno, $errstr, 30 );
+				if ( ! $con ) {
 					usces_log( 'Veritrans : SSL Error', 'acting_transaction.log' );
-					$log = array( 'acting'=>$acting, 'key'=>$order_id, 'result'=>'SSL/TLS ERROR ('.$errno.')', 'data'=>array($errstr) );
+					$log = array(
+						'acting' => $acting,
+						'key'    => $order_id,
+						'result' => 'SSL/TLS ERROR (' . $errno . ')',
+						'data'   => array( $errstr ),
+					);
 					usces_save_order_acting_error( $log );
-					header( "location: ".USCES_CART_URL.$delim.'acting='.$acting_flg.'&acting_return=0' );
+					header( 'location: ' . USCES_CART_URL . $delim . 'acting=' . $acting_flg . '&acting_return=0' );
 					exit;
 				}
 			}
 
-			if( $con ) {
+			if ( $con ) {
 				$ret = fwrite( $con, $request );
-				if( $ret == strlen($request) ) {
-					$res = $this->readResponse( $con );
-					$code = $res['Code'];
+				if ( $ret == strlen( $request ) ) {
+					$res     = $this->readResponse( $con );
+					$code    = $res['Code'];
 					$resBody = $res['Body'];
 
 				} else {
-					usces_log( 'Veritrans Write NG: Sent:'.strlen($request).' Send:'.$ret, "acting_transaction.log" );
+					usces_log( 'Veritrans Write NG: Sent:' . strlen( $request ) . ' Send:' . $ret, 'acting_transaction.log' );
 				}
 				fclose( $con );
 			}
 
-			// 正常終了（200 OK）が返ったか
-			if( intval($code) == 200 ) {
-				$merchantKey = null;
-				$browserKey = null;
-				$scd = null;
+			// 正常終了（200 OK）が返ったか.
+			if ( 200 == intval( $code ) ) {
+				$merchantKey   = null;
+				$browserKey    = null;
+				$scd           = null;
 				$error_message = null;
 
-				// レスポンスデータからマーチャントキー、ブラウザキーを取得
+				// レスポンスデータからマーチャントキー、ブラウザキーを取得.
 				$bodyLine = explode( "\n", $resBody );
-				foreach( $bodyLine as $line ) {
-					if( preg_match( '/^MERCHANT_ENCRYPTION_KEY=(.+)/', $line, $match ) ) {
+				foreach ( $bodyLine as $line ) {
+					if ( preg_match( '/^MERCHANT_ENCRYPTION_KEY=(.+)/', $line, $match ) ) {
 						$merchantKey = $match[1];
-					} elseif( preg_match( '/^BROWSER_ENCRYPTION_KEY=(.+)/', $line, $match ) ) {
+					} elseif ( preg_match( '/^BROWSER_ENCRYPTION_KEY=(.+)/', $line, $match ) ) {
 						$browserKey = $match[1];
-					} elseif( preg_match('/^SCD=(.+)/', $line, $match ) ) {
+					} elseif ( preg_match('/^SCD=(.+)/', $line, $match ) ) {
 						$scd = $match[1];
-					} elseif( preg_match( '/^ERROR_MESSAGE=(.+)/', $line, $match ) ) {
+					} elseif ( preg_match( '/^ERROR_MESSAGE=(.+)/', $line, $match ) ) {
 						$error_message = $match[1];
 					}
 				}
 
-				// 両方取れたらOK。SCDはカードでセキュリティコードが入力された場合のみ
-				if( !is_null($merchantKey) && !is_null($browserKey) ) {
-					$getdata  = '?MERCHANT_ID='.$acting_opts['merchant_id'];
-					$getdata .= '&ORDER_ID='.$order_id;
-					$getdata .= '&BROWSER_ENCRYPTION_KEY='.urlencode($browserKey);
-					$payment_url = ( defined('VERITRANS_SHA2_TEST') ) ? "https://sair.veritrans.co.jp/web/paymentStart.action" : $acting_opts['payment_url'];
-					header( "location: ".$payment_url.$getdata );
+				// 両方取れたらOK。SCDはカードでセキュリティコードが入力された場合のみ.
+				if ( ! is_null( $merchantKey ) && ! is_null( $browserKey ) ) {
+					$getdata     = '?MERCHANT_ID=' . $acting_opts['merchant_id'];
+					$getdata    .= '&ORDER_ID=' . $order_id;
+					$getdata    .= '&BROWSER_ENCRYPTION_KEY=' . urlencode( $browserKey );
+					$payment_url = ( defined('VERITRANS_SHA2_TEST') ) ? 'https://sair.veritrans.co.jp/web/paymentStart.action' : $acting_opts['payment_url'];
+					header( 'location: ' . $payment_url . $getdata );
 
 				} else {
-					if( !is_null($error_message) ) {
-						usces_log( "Veritrans AWeb:".$error_message, "acting_transaction.log" );
-						$log = array( 'acting'=>$acting, 'key'=>$order_id, 'result'=>$code, 'data'=>$bodyLine );
+					if ( ! is_null( $error_message ) ) {
+						usces_log( 'Veritrans AWeb:' . $error_message, 'acting_transaction.log' );
+						$log = array(
+							'acting' => $acting,
+							'key'    => $order_id,
+							'result' => $code,
+							'data'   => $bodyLine,
+						);
 						usces_save_order_acting_error( $log );
 					}
-					header( "location: ".USCES_CART_URL.$delim.'acting='.$acting_flg.'&acting_return=0' );
+					header( 'location: ' . USCES_CART_URL . $delim . 'acting=' . $acting_flg . '&acting_return=0' );
 				}
 
 			} else {
-				usces_log( "Veritrans Response NG: ".$resBody, "acting_transaction.log" );
+				usces_log( 'Veritrans Response NG: ' . $resBody, 'acting_transaction.log' );
 				$bodyLine = explode( "\n", $resBody );
-				$log = array( 'acting'=>$acting, 'key'=>$order_id, 'result'=>$code, 'data'=>$bodyLine );
+				$log      = array(
+					'acting' => $acting,
+					'key'    => $order_id,
+					'result' => $code,
+					'data'   => $bodyLine,
+				);
 				usces_save_order_acting_error( $log );
-				header( "location: ".USCES_CART_URL.$delim.'acting='.$acting_flg.'&acting_return=0' );
+				header( 'location: ' . USCES_CART_URL . $delim . 'acting=' . $acting_flg . '&acting_return=0' );
 			}
 			exit;
 		}
-		do_action('usces_action_acting_processing', $acting_flg, $post_query);
+
+		do_action( 'usces_action_acting_processing', $acting_flg, $post_query );
 		$acting_status = apply_filters( 'usces_filter_acting_processing', $acting_flg, $post_query, $acting_status );
 		return $acting_status;
 	}
 
 	private function readResponse( $fp ) {
-		$res = array( 'Status'=>'', 'Version'=>'', 'Code'=>0, 'Message'=>'', 'Headers'=>array(), 'Body'=>'' );
+		$res = array(
+			'Status'  => '',
+			'Version' => '',
+			'Code'    => 0,
+			'Message' => '',
+			'Headers' => array(),
+			'Body'    => '',
+		);
 
-		// HTTPステータスの読み込み
+		// HTTPステータスの読み込み.
 		$line = $this->readLine( $fp );
-		if( preg_match( '/^(HTTP\/1\.[0-9x]+)\s+([0-9]+)\s+(.+)/i', $line, $match ) == 0 ) {
+		if ( 0 == preg_match( '/^(HTTP\/1\.[0-9x]+)\s+([0-9]+)\s+(.+)/i', $line, $match ) ) {
 			return $res;
 		}
-		$res['Status'] = $line;
+		$res['Status']  = $line;
 		$res['Version'] = $match[1];
-		$res['Code'] = $match[2];
+		$res['Code']    = $match[2];
 		$res['Message'] = $match[3];
 
-		// レスポンスヘッダの読み込み
-		while( !feof($fp) ) {
+		// レスポンスヘッダの読み込み.
+		while ( ! feof( $fp ) ) {
 			$line = $this->readLine( $fp );
-			if( $line != '' ) {
+			if ( '' != $line ) {
 				list( $hname, $hvalue ) = explode( ':', $line, 2 );
-				$res['Headers'][strtolower($hname)] = ltrim($hvalue);
+				$res['Headers'][ strtolower( $hname ) ] = ltrim( $hvalue );
 			} else {
 				break;
 			}
 		}
-		// レスポンスデータの読み込み
-		while( !feof($fp) ) {
-			$data = $this->readLine( $fp )."\n";
-			if( '' == $data ) {
+		// レスポンスデータの読み込み.
+		while ( ! feof( $fp ) ) {
+			$data = $this->readLine( $fp ) . "\n";
+			if ( '' == $data ) {
 				break;
 			}
 			$res['Body'] .= $data;
@@ -7482,14 +7614,14 @@ class usc_e_shop
 	}
 
 	private function readLine( $fp ) {
-		if( !$fp ) {
+		if ( ! $fp ) {
 			return '';
 		}
-		// レスポンスデータを受信
+		// レスポンスデータを受信.
 		$line = null;
-		while( !feof($fp) ) {
+		while ( ! feof( $fp ) ) {
 			$line .= @fgets( $fp, 4096 );
-			if( substr($line, -1) == "\n" ) {
+			if ( "\n" == substr( $line, -1 ) ) {
 				return rtrim( $line, "\r\n" );
 			}
 		}
@@ -7709,6 +7841,10 @@ class usc_e_shop
 
 		foreach ( $cart as $rows ) {
 
+			if ( 'shipped' !== $this->getItemDivision( $rows['post_id'] ) ) {
+				continue;
+			}
+
 			if( -1 == $fixed_charge_id ){
 				//商品送料ID
 				$s_charge_id = $this->getItemShippingCharge($rows['post_id']);
@@ -7904,6 +8040,7 @@ class usc_e_shop
 
 		} else {
 			$discount = $this->get_order_discount( NULL, $carts );
+			$entries['order']['discount'] = $discount;
 			$amount_by_cod = $total_items_price - $use_point + $discount;
 			if ( 'all' == usces_is_fee_subject() ) {
 				$amount_by_cod += $shipping_charge;
@@ -7920,6 +8057,8 @@ class usc_e_shop
 			$materials = compact( 'member', 'entries', 'carts', 'total_items_price', 'shipping_charge', 'payments', 'discount', 'cod_fee', 'use_point' );
 			$tax = $this->getTax( $total_price, $materials );
 		}
+		$entries['order']['total_price'] = $total_price;
+		$entries['order']['tax'] = $tax;
 
 		if( 'exclude' == $this->options['tax_mode'] ) {
 			if( 0 < $use_point ) {
@@ -7935,7 +8074,9 @@ class usc_e_shop
 		$total_full_price = apply_filters( 'usces_filter_set_cart_fees_total_full_price', $total_full_price, $total_items_price, $use_point, $discount, $shipping_charge, $cod_fee );
 		$entries['order']['total_full_price'] = $total_full_price;
 
-		$get_point = $this->get_order_point( (isset($member['ID']) ? $member['ID'] : null) );
+		$mem_id    = isset($member['ID']) ? $member['ID'] : null;
+		$get_point = $this->get_order_point( $mem_id );
+		$get_point = apply_filters( 'usces_filter_set_get_point', $get_point, $entries, $carts );
 
 		$array = array(
 				'total_items_price' => $total_items_price,
@@ -8855,6 +8996,13 @@ class usc_e_shop
 					foreach( $meta_values as $key => $meta_value ){
 						$fields[$key] = $meta_value;
 					}
+				} else {
+					$meta_values = maybe_unserialize( $value['meta_value'] );
+					if ( is_array( $meta_values ) ) {
+						foreach ( $meta_values as $key => $meta_value ) {
+							$fields[ $key ] = $meta_value;
+						}
+					}
 				}
 			}
 		}
@@ -9006,32 +9154,32 @@ class usc_e_shop
 
 	//shortcode-----------------------------------------------------------------------------
 	function sc_company_name() {
-		return htmlspecialchars($this->options['company_name']);
+		return htmlspecialchars( $this->options['company_name'], ENT_COMPAT );
 	}
 	function sc_zip_code() {
-		return htmlspecialchars($this->options['zip_code']);
+		return htmlspecialchars( $this->options['zip_code'], ENT_COMPAT );
 	}
 	function sc_address1() {
-		return htmlspecialchars($this->options['address1']);
+		return htmlspecialchars( $this->options['address1'], ENT_COMPAT );
 	}
 	function sc_address2() {
-		return htmlspecialchars($this->options['address2']);
+		return htmlspecialchars( $this->options['address2'], ENT_COMPAT );
 	}
 	function sc_tel_number() {
-		return htmlspecialchars($this->options['tel_number']);
+		return htmlspecialchars( $this->options['tel_number'], ENT_COMPAT );
 	}
 	function sc_fax_number() {
-		return htmlspecialchars($this->options['fax_number']);
+		return htmlspecialchars( $this->options['fax_number'], ENT_COMPAT );
 	}
 	function sc_inquiry_mail() {
-		return htmlspecialchars($this->options['inquiry_mail']);
+		return htmlspecialchars( $this->options['inquiry_mail'], ENT_COMPAT );
 	}
 	function sc_payment() {
 		$payments = usces_get_system_option( 'usces_payment_method', 'sort' );
 		$htm = "<ul>\n";
 		foreach ( (array)$payments as $payment ) {
-			$htm .= "<li>" . htmlspecialchars($payment['name']) . "<br />\n";
-			$htm .= nl2br(htmlspecialchars($payment['explanation'])) . "</li>\n";
+			$htm .= "<li>" . htmlspecialchars( $payment['name'], ENT_COMPAT ) . "<br />\n";
+			$htm .= nl2br( htmlspecialchars( $payment['explanation'], ENT_COMPAT ) ) . "</li>\n";
 		}
 		$htm .= "</ul>\n";
 		return $htm;
@@ -9264,7 +9412,7 @@ class usc_e_shop
 	}
 
 	function action_search_item(){
-		include(TEMPLATEPATH . '/page.php');
+		include get_template_directory() . '/page.php';
 		exit;
 	}
 
@@ -9406,7 +9554,7 @@ class usc_e_shop
 	function load_upload_template(){
 		$post_id = $_POST['post_id'];
 		$file = 'upload_template01.php';
-		include(TEMPLATEPATH . '/' . $file);
+		include get_template_directory() . '/' . $file;
 		exit;
 	}
 
@@ -9763,7 +9911,7 @@ class usc_e_shop
 			case 'ord_ex_cancel':
 				$ex_cancel = filter_input( INPUT_GET, 'ord_ex_cancel' );
 				if ( $ex_cancel ) {
-					$result = ('on' === $ex_cancel) ? 'on' : 'off';
+					$result = ( 'on' === $ex_cancel ) ? 'on' : 'off';
 				} else {
 					$cookie = $this->get_cookie( 'usces_front' );
 					$result = isset( $cookie['ord_ex_cancel'] ) ? $cookie['ord_ex_cancel'] : 'on';
@@ -9775,6 +9923,7 @@ class usc_e_shop
 				if ( null === $result ) {
 					$cookie = $this->get_cookie( 'usces_front' );
 					$result = isset( $cookie['usces_purdate'] ) ? $cookie['usces_purdate'] : 'd_30';
+					$result = apply_filters( 'usces_filter_ord_purdate_init', $result );
 				}
 				break;
 		}

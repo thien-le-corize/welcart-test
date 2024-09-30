@@ -1766,7 +1766,7 @@ class TCPDF_STATIC {
 	 * @since 6.0.023
 	 * @public static
 	 */
-	public static function pregSplit($pattern, $modifiers, $subject, $limit=NULL, $flags=NULL) {
+	public static function pregSplit($pattern, $modifiers, $subject, $limit = 0, $flags = 0) {
 		// the bug only happens on PHP 5.2 when using the u modifier
 		if ((strpos($modifiers, 'u') === FALSE) OR (count(preg_split('//u', "\n\t", -1, PREG_SPLIT_NO_EMPTY)) == 2)) {
 			return preg_split($pattern.$modifiers, $subject, $limit, $flags);
@@ -1885,7 +1885,7 @@ class TCPDF_STATIC {
 		) {
 		    $findroot = strpos($file, $_SERVER['DOCUMENT_ROOT']);
 		    if (($findroot === false) || ($findroot > 1)) {
-			$alt[] = htmlspecialchars_decode(urldecode($_SERVER['DOCUMENT_ROOT'].$file));
+			$alt[] = htmlspecialchars_decode( urldecode( $_SERVER['DOCUMENT_ROOT'].$file ), ENT_COMPAT );
 		    }
 		}
 		//
@@ -1898,7 +1898,7 @@ class TCPDF_STATIC {
 		if (preg_match('%^//%', $url) && !empty($_SERVER['HTTP_HOST'])) {
 			$url = $protocol.':'.str_replace(' ', '%20', $url);
 		}
-		$url = htmlspecialchars_decode($url);
+		$url = htmlspecialchars_decode( $url, ENT_COMPAT );
 		$alt[] = $url;
 		//
 		if (preg_match('%^(https?)://%', $url)
@@ -1911,7 +1911,7 @@ class TCPDF_STATIC {
 				if (strpos($url, $host) === 0) {
 				    // convert URL to full server path
 				    $tmp = str_replace($host, $_SERVER['DOCUMENT_ROOT'], $url);
-				    $alt[] = htmlspecialchars_decode(urldecode($tmp));
+				    $alt[] = htmlspecialchars_decode( urldecode( $tmp ), ENT_COMPAT );
 				}
 			}
 		}

@@ -24,7 +24,7 @@ function wel_db_check() {
 
 	global $usces;
 
-	$update_history = get_option( 'usces_db_version' );
+	$update_history = get_option( 'usces_db_version', array() );
 	$action_status  = '';
 	$first_install  = wel_is_first_install();
 
@@ -95,7 +95,7 @@ function wel_db_notice() {
 	}
 
 	if ( isset( $current_screen->base ) && 'toplevel_page_usc-e-shop/usc-e-shop' === $current_screen->base ) {
-		$action = filter_input( INPUT_GET, 'wel_action', FILTER_SANITIZE_STRING, FILTER_REQUIRE_SCALAR );
+		$action = filter_input( INPUT_GET, 'wel_action', FILTER_DEFAULT, FILTER_REQUIRE_SCALAR );
 		if ( 'update_db' === $action ) {
 			return;
 		}
@@ -134,6 +134,12 @@ function wel_need_to_update_db() {
  * @since 2.6
  */
 function wel_db_update_ajax() {
+	check_ajax_referer( 'wel_db_update' );
+
+	if ( ! current_user_can( 'wel_manage_setting' ) ) {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+	}
+
 	define( 'USCES_DB_UP_INTERBAL', 10 );
 
 	$update_history = get_option( 'usces_db_version' );
@@ -822,8 +828,10 @@ function wel_backup_remove_data( $db_data, $flag = null ) {
  * @since  2.6
  */
 function wel_check_progress_ajax() {
-	if ( 4 > usces_get_admin_user_level() ) {
-		die( 'user_level' );
+	check_ajax_referer( 'wel_db_update' );
+
+	if ( ! current_user_can( 'wel_manage_setting' ) ) {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 	}
 
 	$progressfile = filter_input( INPUT_POST, 'progressfile' );

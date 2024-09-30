@@ -10,22 +10,22 @@ jQuery( document ).ready( function( $ ) {
 		if ( "module" == paygent_params.card_service_type && "confirm" == $( this ).attr( "name" ) && $( "#paygent_card_form" ).css( "display" ) != "none" ) {
 			var stock_card = ( 0 < $( "input[name=stock_card]" ).length ) ? $( "input[name=stock_card]:checked" ).val() : "new";
 			if ( "new" == stock_card ) {
-				var message = "";
+				var check = true;
 				if ( "" == $( "#card_number" ).val() ) {
-					message += paygent_params.message.error_card_number + "\n";
+					check = false;
 				}
 				if ( undefined == $( "#expire_year" ).get( 0 ) || undefined == $( "#expire_month" ).get( 0 ) ) {
-					message += paygent_params.message.error_card_expire + "\n";
+					check = false;
 				} else if ( "" == $( "#expire_year option:selected" ).val() || "" == $( "#expire_month option:selected" ).val() ) {
-					message += paygent_params.message.error_card_expire + "\n";
+					check = false;
 				}
 				if ( "on" == paygent_params.use_card_conf_number ) {
 					if ( "" == $( "#cvc" ).val() ) {
-						message += paygent_params.message.error_card_cvc + "\n";
+						check = false;
 					}
 				}
-				if ( "" != message ) {
-					alert( message );
+				if( !check ) {
+					alert( paygent_params.message.error_card_number );
 					return false;
 				}
 

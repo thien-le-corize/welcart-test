@@ -32,7 +32,7 @@ function usces_define_functions() {
 				define( 'USCES_ITEM_UP_INTERBAL', 100 );
 			}
 
-			if ( ! current_user_can( 'import' ) ) {
+			if ( ! current_user_can( 'wel_others_products' ) ) {
 				$progress = array(
 					'status'   => __( 'forced termination', 'usces' ) . $check_label,
 					'progress' => __( 'The process was not completed', 'usces' ),
@@ -68,6 +68,7 @@ function usces_define_functions() {
 
 				$db_check = usces_item_code_duplication_check();
 				if ( $db_check ) {
+					$code = '';
 					foreach ( $db_check as $d_item ) {
 						$code .= ' , ' . $d_item['itemCode'];
 					}
@@ -145,6 +146,7 @@ function usces_define_functions() {
 				$mode_name       = usces_get_upmode_name( $upload_mode );
 				$file_name       = $_REQUEST['regfile'];
 				$decode_filename = base64_decode( $file_name );
+				$decode_filename = wel_esc_upload_file_name( $decode_filename );
 
 				list( $dfname, $dfext ) = explode( '.', $decode_filename, 2 );
 
@@ -161,6 +163,18 @@ function usces_define_functions() {
 					'rowcount' => '',
 					'header'   => '',
 				);
+				if ( 'csv' !== $dfext ) {
+					$progress = array(
+						'info'     => $file_info,
+						'status'   => __( 'forced termination', 'usces' ) . $check_label,
+						'progress' => __( 'The process was not completed', 'usces' ),
+						'flag'     => 'complete',
+						'log'      => 'Error : ' . __( 'The file is not supported.', 'usces' ) . ' ( ' . $file_name . ' )',
+					);
+					record_item_up_progress( $progress );
+					unlink( $upload_folder . $file_name );
+					die( wp_json_encode( $progress ) );
+				}
 				$progress = array(
 					'info'     => $file_info,
 					'status'   => __( 'Processing...', 'usces' ) . $check_label,
@@ -795,7 +809,7 @@ function usces_define_functions() {
 						$valstr      = '';
 
 						if ( $pre_code !== $item_code ) {
-							if ( $pre_skus_count > 0 && $pre_skus_count > $sku_index + 1 && ! empty( $pre_code ) ) {
+							if ( isset( $pre_skus_count ) && $pre_skus_count > 0 && $pre_skus_count > $sku_index + 1 && ! empty( $pre_code ) ) {
 								$pre_post_id = wel_get_id_by_item_code( $pre_code, false );
 								wel_del_skus_by_postid_and_sort( $pre_post_id, $sku_index );
 							}
@@ -1196,7 +1210,7 @@ function usces_define_functions() {
 				}
 
 				if ( ! $check_mode ) {
-					if ( $pre_skus_count > 0 && $pre_skus_count > $sku_index + 1 && ! empty( $post_id ) ) {
+					if ( isset( $pre_skus_count ) && $pre_skus_count > 0 && $pre_skus_count > $sku_index + 1 && ! empty( $post_id ) ) {
 						wel_del_skus_by_postid_and_sort( $post_id, $sku_index );
 					}
 				}
@@ -1552,6 +1566,7 @@ function usces_define_functions() {
 
 		$upload_folder = WP_CONTENT_DIR . USCES_UPLOAD_TEMP . '/';
 		$file_name     = $_REQUEST['regfile'];
+		$file_name     = wel_esc_upload_file_name( $file_name );
 
 		$comp_num     = isset( $_REQUEST['comp_num'] ) ? (int) $_REQUEST['comp_num'] : 0;
 		$err_num      = isset( $_REQUEST['err_num'] ) ? (int) $_REQUEST['err_num'] : 0;
@@ -1866,6 +1881,7 @@ function usces_define_functions() {
 
 			$upload_folder = WP_CONTENT_DIR . USCES_UPLOAD_TEMP . '/';
 			$file_name     = $_REQUEST['regfile'];
+			$file_name     = wel_esc_upload_file_name( $file_name );
 
 			$comp_num     = isset( $_REQUEST['comp_num'] ) ? (int) $_REQUEST['comp_num'] : 0;
 			$err_num      = isset( $_REQUEST['err_num'] ) ? (int) $_REQUEST['err_num'] : 0;
@@ -2239,6 +2255,7 @@ function usces_define_functions() {
 
 		$upload_folder = WP_CONTENT_DIR . USCES_UPLOAD_TEMP . '/';
 		$file_name     = $_REQUEST['regfile'];
+		$file_name     = wel_esc_upload_file_name( $file_name );
 
 		$comp_num     = isset( $_REQUEST['comp_num'] ) ? (int) $_REQUEST['comp_num'] : 0;
 		$err_num      = isset( $_REQUEST['err_num'] ) ? (int) $_REQUEST['err_num'] : 0;

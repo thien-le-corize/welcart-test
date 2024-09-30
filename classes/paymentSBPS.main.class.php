@@ -908,7 +908,8 @@ class SBPS_MAIN {
 			} elseif ( $this->acting_flg_conv === $acting_flg ) {
 				$pay_method = 'webcvs';
 				$acting     = $this->acting_conv;
-				$free_csv   = $this->set_free_csv( $usces_entries['customer'], $acting_opts['conv_limit'] );
+				$conv_limit = ( isset( $acting_opts['conv_limit'] ) ) ? $acting_opts['conv_limit'] : '';
+				$free_csv   = $this->set_free_csv( $usces_entries['customer'], $conv_limit );
 			} elseif ( $this->acting_flg_payeasy === $acting_flg ) {
 				$pay_method = 'payeasy';
 				$acting     = $this->acting_payeasy;
@@ -918,7 +919,9 @@ class SBPS_MAIN {
 				if ( 'on' === $acting_opts['wallet_yahoowallet'] ) {
 					$pay_method .= ',yahoowallet';
 				}
-				if ( 'on' === $acting_opts['wallet_rakuten'] ) {
+				if ( 'on' === $acting_opts['wallet_rakutenv2'] ) {
+					$pay_method .= ',rakutenv2';
+				} elseif ( 'on' === $acting_opts['wallet_rakuten'] ) {
 					$pay_method .= ',rakuten';
 				}
 				if ( 'on' === $acting_opts['wallet_paypal'] ) {

@@ -30,6 +30,9 @@ jQuery(document).ready( function($) {
 	}
 });
 jQuery( function($) {
+
+	const isNumberString = n => typeof n === 'string' && n !== '' && !isNaN(n);
+
 	cartEScott = {
 		changePayType: function(cnum) {
 			var first_c = cnum.substr(0,1);
@@ -130,18 +133,21 @@ jQuery( function($) {
 			$("#escott-token-response").html("");
 
 			var check = true;
-			if( "" == $("#cardno").val() ) {
+			if( !isNumberString($("#cardno").val()) ) {
 				check = false;
 			}
 			if( undefined == $("#expyy").get(0) || undefined == $("#expmm").get(0) ) {
 				check = false;
-			} else if( "" == $("#expyy option:selected").val() || "" == $("#expmm option:selected").val() ) {
+			} else if( !isNumberString($("#expyy option:selected").val()) || !isNumberString($("#expmm option:selected").val()) ) {
 				check = false;
 			}
 			if( $("#seccd").val() != undefined ) {
-				if( "" == $("#seccd").val() ) {
+				if( !isNumberString($("#seccd").val()) ) {
 					check = false;
 				}
+			}
+			if ( !isValidInput($("#cardname").val()) ) {
+				check = false;
 			}
 			if( !check ) {
 				alert(uscesL10n.escott_token_error_message);
@@ -272,8 +278,23 @@ jQuery( function($) {
 function setToken(token,card) {
 	if( token ) {
 		document.getElementById("token").value = token;
+		document.getElementById("billingname").value = document.getElementById("cardname").value;
 		document.getElementById("delivery-form").submit();
 	} else {
 		document.getElementById("escott-token-response").value = "";
 	}
+}
+
+function isValidInput(str) {
+	let len = str.length;
+	if( 0 === len ) {
+		return false;
+	}
+	for( let i = 0; i < len; i++ ) {
+		let char = str.charAt(i);
+		if( !( char >= 'A' && char <= 'Z' ) && !( char >= 'a' && char <= 'z' ) && char !== ' ' ) {
+			return false;
+		}
+	}
+	return true;
 }

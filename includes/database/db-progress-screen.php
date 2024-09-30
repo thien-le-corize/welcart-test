@@ -133,8 +133,10 @@ $logfile      = WP_CONTENT_URL . USCES_UPLOAD_TEMP . '/db-log.txt';
 ?>
 <script type='text/javascript'>
 (function($) {
-	var progressfile = '<?php echo( $progressfile ); ?>';
-	var logfile      = '<?php echo( $logfile ); ?>';
+	var progressfile = '<?php echo esc_js( $progressfile ); ?>';
+	var logfile      = '<?php echo esc_js( $logfile ); ?>';
+	var nonce        = '<?php echo esc_js( wp_create_nonce( 'wel_db_update' ) ); ?>';
+
 
 	checkPRG = {
 		settings: {
@@ -151,6 +153,7 @@ $logfile      = WP_CONTENT_URL . USCES_UPLOAD_TEMP . '/db-log.txt';
 			s.data = {
 				'action'       : 'wel_check_progress_ajax',
 				'progressfile' : progressfile,
+				'_ajax_nonce'  : nonce,
 				'noheader'     : 'true'
 			};
 
@@ -222,6 +225,7 @@ $logfile      = WP_CONTENT_URL . USCES_UPLOAD_TEMP . '/db-log.txt';
 				'comp_num'    : comp_num,
 				'err_num'     : err_num,
 				'time_start'  : time_start,
+				'_ajax_nonce' : nonce,
 				'noheader'    : 'true'
 			};
 
@@ -255,11 +259,11 @@ $logfile      = WP_CONTENT_URL . USCES_UPLOAD_TEMP . '/db-log.txt';
 	});
 
 	$("#cancel_update").on('click', function () {
-		location.href = '<?php echo( USCES_ADMIN_URL . '?page=' . rawurlencode( 'usc-e-shop/usc-e-shop.php' ) ); ?>';
+		location.href = '<?php echo esc_url( USCES_ADMIN_URL . '?page=' . rawurlencode( 'usc-e-shop/usc-e-shop.php' ) ); ?>';
 	});
 
 	$("#to_home").on('click', function () {
-		location.href = '<?php echo( USCES_ADMIN_URL . '?page=' . rawurlencode( 'usc-e-shop/usc-e-shop.php' ) ); ?>';
+		location.href = '<?php echo esc_url( USCES_ADMIN_URL . '?page=' . rawurlencode( 'usc-e-shop/usc-e-shop.php' ) ); ?>';
 	});
 
 

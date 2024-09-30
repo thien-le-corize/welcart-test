@@ -1,10 +1,10 @@
 === Welcart e-Commerce ===
-Contributors: Collne Inc., uscnanbu
+Contributors: Welcart Inc., uscnanbu
 Tags: Welcart, e-Commerce, shopping, cart, eShop, store, admin, calendar, manage, plugin, shortcode, widgets, membership
 Requires at least: 5.5
-Tested up to: 6.2
-Requires PHP: 7.4 - 8.0
-Stable tag: 2.8.20
+Tested up to: 6.6
+Requires PHP: 7.4 - 8.1
+Stable tag: 2.11.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,6 +101,227 @@ Please see [Welcart Forum(Japanese)](https://www.welcart.com/community/forums).
 
 
 == Changelog ==
+
+17 Sep 2024
+= V2.11.3 =
+-----------
+* Added hooks.
+* Fixed PHP errors.
+
+3 Sep 2024
+= V2.11.2 =
+-----------
+* [Security Enhancement] Improved security on the operation log page.
+* [Security Enhancement] Improved security on the shipping settings page.
+* Added hooks.
+* Fixed PHP errors.
+
+26 Aug 2024
+= V2.11.1 =
+-----------
+* Fixed a bug that the "Register/Change Credit Card" button did not function when "Email Verification for Member Information Editing" was disabled.
+* Fixed a bug that two "Edit Member Information" links were displayed when "Email Verification for Member Information Editing" was enabled using the built-in template.
+* [Paygent] Fixed a bug that the transaction history was not displayed in chronological order.
+* [Paygent] Added "Merchant Transaction ID" to the transaction history.
+
+20 Aug 2024
+= V2.11 =
+-----------
+* [Security Enhancement] Added an optional email verification feature when editing member information.
+* [Security Enhancement] Added an optional feature to send an email to members upon login.
+* [SB Payment Service] Added support for Rakuten Pay V2.
+* Changed the specification to display thumbnails in the product image file tab.
+
+19 Aug 2024
+= V2.10.6 =
+-----------
+* Fixed JavaScript errors.
+* Added hooks to the operation log in the admin page.
+* Added hooks for PDF output.
+
+16 July 2024
+= V2.10.5 =
+-----------
+* [WelcartPay] Fixed a bug where "card name" was not passed on credit card renewal when using 3DS.
+* Fixed a bug that the "description" of no-image images becomes the product detail text.
+* Changed the specification to hide the "Delete" link in the order list and member list by default.
+* Added hooks after updating member information on the admin page.
+
+26 June 2024
+= V2.10.4 =
+-----------
+* [e-SCOTT/WelcartPay/Metaps Payment] Added 3DS authentication parameters for card payments.
+* [ZEUS] Fixed some bugs with 3DS authentication for card payments and corrected error messages.
+* [Metaps Payment] Fixed a bug with user ID payments.
+* [Metaps Payment/ROBOT PAYMENT] Fixed a bug where payment information was not displayed.
+* Fixed a bug where an error occurred when returning via the "Back to List" link after updating order data.
+* Fixed a bug where the stock status style was not applied in the order data editing page.
+* Added hooks.
+* Fixed PHP errors.
+
+8 May 2024
+= V2.10.3 =
+-----------
+* [Paygent] Fixed a bug that "0" (within the day) cannot be set for the "Payment Due Date" of ATM payments.
+* [WelcartPay/e-SCOTT] Changed message for card payment errors.
+* Added hooks.
+
+16 Apr 2024
+= V2.10.2 =
+-----------
+* Fixed a bug that alternate text for product images cannot be saved.
+* Fixed a bug that codes are changed when specific strings are inserted in item codes and item names.
+* [Paygent] Fixed a bug that credit card registration/update cannot be completed on "My Page" when the link type is "Paygent".
+* Fixed a bug that caused shipping charges to be added when download/service items are bundled in the shopping cart with items for which shipping charges are individually billed when using DL Seller.
+* Added various hooks.
+
+2 Apr 2024
+= V2.10.1 =
+-----------
+* Fixed a bug that management order mail in text format cannot be sent.
+* Fixed a bug that the code is changed when a specific string is inserted in the SKU code.
+* Corrected update plugin notification content.
+
+1 Apr 2024
+= V2.10.0 =
+-----------
+* Enhanced security for nonce authentication when accessing the edit pages from each of the order list and member list.
+* Fixed a problem with Welcart's unique permissions, "Editor (no configuration permissions)" and "Editor (no management permissions)," and corrected them to work correctly.
+
+12 Mar 2024
+= V2.9.14 =
+-----------
+* Fixed feature to change Google Recapcha scores.
+* Fixed a bug that "Shipping and Payment Method Page" cannot be proceeded when Google Recapcha is enabled.
+* Fixed a bug that enrollment completion notification in HTML email format is not displayed correctly for some email addresses.
+* Added hook to change Reply-to in order report emails
+* Fixed a bug that Kuroneko Yamato's package tracking URL is not displayed correctly when a hyphen is included in the waybill number.
+* Fixed a bug that the link to the package tracking URL is not displayed correctly when there are multiple waybill numbers in the order list.
+
+28 Feb 2024
+= V2.9.13 =
+-----------
+* [SB Payment Service] Fixed a bug that PHP error is output when using WCEX DLSeller in combination with card payment.
+* Fixed a bug that some HTML mail formats were not breaking lines.
+* Changed URL for Kuroneko Yamato package tracking
+* Fixed a bug that the radio buttons in the "Display Mode" of the Basic Settings behave incorrectly.
+
+20 Feb 2024
+= V2.9.12 =
+-----------
+* Enhanced referrer checking on content confirmation pages.
+
+19 Feb 2024
+= V2.9.11 =
+-----------
+* Added optional value for credit card security measure.
+* Enhanced referrer checking on content confirmation pages.
+* Applied Google reCAPTCHA to shipping and payment method pages. ( when working in system settings )
+* Added a Reply-to to the email.
+* [DSK] Fixed a bug that caused a Warning error in convenience store payments.
+
+23 Jan 2024
+= V2.9.10 =
+-----------
+* [PayPal] Fixed a bug that the payment fails when the processing category is credit (AUTHORIZE) for credit card payment.
+* [REMISE] Fixed a bug in which the text on the order completion page is incorrect when multiple payments are made.
+* Add a hook to the payment history for automatic recurring billing.
+
+21 Dec 2023
+= V2.9.9 =
+-----------
+* Fixed a bug in the PDF of the standard tax rate form where the amount subject to the tax rate is incorrect when the tax is not included.
+
+20 Dec 2023
+= V2.9.8 =
+-----------
+* [REMISE] Compatible with Carrier Payments and PayPay Payments.
+* Added a link to move from the item name in the order edit page to the item information edit page.
+* Fixed a bug in the radio button of the payment module in the credit card payment setup page.
+* Fixed a bug in the PDF of the standard tax rate form where the amount subject to the tax rate is incorrect when the tax is not included.
+* Fixed PHP errors.
+
+22 Nov 2023
+= V2.9.7 =
+-----------
+* Countermeasures against arbitrary file uploads by subscribers.
+* Fixed a bug that only the heading was displayed even if the payee information for bank transfers was not set.
+* Fixed a bug that caused the radio buttons in the "Display Mode" of the Basic Settings to behave incorrectly.
+
+15 Nov 2023
+= V2.9.6 =
+-----------
+* Countermeasures against PHP object injection.
+* Fixed a bug that the cart page (member page) link does not respond when pressed during the preview of the Customizer.
+
+9 Nov 2023
+= V2.9.5 =
+-----------
+* CSRF Countermeasures.
+* Countermeasures against arbitrary file uploads by subscribers.
+* Countermeasures against unauthenticated PHP object injection.
+* Countermeasures against reflective XSS.
+* Removed deprecated constants from WordPress 6.4.
+
+24 Oct 2023
+= V2.9.4 =
+-----------
+* Security enhancements (possible SQL injection).
+* Changed attributes of units in SKU table.
+* Fixed a bug that Welcart information is not displayed.
+* Fixed a bug that the item list, old order list, and old member list cannot be reordered.
+* Added hooks.
+
+12 Oct 2023
+= V2.9.3 =
+-----------
+* Fixed a bug that the order list and member list cannot be sorted.
+
+10 Oct 2023
+= V2.9.2 =
+-----------
+* Enhanced security. (product list page, order list page, member list page)
+
+5 Oct 2023
+= V2.9.1 =
+-----------
+* [Paidy] Fixed "Paidy Settlement Rakuraku Setup".
+* Enhanced security. (cart-related pages, member-related pages)
+* Fixed PHP errors.
+
+3 Oct 2023
+= V2.9 =
+-----------
+* [Paidy] Implemented "Paidy Settlement Rakuraku Setup".
+* Fixed a bug that caused the tax-qualified amount to be output on all pages in the PDF of the standard tax rate form.
+* Corrected items in purchase history on My Page.
+* Fixed PHP errors.
+
+25 Sep 2023
+= V2.8.23 =
+-----------
+* Support for invoices (Qualified Invoice Form).
+* [PayPal] Modified to allow the prefix to be specified when using the card information saving feature for credit card payments.
+* Fixed a bug that inventory data is not updated when changing from managed orders to estimates in the order edit page.
+* Added a hook to change the time period of the purchase history on My Page.
+* Added a hook for checking when adding SKUs on the item edit page.
+
+14 Sep 2023
+= V2.8.22 =
+-----------
+* Enhanced security ( Item List page and Credit Card Payment Setup page and Order Data Edit page).
+* Restricted the types of attachment emails that can be sent from the order data edit page.
+
+28 Aug 2023
+= V2.8.21 =
+-----------
+* [PayPal] Fixed the bug that cart data is not created during automatic order processing for subscription purchases.
+* [SB Payment Service] Support for re-payment when automatic billing fails due to unsaved card information.
+* [SB Payment Service] Fixed the bug that caused an error in updating the recurring billing member information page.
+* [Paidy] Corresponded to inconsistency of transaction IDs in v2.8.2 and lower versions.
+* Fixed the bug that the password field in the login widget does not get masked.
+* Fixed instance variable for USCES_VERIFY_MEMBERS_EMAIL().
+
 7 Aug 2023
 = V2.8.20 =
 -----------

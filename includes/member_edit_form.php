@@ -94,10 +94,15 @@ if ( 'new' === $member_action ) {
 	if ( isset( $exopt['system']['datalistup']['memberlist_flag'] ) && $exopt['system']['datalistup']['memberlist_flag'] ) {
 		$navibutton  = '';
 		$navibutton .= '<a javascript:; class="prev-page"  style="display:none"><span class="dashicons dashicons-arrow-left-alt2"></span>' . __( 'to prev page', 'usces' ) . '</a>';
-		$navibutton .= '<a href="' . admin_url( 'admin.php?page=usces_memberlist&returnList=1' ) . '" class="back-list"><span class="dashicons dashicons-list-view"></span>' . __( 'to member list', 'usces' ) . '</a>';
+
+		$url       = admin_url( 'admin.php?page=usces_memberlist&returnList=1' );
+		$nonce_url = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+		$navibutton .= '<a href="' . esc_url( $nonce_url ) . '" class="back-list"><span class="dashicons dashicons-list-view"></span>' . __( 'to member list', 'usces' ) . '</a>';
 		$navibutton .= '<a javascript:; class="next-page" style="display:none">' . __( 'to next page', 'usces' ) . '<span class="dashicons dashicons-arrow-right-alt2"></span></a>';
 	} else {
-		$navibutton = '<a href="' . admin_url( 'admin.php?page=usces_memberlist&returnList=1' ) . '" class="back-list"><span class="dashicons dashicons-list-view"></span>' . __( 'to member list', 'usces' ) . '</a>';
+		$url       = admin_url( 'admin.php?page=usces_memberlist&returnList=1' );
+		$nonce_url = wp_nonce_url( $url, 'member_list', 'wc_nonce' );
+		$navibutton = '<a href="' . esc_url( $nonce_url ) . '" class="back-list"><span class="dashicons dashicons-list-view"></span>' . __( 'to member list', 'usces' ) . '</a>';
 	}
 }
 
@@ -108,7 +113,7 @@ $curent_url = urlencode( esc_url( USCES_ADMIN_URL . '?' . $_SERVER['QUERY_STRING
 <script type="text/javascript">
 jQuery(document).ready(function($) {
 	// load show nav prev, next link.
-	var sub_uri_link = '<?php echo esc_url_raw( USCES_ADMIN_URL ) . '?page=usces_memberlist&member_action=edit&member_id='; ?>';
+	var sub_uri_link = '<?php echo esc_url_raw( USCES_ADMIN_URL ) . '?page=usces_memberlist&member_action=edit&wc_nonce=' . wp_create_nonce( 'member_list' ) . '&member_id='; ?>';
 	welPageNav.checkShowNextprevPage( 'wel_member_current_page_ids', sub_uri_link, <?php echo esc_attr( $member_id ); ?> );
 });
 function addComma(str) {
@@ -286,7 +291,7 @@ foreach ( (array) $usces_member_history as $umhs ) :
 </tr>
 <tr>
 <td><?php echo esc_html( $umhs['date'] ); ?></td>
-<td><a href="<?php echo esc_url( USCES_ADMIN_URL ); ?>?page=usces_orderlist&order_action=edit&order_id=<?php echo esc_attr( $order_id ); ?>&usces_referer=<?php echo esc_url( $curent_url ); ?>"><?php echo esc_attr( usces_get_deco_order_id( $order_id ) ); ?></a></td>
+<td><a href="<?php echo esc_url( USCES_ADMIN_URL ); ?>?page=usces_orderlist&order_action=edit&order_id=<?php echo esc_attr( $order_id ); ?>&wc_nonce=<?php echo esc_attr( wp_create_nonce( 'order_edit' ) ); ?>&usces_referer=<?php echo esc_url( $curent_url ); ?>"><?php echo esc_attr( usces_get_deco_order_id( $order_id ) ); ?></a></td>
 <td><?php echo wp_kses_post( $p_status ); ?></td>
 	<?php if ( ! empty( $r_status ) ) : ?>
 <td><?php echo wp_kses_post( $r_status ); ?></td>

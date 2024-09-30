@@ -316,6 +316,9 @@ class WlcOrderList { // phpcs:ignore
 				break;
 
 			case 'collective_receipt_status':
+				if ( ! current_user_can( 'wel_manage_order' ) ) {
+					wp_die( __( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
+				}
 				check_admin_referer( 'order_list', 'wc_nonce' );
 				usces_all_change_order_reciept( $this );
 				$this->SearchIn();
@@ -324,6 +327,9 @@ class WlcOrderList { // phpcs:ignore
 
 			case 'collective_estimate_status':
 			case 'collective_process_status':
+				if ( ! current_user_can( 'wel_manage_order' ) ) {
+					wp_die( __( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
+				}
 				check_admin_referer( 'order_list', 'wc_nonce' );
 				usces_all_change_order_status( $this );
 				$this->SearchIn();
@@ -331,6 +337,9 @@ class WlcOrderList { // phpcs:ignore
 				break;
 
 			case 'collective_delete':
+				if ( ! current_user_can( 'wel_manage_order' ) ) {
+					wp_die( __( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
+				}
 				check_admin_referer( 'order_list', 'wc_nonce' );
 				usces_all_delete_order_data( $this );
 				$this->SetTotalRow();
@@ -343,6 +352,7 @@ class WlcOrderList { // phpcs:ignore
 			case 'returnList':
 			case 'changeSort':
 			case 'changePage':
+				check_admin_referer( 'order_list', 'wc_nonce' );
 			default:
 				$this->SearchIn();
 				$res = $this->GetRows();
@@ -434,10 +444,19 @@ class WlcOrderList { // phpcs:ignore
 
 			$this->action                           = 'changeSort';
 			$this->sortOldColumn                    = $this->sortColumn;
-			$this->sortColumn                       = str_replace( '`', '', $_REQUEST['changeSort'] );
-			$this->sortColumn                       = str_replace( ',', '', $this->sortColumn );
+			// Validate sortColumn.
+			if ( in_array( $_REQUEST['changeSort'], array_keys( $this->columns ) ) ) {
+				$this->sortColumn = $_REQUEST['changeSort'];
+			} else {
+				$this->sortColumn = 'ID'; // default.
+			}
 			$this->sortSwitchs                      = ( isset( $this->data_cookie['sortSwitchs'] ) ) ? $this->data_cookie['sortSwitchs'] : $this->sortSwitchs;
-			$this->sortSwitchs[ $this->sortColumn ] = ( 'ASC' == $_REQUEST['switch'] ) ? 'ASC' : 'DESC';
+			// Validate sortSwitchs.
+			if (isset($_REQUEST['switch']) && in_array($_REQUEST['switch'], array('ASC', 'DESC'))) {
+				$this->sortSwitchs[$this->sortColumn] = $_REQUEST['switch'];
+			} else {
+				$this->sortSwitchs[$this->sortColumn] = 'DESC'; // default.
+			}
 			$this->currentPage                      = ( isset( $this->data_cookie['currentPage'] ) ) ? $this->data_cookie['currentPage'] : $this->currentPage;
 			$this->userHeaderNames                  = ( isset( $this->data_cookie['userHeaderNames'] ) ) ? $this->data_cookie['userHeaderNames'] : $this->userHeaderNames;
 			$this->arr_search                       = ( isset( $this->data_cookie['arr_search'] ) ) ? $this->data_cookie['arr_search'] : $this->arr_search;
@@ -569,7 +588,7 @@ class WlcOrderList { // phpcs:ignore
 		if ( ! empty( $this->arr_search['order_word_term'][1] ) && ! in_array( $this->arr_search['order_word_term'][1], $default_order_word_term ) ) {
 			$this->arr_search['order_word_term'][1] = $default_order_word_term[0];
 		}
-		if ( ! in_array( $this->arr_search['order_term'], $default_order_term ) ) {
+		if ( isset( $this->arr_search['order_term'] ) && ! in_array( $this->arr_search['order_term'], $default_order_term ) ) {
 			$this->arr_search['order_term'] = $default_order_term[0];
 		}
 
@@ -586,7 +605,7 @@ class WlcOrderList { // phpcs:ignore
 		if ( ! empty( $this->arr_search['product_word_term'][1] ) && ! in_array( $this->arr_search['product_word_term'][1], $default_product_word_term ) ) {
 			$this->arr_search['product_word_term'][1] = $default_product_word_term[0];
 		}
-		if ( ! in_array( $this->arr_search['product_term'], $default_product_term ) ) {
+		if ( isset( $this->arr_search['product_term'] ) && ! in_array( $this->arr_search['product_term'], $default_product_term ) ) {
 			$this->arr_search['product_term'] = $default_product_term[0];
 		}
 	}
@@ -819,7 +838,7 @@ class WlcOrderList { // phpcs:ignore
 		} elseif ( 3 == $this->period['period'] ) {
 
 			$start = $this->period['start'] . ' 00:00:00';
-			$end   = $this->period['end'] . '23:59:59';
+			$end   = $this->period['end'] . ' 23:59:59';
 			if ( ! empty( $this->period['start'] ) && ! empty( $this->period['end'] ) ) {
 
 				$query = $wpdb->prepare( " order_date >= %s AND order_date <= %s ", $start, $end );
@@ -1201,8 +1220,13 @@ class WlcOrderList { // phpcs:ignore
 			$html .= '<li class="navigationStr">first&lt;&lt;</li>';
 			$html .= '<li class="navigationStr">prev&lt;</li>';
 		} else {
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=1">first&lt;&lt;</a></li>';
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=' . $this->previousPage . '">prev&lt;</a></li>';
+			$url       = site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=1';
+			$nonce_url = wp_nonce_url( $url, 'order_list', 'wc_nonce' );
+			$html .= '<li class="navigationStr"><a href="' . $nonce_url . '">first&lt;&lt;</a></li>';
+
+			$url       = site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=' . $this->previousPage;
+			$nonce_url = wp_nonce_url( $url, 'order_list', 'wc_nonce' );
+			$html .= '<li class="navigationStr"><a href="' . $nonce_url . '">prev&lt;</a></li>';
 		}
 		if ( $this->selectedRow > 0 ) {
 			$box_count = count( $box );
@@ -1210,7 +1234,9 @@ class WlcOrderList { // phpcs:ignore
 				if ( $box[ $i ] == $this->currentPage ) {
 					$html .= '<li class="navigationButtonSelected"><span>' . $box[ $i ] . '</span></li>';
 				} else {
-					$html .= '<li class="navigationButton"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=' . $box[ $i ] . '">' . $box[ $i ] . '</a></li>';
+					$url       = site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=' . $box[ $i ];
+					$nonce_url = wp_nonce_url( $url, 'order_list', 'wc_nonce' );
+					$html .= '<li class="navigationButton"><a href="' . $nonce_url . '">' . $box[ $i ] . '</a></li>';
 				}
 			}
 		}
@@ -1219,8 +1245,13 @@ class WlcOrderList { // phpcs:ignore
 			$html .= '<li class="navigationStr">&gt;next</li>';
 			$html .= '<li class="navigationStr">&gt;&gt;last</li>';
 		} else {
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=' . $this->nextPage . '">&gt;next</a></li>';
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=' . $this->lastPage . '">&gt;&gt;last</a></li>';
+			$url       = site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=' . $this->nextPage;
+			$nonce_url = wp_nonce_url( $url, 'order_list', 'wc_nonce' );
+			$html .= '<li class="navigationStr"><a href="' . $nonce_url . '">&gt;next</a></li>';
+
+			$url       = site_url() . '/wp-admin/admin.php?page=usces_orderlist&changePage=' . $this->lastPage;
+			$nonce_url = wp_nonce_url( $url, 'order_list', 'wc_nonce' );
+			$html .= '<li class="navigationStr"><a href="' . $nonce_url . '">&gt;&gt;last</a></li>';
 		}
 		$html .= '</ul>';
 
@@ -1254,10 +1285,14 @@ class WlcOrderList { // phpcs:ignore
 					$str    = __( '[DESC]', 'usces' );
 					$switch = 'ASC';
 				}
-				$this->headers[ $key ] = '<a href="' . site_url() . '/wp-admin/admin.php?page=usces_orderlist&changeSort=' . $key . '&switch=' . $switch . '"><span class="sortcolumn">' . $value . ' ' . $str . '</span></a>';
+				$url                   = site_url() . '/wp-admin/admin.php?page=usces_orderlist&changeSort=' . $key . '&switch=' . $switch;
+				$nonce_url             = wp_nonce_url( $url, 'order_list', 'wc_nonce' );
+				$this->headers[ $key ] = '<a href="' . $nonce_url . '"><span class="sortcolumn">' . $value . ' ' . $str . '</span></a>';
 			} else {
 				$switch                = isset( $this->sortSwitchs[ $key ] ) ? $this->sortSwitchs[ $key ] : 'DESC';
-				$this->headers[ $key ] = '<a href="' . site_url() . '/wp-admin/admin.php?page=usces_orderlist&changeSort=' . $key . '&switch=' . $switch . '"><span>' . $value . '</span></a>';
+				$url                   = site_url() . '/wp-admin/admin.php?page=usces_orderlist&changeSort=' . $key . '&switch=' . $switch;
+				$nonce_url             = wp_nonce_url( $url, 'order_list', 'wc_nonce' );
+				$this->headers[ $key ] = '<a href="' . $nonce_url . '"><span>' . $value . '</span></a>';
 			}
 		}
 	}

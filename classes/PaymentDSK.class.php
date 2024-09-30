@@ -70,6 +70,7 @@ class DSK_SETTLEMENT extends SBPS_MAIN {
 		$options['acting_settings']['dsk']['card_activate']    = ( isset( $options['acting_settings']['dsk']['card_activate'] ) ) ? $options['acting_settings']['dsk']['card_activate'] : 'off';
 		$options['acting_settings']['dsk']['3d_secure']        = ( isset( $options['acting_settings']['dsk']['3d_secure'] ) ) ? $options['acting_settings']['dsk']['3d_secure'] : 'off';
 		$options['acting_settings']['dsk']['conv_activate']    = ( isset( $options['acting_settings']['dsk']['conv_activate'] ) ) ? $options['acting_settings']['dsk']['conv_activate'] : 'off';
+		$options['acting_settings']['dsk']['conv_limit']       = ( isset( $options['acting_settings']['dsk']['conv_limit'] ) ) ? $options['acting_settings']['dsk']['conv_limit'] : '';
 		$options['acting_settings']['dsk']['payeasy_activate'] = ( isset( $options['acting_settings']['dsk']['payeasy_activate'] ) ) ? $options['acting_settings']['dsk']['payeasy_activate'] : 'off';
 		$options['acting_settings']['dsk']['wallet_activate']  = 'off';
 		$options['acting_settings']['dsk']['mobile_activate']  = 'off';
@@ -108,6 +109,7 @@ class DSK_SETTLEMENT extends SBPS_MAIN {
 jQuery( document ).ready( function( $ ) {
 
 	var dsk_card_activate = "<?php echo esc_js( $acting_opts['card_activate'] ); ?>";
+	var dsk_conv_activate = "<?php echo esc_js( $acting_opts['conv_activate'] ); ?>";
 	if( "on" == dsk_card_activate ) {
 		$( ".card_link_dsk" ).css( "display", "" );
 	} else {
@@ -119,6 +121,20 @@ jQuery( document ).ready( function( $ ) {
 			$( ".card_link_dsk" ).css( "display", "" );
 		} else {
 			$( ".card_link_dsk" ).css( "display", "none" );
+		}
+	});
+
+	if ( "on" == dsk_conv_activate ) {
+		$( ".conv_dsk" ).css( "display", "" );
+	} else {
+		$( ".conv_dsk" ).css( "display", "none" );
+	}
+
+	$( document ).on( "change", ".conv_activate_dsk", function() {
+		if( "on" == $( this ).val() ) {
+			$( ".conv_dsk" ).css( "display", "" );
+		} else {
+			$( ".conv_dsk" ).css( "display", "none" );
 		}
 	});
 });
@@ -153,6 +169,7 @@ jQuery( document ).ready( function( $ ) {
 		$options['acting_settings']['dsk']['card_activate']    = ( isset( $post_data['card_activate'] ) ) ? $post_data['card_activate'] : 'off';
 		$options['acting_settings']['dsk']['3d_secure']        = ( isset( $post_data['3d_secure'] ) ) ? $post_data['3d_secure'] : 'off';
 		$options['acting_settings']['dsk']['conv_activate']    = ( isset( $post_data['conv_activate'] ) ) ? $post_data['conv_activate'] : 'off';
+		$options['acting_settings']['dsk']['conv_limit']       = ( isset( $post_data['conv_limit'] ) ) ? $post_data['conv_limit'] : '';
 		$options['acting_settings']['dsk']['payeasy_activate'] = ( isset( $post_data['payeasy_activate'] ) ) ? $post_data['payeasy_activate'] : 'off';
 		$options['acting_settings']['dsk']['wallet_activate']  = 'off';
 		$options['acting_settings']['dsk']['mobile_activate']  = 'off';
@@ -345,10 +362,15 @@ jQuery( document ).ready( function( $ ) {
 		<table class="settle_table">
 			<tr>
 				<th>コンビニ決済</th>
-				<td><label><input name="conv_activate" type="radio" id="conv_activate_dsk_1" value="on"<?php checked( $acting_opts['conv_activate'], 'on' ); ?> /><span><?php esc_html_e( 'Use', 'usces' ); ?></span></label><br />
-					<label><input name="conv_activate" type="radio" id="conv_activate_dsk_2" value="off"<?php checked( $acting_opts['conv_activate'], 'off' ); ?> /><span><?php esc_html_e( 'Do not Use', 'usces' ); ?></span></label>
+				<td><label><input name="conv_activate" type="radio" class="conv_activate_dsk" id="conv_activate_dsk_1" value="on"<?php checked( $acting_opts['conv_activate'], 'on' ); ?> /><span><?php esc_html_e( 'Use', 'usces' ); ?></span></label><br />
+					<label><input name="conv_activate" type="radio" class="conv_activate_dsk" id="conv_activate_dsk_2" value="off"<?php checked( $acting_opts['conv_activate'], 'off' ); ?> /><span><?php esc_html_e( 'Do not Use', 'usces' ); ?></span></label>
 				</td>
 			</tr>
+			<tr class="conv_dsk">
+				<th><a class="explanation-label" id="label_ex_conv_limit_dsk"><?php esc_html_e( 'Payment due days', 'usces' ); ?></a></th>
+				<td><input name="conv_limit" type="text" id="conv_limit" value="<?php echo esc_attr( $acting_opts['conv_limit'] ); ?>" class="small-text" /><?php esc_html_e( 'days', 'usces' ); ?>（1～59）</td>
+			</tr>
+			<tr id="ex_conv_limit_dsk" class="explanation"><td colspan="2">未設定の場合は申込時に設定した既定値となります。ここでの変更は、申込時に設定した既定値以内の指定が可能（既定値が14日の場合、13日まで）となります。既定値が不明な場合はDSKにお問い合わせください。</td></tr>
 		</table>
 		<table class="settle_table">
 			<tr>
