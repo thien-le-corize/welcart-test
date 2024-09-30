@@ -1,8 +1,8 @@
-# Copyright (C) 2020 Collne Inc.
+# Copyright (C) 2023 Welcart Inc.
 # This file is distributed under the same license as the Welcart e-Commerce plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Welcart e-Commerce 1.9.35\n"
+"Project-Id-Version: Welcart e-Commerce\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/usc-e-shop\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,11 +27,11 @@ msgid "Welcart builds the management system with a net shop on WordPress."
 msgstr ""
 
 #. Author of the plugin
-msgid "Collne Inc."
+msgid "Welcart Inc."
 msgstr ""
 
 #. Author URI of the plugin
-msgid "http://www.collne.com/"
+msgid "https://www.welcart.com/"
 msgstr ""
 
 #: classes/dataList.class.php:43
@@ -3392,16 +3392,6 @@ msgstr ""
 msgid "Sorry, no posts matched your criteria."
 msgstr ""
 
-#: classes/paymentSBPS.class.php:615
-#: classes/paymentSBPS.class.php:669
-msgid "与信金額を超える金額は売上計上できません。"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:619
-#: classes/paymentSBPS.class.php:673
-msgid "円に減額して売上処理を実行します。よろしいですか？"
-msgstr ""
-
 #: classes/paymentSBPS.class.php:622
 #: classes/paymentSBPS.class.php:676
 #: classes/paymentWelcart.class.php:996
@@ -3416,27 +3406,6 @@ msgstr ""
 #: classes/paymentWelcart.class.php:1062
 #: classes/paymentWelcart.class.php:1118
 msgid "Are you sure you want to cancellation processing?"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:645
-msgid "売上金額を超える金額は返金できません。"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:655
-#: classes/paymentSBPS.class.php:709
-msgid "円の返金処理を実行します。よろしいですか？"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:699
-msgid "返金できません。"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:723
-msgid "増額できません。"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:727
-msgid "円の増額売上処理を実行します。よろしいですか？"
 msgstr ""
 
 #: classes/paymentSBPS.class.php:1322
@@ -3459,53 +3428,6 @@ msgstr ""
 #: classes/paymentWelcart.class.php:4799
 #: classes/paymentWelcart.class.php:5224
 msgid "Settlement amount"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:1332
-#: classes/paymentSBPS.class.php:1424
-#: classes/paymentSBPS.class.php:1509
-#: classes/paymentSBPS.class.php:1678
-#: classes/paymentSBPS.class.php:1774
-#: classes/paymentSBPS.class.php:1864
-#: classes/paymentSBPS.class.php:2025
-#: classes/paymentSBPS.class.php:2055
-#: classes/paymentSBPS.class.php:2584
-msgid "売上確定"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:1334
-#: classes/paymentSBPS.class.php:1427
-#: classes/paymentSBPS.class.php:1512
-#: classes/paymentSBPS.class.php:1597
-#: classes/paymentSBPS.class.php:1680
-#: classes/paymentSBPS.class.php:1777
-#: classes/paymentSBPS.class.php:1867
-#: classes/paymentSBPS.class.php:1954
-#: classes/paymentSBPS.class.php:2026
-#: classes/paymentSBPS.class.php:2058
-#: classes/paymentSBPS.class.php:2599
-msgid "取消"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:1336
-#: classes/paymentSBPS.class.php:1429
-#: classes/paymentSBPS.class.php:1514
-#: classes/paymentSBPS.class.php:1598
-#: classes/paymentSBPS.class.php:1682
-#: classes/paymentSBPS.class.php:1779
-#: classes/paymentSBPS.class.php:1869
-#: classes/paymentSBPS.class.php:1956
-#: classes/paymentSBPS.class.php:2060
-#: classes/paymentSBPS.class.php:2587
-msgid "部分返金"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:1685
-#: classes/paymentSBPS.class.php:1782
-#: classes/paymentSBPS.class.php:1872
-#: classes/paymentSBPS.class.php:1959
-#: classes/paymentSBPS.class.php:2063
-msgid "増額売上"
 msgstr ""
 
 #: classes/paymentSBPS.class.php:2175
@@ -3559,30 +3481,6 @@ msgstr ""
 #: functions/settlement_func.php:840
 #: functions/settlement_func.php:923
 msgid "Result"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:2578
-msgid "与信済"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:2581
-msgid "自動売上"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:2590
-msgid "増額売上確定"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:2593
-msgid "増額売上処理中"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:2596
-msgid "増額売上期限切れ"
-msgstr ""
-
-#: classes/paymentSBPS.class.php:2602
-msgid "決済処理不可"
 msgstr ""
 
 #: classes/paymentSBPS.main.class.php:1374
@@ -7002,6 +6900,12 @@ msgstr ""
 #: functions/template_func.php:2570
 #: includes/member_edit_form.php:187
 msgid "There is no purchase history for this moment."
+msgstr ""
+
+msgid "There is no purchase history during the period."
+msgstr ""
+
+msgid "There is no purchase history."
 msgstr ""
 
 #: functions/template_func.php:2579
@@ -11493,4 +11397,19 @@ msgid "Unlock all locks?"
 msgstr ""
 
 msgid "Unlocked Completed."
+msgstr ""
+
+msgid "When activated, inventory will increase or decrease in tandem with the addition or deletion of items in the order edit screen."
+msgstr ""
+
+msgid "When activated, inventory will increase or decrease in tandem with the addition or deletion of products when performing a batch order update."
+msgstr ""
+
+msgid "When activated, it will switch to the new order list."
+msgstr ""
+
+msgid "When activated, it will switch to the new member list."
+msgstr ""
+
+msgid "The following plugins are outdated and will not function properly. Please update them immediately."
 msgstr ""

@@ -67,7 +67,6 @@
 			var s = itemOpt.settings;
 			s.data = "action=item_option_ajax&ID=" + id + "&newoptname=" + encodeURIComponent(name) + "&newoptvalue=" + encodeURIComponent(value) + "&newoptmeans=" + encodeURIComponent(means) + "&newoptessential=" + encodeURIComponent(essential) + "&wc_nonce=" + encodeURIComponent(wc_nonce)+ "&_wp_http_referer=" + encodeURIComponent(_wp_http_referer);
 			$.ajax( s ).done(function( data ){
-				console.log(data);
 				var meta_id = data.meta_id;
 				$("#itemopt_ajax-response").html('');
 				$("#newitemopt_loading").html('');
@@ -126,7 +125,6 @@
 			var s = itemOpt.settings;
 			s.data = "action=item_option_ajax&ID=" + id + "&newoptname=" + encodeURIComponent(name) + "&newoptvalue=" +encodeURIComponent(value) + "&newoptmeans=" + encodeURIComponent(means) + "&newoptessential=" + encodeURIComponent(essential) + "&wc_nonce=" + encodeURIComponent(wc_nonce)+ "&_wp_http_referer=" + encodeURIComponent(_wp_http_referer);
 			$.ajax( s ).done(function( data ){
-				console.log(data);
 				var meta_id = data.meta_id;
 				$("#newcomopt_loading").html('');
 				$("#itemopt_ajax-response").html('');
@@ -189,7 +187,6 @@
 			var s = itemOpt.settings;
 			s.data = "action=item_option_ajax&ID=" + id + "&update=1&optname=" + encodeURIComponent(name) + "&optvalue=" + encodeURIComponent(value) + "&optmeans=" + means + "&optessential=" + essential + "&sort=" + sortnum + "&optmetaid=" + meta_id + "&wc_nonce=" + encodeURIComponent(wc_nonce)+ "&_wp_http_referer=" + encodeURIComponent(_wp_http_referer);
 			$.ajax( s ).done(function( data ){
-				console.log(data);
 				$("#itemopt_ajax-response").html('');
 				$("#itemopt_loading-" + meta_id).html('');
 				$("tbody#item-opt-list").html( data.meta_row );
@@ -213,7 +210,6 @@
 			var s = itemOpt.settings;
 			s.data = "action=item_option_ajax&ID=" + id + "&delete=1&optmetaid=" + meta_id + "&wc_nonce=" + encodeURIComponent(wc_nonce)+ "&_wp_http_referer=" + encodeURIComponent(_wp_http_referer);
 			$.ajax( s ).done(function( data ){
-				console.log(data);
 				$("#itemopt_ajax-response").html("");
 				$("tbody#item-opt-list").html( data.meta_row );
 			}).fail(function( msg ){ });
@@ -238,7 +234,6 @@
 			var s = itemOpt.settings;
 			s.data = "action=item_option_ajax&ID=" + id + "&select=1&meta_id=" + meta_id + "&wc_nonce=" + encodeURIComponent(wc_nonce)+ "&_wp_http_referer=" + encodeURIComponent(_wp_http_referer);
 			$.ajax( s ).done(function( data ){
-				console.log(data);
 				$("#itemopt_ajax-response").html("");
 				var means = data.means;
 				var essential = data.essential;
@@ -273,7 +268,6 @@
 			var s = itemOpt.settings;
 			s.data = "action=item_option_ajax&ID=" + id + "&sort=1&meta=" + encodeURIComponent(meta_id_str) + "&wc_nonce=" + encodeURIComponent(wc_nonce)+ "&_wp_http_referer=" + encodeURIComponent(_wp_http_referer);
 			$.ajax( s ).done(function( data ){
-				console.log(data);
 				$("#itemopt_ajax-response").html("");
 				$("tbody#item-opt-list").html( data.meta_row );
 				for(i=0; i<meta_ids.length; i++){
@@ -364,7 +358,8 @@
 			$("#newitemsku_loading").html('<img src="' + uscesL10n.USCES_PLUGIN_URL + '/images/loading.gif" />');
 
 			var s = itemSku.settings;
-			s.data = "action=item_sku_ajax&ID=" + id + "&newskuname=" + encodeURIComponent(name) + "&newskucprice=" + cprice + "&newskuprice=" + price + "&newskuzaikonum=" + zaikonum + "&newskuzaikoselect=" + encodeURIComponent(zaiko) + "&newskudisp=" + encodeURIComponent(skudisp) + "&newskuunit=" + encodeURIComponent(skuunit) + "&newskugptekiyo=" + skugptekiyo + skuadvance;
+			var wc_nonce = $("#wc_nonce").val();
+			s.data = "action=item_sku_ajax&ID=" + id + "&wc_nonce=" + wc_nonce + "&newskuname=" + encodeURIComponent(name) + "&newskucprice=" + cprice + "&newskuprice=" + price + "&newskuzaikonum=" + zaikonum + "&newskuzaikoselect=" + encodeURIComponent(zaiko) + "&newskudisp=" + encodeURIComponent(skudisp) + "&newskuunit=" + encodeURIComponent(skuunit) + "&newskugptekiyo=" + skugptekiyo + skuadvance;
 			if( '' != applicable_taxrate ) {
 				s.data += "&newskutaxrate=" + applicable_taxrate;
 			}
@@ -388,7 +383,9 @@
 				var meta_id = data.meta_id;
 				hookargs.metaId = meta_id;
 				hookargs.response = data;
-				if( 0 > meta_id ){
+				if( data.meta_msg && '' != data.meta_msg ) {
+					$("#sku_ajax-response").html('<div class="error"><p>'+data.meta_msg+'</p></div>');
+				} else if( 0 > meta_id ){
 					$("#sku_ajax-response").html('<div class="error"><p>'+uscesL10n.message[10]+'</p></div>');
 				}else{
 					wp.hooks.doAction('usces.itemSku.additemsku.on-success.before-dom-update', hookargs);
@@ -490,7 +487,8 @@
 
 			$("#itemsku_loading-" + meta_id).html('<img src="' + uscesL10n.USCES_PLUGIN_URL + '/images/loading.gif" />');
 			var s = itemSku.settings;
-			s.data = "action=item_sku_ajax&ID=" + id + "&update=1&skuprice=" + price + "&skucprice=" + cprice + "&skuzaikonum=" + zaikonum + "&skuzaiko=" + encodeURIComponent(zaiko) + "&skuname=" + encodeURIComponent(name) + "&skudisp=" + encodeURIComponent(skudisp) + "&skuunit=" + encodeURIComponent(skuunit) + "&skugptekiyo=" + skugptekiyo + "&sort=" + sortnum + "&skumetaid=" + meta_id + skuadvance;
+			var wc_nonce = $("#wc_nonce").val();
+			s.data = "action=item_sku_ajax&ID=" + id + "&wc_nonce=" + wc_nonce + "&update=1&skuprice=" + price + "&skucprice=" + cprice + "&skuzaikonum=" + zaikonum + "&skuzaiko=" + encodeURIComponent(zaiko) + "&skuname=" + encodeURIComponent(name) + "&skudisp=" + encodeURIComponent(skudisp) + "&skuunit=" + encodeURIComponent(skuunit) + "&skugptekiyo=" + skugptekiyo + "&sort=" + sortnum + "&skumetaid=" + meta_id + skuadvance;
 			if( '' != applicable_taxrate ) {
 				s.data += "&skutaxrate=" + applicable_taxrate;
 			}
@@ -538,7 +536,8 @@
 			$("#itemsku-" + meta_id).animate({ 'background-color': '#FFFFEE' }, 1000 );
 			var id = $("#post_ID").val();
 			var s = itemSku.settings;
-			s.data = "action=item_sku_ajax&ID=" + id + "&delete=1&skumetaid=" + meta_id;
+			var wc_nonce = $("#wc_nonce").val();
+			s.data = "action=item_sku_ajax&ID=" + id + "&wc_nonce=" + wc_nonce + "&delete=1&skumetaid=" + meta_id;
 			$.ajax( s ).done(function( data ){
 				if( data.meta_msg && '' != data.meta_msg ) {
 					$("#sku_ajax-response").html('<div class="error"><p>'+data.meta_msg+'</p></div>');
@@ -585,7 +584,8 @@
 				$("#itemsku_loading-" + meta_ids[i]).html('<img src="' + uscesL10n.USCES_PLUGIN_URL + '/images/loading.gif" />');
 			}
 			var s = itemSku.settings;
-			s.data = "action=item_sku_ajax&ID=" + id + "&sort=1&meta=" + encodeURIComponent(meta_id_str);
+			var wc_nonce = $("#wc_nonce").val();
+			s.data = "action=item_sku_ajax&ID=" + id + "&wc_nonce=" + wc_nonce + "&sort=1&meta=" + encodeURIComponent(meta_id_str);
 			$.ajax( s ).done(function( data ){
 				$("#sku_ajax-response").html("");
 				var hookargs = {
@@ -780,9 +780,10 @@
 
 		add2cart : function(newid, newsku) {
 			var ID = $("input[name='order_id']").val();
+			var wc_nonce = $("#wc_nonce").val();
 			var optob;
 			var optvalue = '';
-			var query = 'action=order_item2cart_ajax&order_id='+ID+'&post_id='+newid+'&sku='+newsku;
+			var query = 'action=order_item2cart_ajax&order_id='+ID+'&post_id='+newid+'&sku='+newsku + '&wc_nonce=' + encodeURIComponent(wc_nonce);
 
 			var newoptob = $("input[name*='optNEWCode\[" + newid + "\]\[" + newsku + "\]']");
 			var newoptvalue = '';
@@ -878,13 +879,14 @@
 			var cnum = $("#orderitemlist").children().length;
 			var priceob = $("input[name*='skuPrice']");
 			var quantob = $("input[name*='quant']");
+			var wc_nonce = $("#wc_nonce").val();
 			var name = '';
 			var strs = '';
 			var post_ids = [];
 			var skus = [];
 			var optob;
 			var optvalue = '';
-			var query = 'action=order_item2cart_ajax&order_id='+ID;
+			var query = 'action=order_item2cart_ajax&order_id='+ID + '&wc_nonce=' + encodeURIComponent(wc_nonce);
 			for( var i = 0; i < cnum; i++) {
 				name = $(priceob[i]).attr("name");
 				strs = name.split('[');
@@ -1058,8 +1060,9 @@
 				return false;
 			}
 			$("#loading").html('<img src="' + uscesL10n.USCES_PLUGIN_URL + '/images/loading.gif" />');
+			var wc_nonce = $("#wc_nonce").val();
 			var s = orderItem.settings;
-			s.data = "action=order_item_ajax&mode=get_item_select_option&cat_id=" + cat_id;
+			s.data = "action=order_item_ajax&mode=get_item_select_option&cat_id=" + cat_id + "&wc_nonce=" + wc_nonce;
 			$.ajax( s ).done(function( data ){
 				$("#loading").html('');
 				$("#newitemcode").html( data );
@@ -1075,8 +1078,9 @@
 				return false;
 			}
 			$("#loading").html('<img src="' + uscesL10n.USCES_PLUGIN_URL + '/images/loading.gif" />');
+			var wc_nonce = $("#wc_nonce").val();
 			var s = orderItem.settings;
-			s.data = "action=order_item_ajax&mode=get_order_item&itemcode=" + itemcode;
+			s.data = "action=order_item_ajax&mode=get_order_item&itemcode=" + itemcode + "&wc_nonce=" + wc_nonce;
 			$.ajax( s ).done(function( data ){
 				$("#loading").html('');
 				$("#newitemform").html( data );
@@ -1091,7 +1095,8 @@
 			$("#usces_email_bnt_send").prop("disabled", true);
 			var order_id = $("input[name='order_id']").val();
 			var s = orderItem.settings;
-			s.data = "action=order_item_ajax&mode=" + flag + "&order_id=" + order_id;
+			var wc_nonce = $("#wc_nonce").val();
+			s.data = "action=order_item_ajax&mode=" + flag + "&order_id=" + order_id + "&wc_nonce=" + wc_nonce;
 			$.ajax( s ).done(function( data ){
 					$("#sendmailmessage").val( data );
 					$("#usces_email_bnt_send").removeAttr('disabled');
@@ -1107,7 +1112,7 @@
 			$("#usces_email_bnt_send").prop("disabled", true);
 			$("#loading_iframe").show();
 			var order_id = $("input[name='order_id']").val();
-			usceAdminUrl += '?page=usces_orderlist&order_action=load_rich_editor&orderid='+order_id+'&mode='+mode+'&noheader=true';
+			usceAdminUrl += '?page=usces_orderlist&order_action=load_rich_editor&orderid='+order_id+'&mode='+mode+'&noheader=true' + '&wc_nonce=' + $("#wc_nonce").val();
 			$('#iframeLoadEditor').attr('src', usceAdminUrl);  
 			$('#iframeLoadEditor').load(function(){
 				$("#loading_iframe").hide();
@@ -1283,7 +1288,8 @@
             url: ajaxurl,
             type: "POST",
             data: {
-                action: 'usces_download_system_information',
+                'action': 'usces_download_system_information',
+				'_ajax_nonce'  : $('#wc_nonce').val(),
             }
         })
 		.done(function (response) {

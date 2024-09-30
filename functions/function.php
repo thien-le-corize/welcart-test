@@ -637,6 +637,8 @@ function usces_update_memberdata() {
 		}
 	}
 
+	do_action( 'usces_action_post_update_after_memberdata', $ID, $res );
+
 	$result = ( 0 < array_sum( $res ) ) ? 1 : 0;
 	return $result;
 }
@@ -834,10 +836,10 @@ function usces_update_ordercartdata( $order_id ) {
 		foreach ( $item_opts as $key => $iopts ) {
 			if ( 3 === (int) $iopts['means'] || 4 === (int) $iopts['means'] ) {
 				$cart_meta    = usces_get_ordercart_meta( 'option', $cart_id, $iopts['name'] );
-				$cart_meta_id = $cart_meta[0]['cartmeta_id'];
+				$cart_meta_id = isset( $cart_meta[0]['cartmeta_id'] ) ? $cart_meta[0]['cartmeta_id'] : 'notfound';
+
 				// POSTが無ければmeta_valueをNULLに変更.
-				// $cart_meta['meta_value']にデータがある場合は変更せず.
-				if ( ! isset( $_POST['itemOption'][ $cart_meta_id ] ) && WCUtils::is_blank( $cart_meta[0]['meta_value'] ) ) {
+				if ( ! isset( $_POST['itemOption'][ $cart_meta_id ] ) ) {
 					$query = $wpdb->prepare(
 						"UPDATE $ordercart_meta_table_name SET meta_value = %s WHERE cartmeta_id = %d",
 						NULL, $cart_meta_id
@@ -967,7 +969,10 @@ function usces_update_ordercheck() {
 	$query = $wpdb->prepare( "SELECT `order_check` FROM $tableName WHERE ID = %d", $order_id );
 	$res   = $wpdb->get_var( $query );
 
-	$checkfield = unserialize( $res );
+	$checkfield = unserialize( $res ?? '' );
+	if ( false === $checkfield ) {
+		$checkfield = array();
+	}
 	if ( ! isset( $checkfield[ $checked ] ) ) {
 		$checkfield[ $checked ] = $checked;
 	}
@@ -1870,49 +1875,55 @@ function usces_check_acting_return() {
 
 		case 'jpayment_card':
 			$results = $_GET;
-			if ( 2 === (int) $_GET['rst'] ) {
+			$rst     = ( isset( $_GET['rst'] ) ) ? (int) $_GET['rst'] : 0;
+			if ( 2 === $rst ) {
 				usces_log( 'jpayment card error : ' . print_r( $entry, true ), 'acting_transaction.log' );
+				$cod = ( isset( $_GET['cod'] ) ) ? $_GET['cod'] : '';
 				$log = array(
 					'acting' => $acting,
-					'key'    => $_GET['cod'],
-					'result' => $_GET['rst'],
+					'key'    => $cod,
+					'result' => $rst,
 					'data'   => $_GET,
 				);
 				usces_save_order_acting_error( $log );
 			}
-			$results[0]           = ( 1 === (int) $_GET['rst'] ) ? 1 : 0;
+			$results[0]           = ( 1 === $rst ) ? 1 : 0;
 			$results['reg_order'] = true;
 			break;
 
 		case 'jpayment_conv':
 			$results = $_GET;
-			if ( 2 === (int) $_GET['rst'] ) {
+			$rst     = ( isset( $_GET['rst'] ) ) ? (int) $_GET['rst'] : 0;
+			if ( 2 === $rst ) {
 				usces_log( 'jpayment conv error : ' . print_r( $entry, true ), 'acting_transaction.log' );
+				$cod = ( isset( $_GET['cod'] ) ) ? $_GET['cod'] : '';
 				$log = array(
 					'acting' => $acting,
-					'key'    => $_GET['cod'],
-					'result' => $_GET['rst'],
+					'key'    => $cod,
+					'result' => $rst,
 					'data'   => $_GET,
 				);
 				usces_save_order_acting_error( $log );
 			}
-			$results[0]           = ( 1 === (int) $_GET['rst'] && 'CPL_PRE' === $_GET['ap'] ) ? 1 : 0;
+			$results[0]           = ( 1 === $rst && 'CPL_PRE' === $_GET['ap'] ) ? 1 : 0;
 			$results['reg_order'] = true;
 			break;
 
 		case 'jpayment_bank':
 			$results = $_GET;
-			if ( 2 === (int) $_GET['rst'] ) {
+			$rst     = ( isset( $_GET['rst'] ) ) ? (int) $_GET['rst'] : 0;
+			if ( 2 === $rst ) {
 				usces_log( 'jpayment bank error : ' . print_r( $entry, true ), 'acting_transaction.log' );
+				$cod = ( isset( $_GET['cod'] ) ) ? $_GET['cod'] : '';
 				$log = array(
 					'acting' => $acting,
-					'key'    => $_GET['cod'],
-					'result' => $_GET['rst'],
+					'key'    => $cod,
+					'result' => $rst,
 					'data'   => $_GET,
 				);
 				usces_save_order_acting_error( $log );
 			}
-			$results[0]           = ( 1 === (int) $_GET['rst'] ) ? 1 : 0;
+			$results[0]           = ( 1 === $rst ) ? 1 : 0;
 			$results['reg_order'] = true;
 			break;
 
@@ -3128,6 +3139,7 @@ function usces_page_name( $out = '' ) {
 	} else {
 		$page = $usces->page;
 	}
+	$page = apply_filters( 'usces_filter_usces_page_name', $page );
 
 	if ( 'return' === $out ) {
 		return esc_js( $page );
@@ -3434,11 +3446,12 @@ function usces_get_send_out_date() {
 	$shipping            = 0;
 	$indication_flag     = true;
 	$cart_count          = ( $cart && is_array( $cart ) ) ? count( $cart ) : 0;
+	$shipping_rule_ex    = apply_filters( 'usces_filter_item_shipping_rule_ex', 9 );
 	for ( $i = 0; $i < $cart_count; $i++ ) {
 		$cart_row     = $cart[ $i ];
 		$post_id      = $cart_row['post_id'];
 		$itemShipping = (int) $usces->getItemShipping( $post_id );
-		if ( 0 === $itemShipping || 9 === $itemShipping ) {
+		if ( 0 === $itemShipping || $shipping_rule_ex === $itemShipping ) {
 			$indication_flag = false;
 			break;
 		}
@@ -4115,7 +4128,7 @@ function usces_get_itemOption( $field_data, $materials, $label = '#default#' ) {
 			}
 			$diff = array_diff( (array) $value, $selects );
 
-			if ( ! empty( $diff ) ) {
+			if ( isset( $diff[0] ) && ! empty( $diff[0] ) ) {
 
 				$value_str = '';
 				foreach ( $value as $mv ) {
@@ -4376,15 +4389,16 @@ function usces_get_ordercart_row( $order_id, $cart = array() ) {
 		$cart_thumbnail = ( ! empty( $pictid ) ) ? wp_get_attachment_image( $pictid, array( 80, 80 ), true ) : usces_get_attachment_noimage( array( 80, 80 ), $itemCode );
 		$cart_thumbnail = apply_filters( 'usces_filter_cart_thumbnail', $cart_thumbnail, $post_id, $pictid, $i, $cart_row );
 		$index_column   = apply_filters( 'usces_filter_admin_cart_index', ( $i + 1 ), $materials );
+		$item_editpage  = admin_url( 'admin.php?page=usces_itemedit&action=edit&post=' . $post_id . '&usces_referer=' . urlencode( site_url() . '/wp-admin/admin.php?page=usces_orderlist&order_action=edit&order_id=' . $order_id ) );
 		?>
 	<tr>
 		<td><?php wel_esc_script_e( $index_column ); ?></td>
 		<td><?php wel_esc_script_e( $cart_thumbnail ); ?></td>
-		<td class="aleft"><?php echo apply_filters( 'usces_filter_admin_cart_item_name', esc_html( $cartItemName ), $materials ); ?><?php wel_esc_script_e( $reduced_taxrate_mark ); ?><?php do_action( 'usces_admin_order_item_name', $order_id, $i ); ?><?php usces_make_option_field( $materials, $cart ); ?></td>
+		<td class="aleft"><a href="<?php echo esc_url( $item_editpage ); ?>" title="<?php esc_attr_e( 'To the edit screen for this product.', 'usces' ); ?>" ><?php echo apply_filters( 'usces_filter_admin_cart_item_name', esc_html( $cartItemName ), $materials ); ?></a><?php wel_esc_script_e( $reduced_taxrate_mark ); ?><?php do_action( 'usces_admin_order_item_name', $order_id, $i ); ?><?php usces_make_option_field( $materials, $cart ); ?></td>
 		<td><input name="skuPrice[<?php echo esc_attr( $ordercart_id ); ?>]" class="text price" type="text" value="<?php echo esc_attr( usces_crform( $skuPrice, false, false, 'return', false ) ); ?>" /><?php do_action( 'usces_admin_order_cart_after_price', $materials ); ?></td>
 		<td><input name="quant[<?php echo esc_attr( $ordercart_id ); ?>]" class="text quantity" type="text" value="<?php echo esc_attr( $cart_row['quantity'] ); ?>" /></td>
 		<td><p id="sub_total[<?php echo esc_attr( $ordercart_id ); ?>]" class="aright">&nbsp;</p><?php do_action( 'usces_admin_order_cart_after_sub_total', $materials ); ?></td>
-		<td <?php echo esc_attr( $red ); ?>><?php echo esc_html( $stock ); ?></td>
+		<td <?php wel_esc_script_e( $red ); ?>><?php echo esc_html( $stock ); ?></td>
 		<td>
 		<input name="postId[<?php echo esc_attr( $ordercart_id ); ?>]" type="hidden" value="<?php echo esc_attr( $post_id ); ?>" />
 		<input name="advance[<?php echo esc_attr( $ordercart_id ); ?>]" type="hidden" value="<?php echo esc_attr( $advance_value ); ?>" />
@@ -4401,6 +4415,37 @@ function usces_get_ordercart_row( $order_id, $cart = array() ) {
 	ob_end_clean();
 
 	return apply_filters( 'usces_filter_get_ordercart_row', $row, $order_id, $cart );
+}
+
+/**
+ * Add capabilities to the roles.
+ *
+ * return void
+ */
+function usces_add_capabilites() {
+	$admin_role = get_role( 'administrator' );
+	$admin_role->add_cap( 'wel_publish_products' );
+	$admin_role->add_cap( 'wel_others_products' );
+	$admin_role->add_cap( 'wel_manage_order' );
+	$admin_role->add_cap( 'wel_manage_setting' );
+
+	$editor_role = get_role( 'editor' );
+	$editor_role->add_cap( 'wel_publish_products' );
+	$editor_role->add_cap( 'wel_others_products' );
+	$editor_role->add_cap( 'wel_manage_order' );
+	$editor_role->add_cap( 'wel_manage_setting' );
+
+	$wc_management_role = get_role( 'wc_management' );
+	$wc_management_role->add_cap( 'wel_publish_products' );
+	$wc_management_role->add_cap( 'wel_others_products' );
+	$wc_management_role->add_cap( 'wel_manage_order' );
+	
+	$wc_author_role = get_role( 'wc_author' );
+	$wc_author_role->add_cap( 'wel_publish_products' );
+	$wc_author_role->add_cap( 'wel_others_products' );
+
+	$author_role = get_role( 'author' );
+	$author_role->add_cap( 'wel_publish_products' );
 }
 
 function usces_add_role() {
@@ -5190,6 +5235,8 @@ function get_welcart_system_information() {
 		'datalistup_orderlist_flag'      => $options_ex['system']['datalistup']['orderlist_flag'],
 		'datalistup_memberlist_flag'     => $options_ex['system']['datalistup']['memberlist_flag'],
 		'verifyemail_switch_flag'        => $options_ex['system']['verifyemail']['switch_flag'],
+		'verifyemail_edit_flag'          => $options_ex['system']['verifyemail']['edit_flag'],
+		'verifyemail_login_notify'       => $options_ex['system']['verifyemail']['login_notify'],
 		'number_of_orders'               => usces_get_total_orders(),
 		'number_of_members'              => usces_get_total_members(),
 		'settlement_selected'            => get_option( 'usces_settlement_selected' ),
@@ -5387,7 +5434,9 @@ function usces_generate_system_information_text( $environment, $theme, $active_p
 	$data .= __( 'Linkage Order Collective Upadate', 'usces' ) . ' : ' . ( ( $welcart_information['stocklink_collective_flag'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
 	$data .= __( '[New] Order List', 'usces' ) . ' : ' . ( ( $welcart_information['datalistup_orderlist_flag'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
 	$data .= __( '[New] Member List', 'usces' ) . ' : ' . ( ( $welcart_information['datalistup_memberlist_flag'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
-	$data .= __( 'Verify New Member Email', 'usces' ) . ' : ' . ( ( $welcart_information['verifyemail_switch_flag'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
+	$data .= __( 'Email verification for new registration', 'usces' ) . ' : ' . ( ( $welcart_information['verifyemail_switch_flag'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
+	$data .= __( 'Email verification for editing information', 'usces' ) . ' : ' . ( ( $welcart_information['verifyemail_edit_flag'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
+	$data .= __( 'Login Notification', 'usces' ) . ' : ' . ( ( $welcart_information['verifyemail_login_notify'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
 	$data .= __( 'Google reCAPTCHA v3', 'usces' ) . ' : ' . ( ( $welcart_information['google_recaptcha_status'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
 	$data .= __( 'Brute-force attack countermeasures', 'usces' ) . ' : ' . ( ( $welcart_information['brute_force_status'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
 	$data .= __( 'Structured data measures', 'usces' ) . ' : ' . ( ( $welcart_information['structured_data_product_status'] ) ? __( 'Enabled', 'usces' ) : __( 'Disabled', 'usces' ) ) . "\r\n";
@@ -5433,9 +5482,9 @@ function usces_generate_system_information_text( $environment, $theme, $active_p
 
 function usces_download_system_information() {
 
-	if ( ! current_user_can( 'administrator' ) ) {
-		wp_die();
-		exit();
+	check_ajax_referer( 'admin_system' );
+	if ( ! current_user_can( 'wel_manage_setting' ) ) {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 	}
 
 	$filename            = 'welcart_information_' . date_i18n( 'YmdHis' ) . '.txt';
@@ -5485,6 +5534,11 @@ function usces_filter_content_wp_editor_preview() {
 	global $usces;
 
 	$_POST = $usces->stripslashes_deep_post( $_POST );
+
+	if ( ! current_user_can( 'wel_manage_order' ) ) { // This preview is also used in order_edit_form.
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+	}
+
 	$nonce = isset( $_POST['wc_nonce'] ) ? wp_unslash( $_POST['wc_nonce'] ) : '';
 	if ( ! wp_verify_nonce( $nonce, 'wc_preview_editor_nonce' ) ) {
 		$error_msg = array( 'message' => 'Your request is not valid.' );

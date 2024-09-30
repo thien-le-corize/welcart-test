@@ -55,6 +55,122 @@ class REMISE_SETTLEMENT {
 	protected $acting_company_url;
 
 	/**
+	 * マルチ決済にて選択した支払期間の名称リスト.
+	 *
+	 * @var array[]
+	 */
+	public static $x_pay_csv_list = array(
+		'D001' => array(
+			'label' => 'セブン-イレブン',
+		),
+		'D002' => array(
+			'label' => 'ローソン',
+		),
+		'D005' => array(
+			'label' => 'ミニストップ',
+		),
+		'D015' => array(
+			'label' => 'セイコーマート',
+		),
+		'D405' => array(
+			'label' => 'ペイジー',
+		),
+		'D010' => array(
+			'label' => 'デイリーヤマザキ',
+		),
+		'D011' => array(
+			'label' => 'ヤマザキデイリーストア',
+		),
+		'D030' => array(
+			'label' => 'ファミリーマート',
+		),
+		'E201' => array(
+			'label' => 'PayPay',
+		),
+		'E202' => array(
+			'label' => 'PayPay',
+		),
+		'D401' => array(
+			'label' => '楽天Ｅｄｙ',
+		),
+		'D404' => array(
+			'label' => '楽天銀行',
+		),
+		'D406' => array(
+			'label' => 'PayPay銀行',
+		),
+		'D403' => array(
+			'label' => 'モバイルSuica',
+		),
+		'D451' => array(
+			'label' => 'ウェブマネー',
+		),
+		'D452' => array(
+			'label' => 'ビットキャッシュ',
+		),
+		'D453' => array(
+			'label' => 'JCBプレモカード',
+		),
+		'P901' => array(
+			'label' => 'コンビニ払込票',
+		),
+		'P902' => array(
+			'label' => 'コンビニ払込票',
+		),
+		'P903' => array(
+			'label' => 'コンビニ払込票',
+		),
+		'P904' => array(
+			'label' => 'コンビニ払込票',
+		),
+		'P905' => array(
+			'label' => 'コンビニ払込票',
+		),
+		'P906' => array(
+			'label' => 'コンビニ払込票',
+		),
+		'C501' => array(
+			'label' => 'クレジットカード',
+		),
+		'C502' => array(
+			'label' => 'クレジットカード',
+		),
+		'C511' => array(
+			'label' => 'PayPal',
+		),
+		'K801' => array(
+			'label' => '口座振替会員登録',
+		),
+		'M601' => array(
+			'label' => 'd払い',
+		),
+		'M602' => array(
+			'label' => 'd払い',
+		),
+		'M603' => array(
+			'label' => 'd払い',
+		),
+		'M611' => array(
+			'label' => 'auかんたん決済',
+		),
+		'M612' => array(
+			'label' => 'auかんたん決済',
+		),
+		'M613' => array(
+			'label' => 'auかんたん決済',
+		),
+		'M621' => array(
+			'label' => 'ソフトバンクまとめて支払い',
+		),
+		'M622' => array(
+			'label' => 'ソフトバンクまとめて支払い',
+		),
+		'M623' => array(
+			'label' => 'ソフトバンクまとめて支払い',
+		),
+	);
+
+	/**
 	 * Construct.
 	 */
 	public function __construct() {
@@ -75,10 +191,15 @@ class REMISE_SETTLEMENT {
 			add_action( 'usces_action_admin_settlement_update', array( $this, 'settlement_update' ) );
 			add_action( 'usces_action_settlement_tab_title', array( $this, 'settlement_tab_title' ) );
 			add_action( 'usces_action_settlement_tab_body', array( $this, 'settlement_tab_body' ) );
+
+			add_filter( 'usces_filter_settle_info_field_meta_keys', array( $this, 'settlement_info_field_meta_keys' ) );
+			add_filter( 'usces_filter_settle_info_field_keys', array( $this, 'settlement_info_field_keys' ), 10, 2 );
+			add_filter( 'usces_filter_settle_info_field_value', array( $this, 'settlement_info_field_value' ), 10, 3 );
 		}
 
 		if ( $this->is_activate_card() || $this->is_activate_conv() ) {
 			add_action( 'usces_action_reg_orderdata', array( $this, 'register_orderdata' ) );
+			add_filter( 'usces_filter_send_order_mail_payment', array( $this, 'order_mail_payment' ), 10, 6 );
 		}
 
 		if ( $this->is_validity_acting( 'card' ) ) {
@@ -95,6 +216,8 @@ class REMISE_SETTLEMENT {
 			add_filter( 'usces_filter_payment_detail', array( $this, 'payment_detail' ), 10, 2 );
 			add_action( 'usces_filter_completion_settlement_message', array( $this, 'completion_settlement_message' ), 10, 2 );
 		}
+		add_filter( 'usces_filter_order_confirm_mail_payment', array( $this, 'order_confirm_mail_payment' ), 10, 5 );
+		add_filter( 'usces_filter_pdf_payment_name', array( $this, 'pdf_payment_name' ), 10, 2 );
 	}
 
 	/**
@@ -128,6 +251,7 @@ class REMISE_SETTLEMENT {
 			$options['acting_settings']['remise']['send_url_pc']      = '';
 			$options['acting_settings']['remise']['send_url_cvs_mbl'] = '';
 			$options['acting_settings']['remise']['send_url_cvs_pc']  = '';
+			$options['acting_settings']['remise']['show_x_pay_csv']   = 'off';
 			update_option( 'usces', $options );
 		}
 	}
@@ -230,32 +354,31 @@ class REMISE_SETTLEMENT {
 				if ( in_array( $this->paymod_id, (array) $settlement_selected, true ) ) :
 					?>
 <script type="text/javascript">
-jQuery(document).ready( function($) {
-	if( 'on' == $("input[name='card_activate']:checked").val() ) {
-		$(".card_form_remise").css("display","");
-	} else {
-		$(".card_form_remise").css("display","none");
-	}
-	$("input[name='card_activate']").click( function() {
-		if( 'on' == $("input[name='card_activate']:checked").val() ) {
-			$(".card_form_remise").css("display","");
-		} else {
-			$(".card_form_remise").css("display","none");
+	jQuery(document).ready( function($) {
+		const form_remise = $('form#remise_form');
+		function card_activate_remise() {
+			if( 'on' === form_remise.find("input[name='card_activate']:checked").val() ) {
+				$(".card_form_remise").css("display","");
+			} else {
+				$(".card_form_remise").css("display","none");
+			}
 		}
-	});
-	if( 'on' == $("input[name='conv_activate']:checked").val() ) {
-		$(".conv_form_remise").css("display","");
-	} else {
-		$(".conv_form_remise").css("display","none");
-	}
-	$("input[name='conv_activate']").click( function() {
-		if( 'on' == $("input[name='conv_activate']:checked").val() ) {
-			$(".conv_form_remise").css("display","");
-		} else {
-			$(".conv_form_remise").css("display","none");
+		function conv_activate_remise() {
+			if( 'on' === form_remise.find("input[name='conv_activate']:checked").val() ) {
+				$(".conv_form_remise").css("display","");
+			} else {
+				$(".conv_form_remise").css("display","none");
+			}
 		}
+		card_activate_remise();
+		$("input[id^='card_activate_remise_']").click( function() {
+			card_activate_remise();
+		});
+		conv_activate_remise();
+		$("input[id^='conv_activate_remise_']").click( function() {
+			conv_activate_remise();
+		});
 	});
-});
 </script>
 					<?php
 				endif;
@@ -296,6 +419,7 @@ jQuery(document).ready( function($) {
 		$options['acting_settings']['remise']['send_url_pc']      = ( isset( $post_data['send_url_pc'] ) ) ? $post_data['send_url_pc'] : '';
 		$options['acting_settings']['remise']['send_url_cvs_mbl'] = ( isset( $post_data['send_url_cvs_mbl'] ) ) ? $post_data['send_url_cvs_mbl'] : '';
 		$options['acting_settings']['remise']['send_url_cvs_pc']  = ( isset( $post_data['send_url_cvs_pc'] ) ) ? $post_data['send_url_cvs_pc'] : '';
+		$options['acting_settings']['remise']['show_x_pay_csv']   = ( isset( $post_data['show_x_pay_csv'] ) ) ? $post_data['show_x_pay_csv'] : '';
 
 		if ( 'on' === $options['acting_settings']['remise']['card_activate'] || 'on' === $options['acting_settings']['remise']['conv_activate'] ) {
 			// if ( isset( $post_data['plan_remise'] ) && WCUtils::is_zero( $post_data['plan_remise'] ) ) {
@@ -348,7 +472,7 @@ jQuery(document).ready( function($) {
 						$options['acting_settings']['remise']['send_url_cvs_pc_test']  = 'https://test.remise.jp/rpgw2/pc/cvs/paycvs.aspx';
 						$options['acting_settings']['remise']['send_url_cvs_mbl_test'] = 'https://test.remise.jp/rpgw2/mbl/cvs/paycvs.aspx';
 					}
-					$usces->payment_structure['acting_remise_conv'] = 'コンビニ決済（ルミーズ）';
+					$usces->payment_structure['acting_remise_conv'] = 'マルチ決済（ルミーズ）';
 					foreach ( $payment_method as $settlement => $payment ) {
 						if ( 'acting_remise_conv' === $settlement && 'activate' !== $payment['use'] ) {
 							$toactive[] = $payment['name'];
@@ -362,11 +486,11 @@ jQuery(document).ready( function($) {
 					$usces->action_message .= __( 'Please update the payment method to "Activate". <a href="admin.php?page=usces_initial#payment_method_setting">General Setting > Payment Methods</a>', 'usces' );
 				}
 			} else {
-				$options['acting_settings']['paypal']['activate'] = 'off';
+				$options['acting_settings']['remise']['activate'] = 'off';
 				unset( $usces->payment_structure['acting_remise_card'] );
 				unset( $usces->payment_structure['acting_remise_conv'] );
 			}
-			if ( 'on' !== $options['acting_settings']['remise']['card_activate'] || 'on' !== $options['acting_settings']['remise']['payquick'] || 'off' === $options['acting_settings']['paypal']['activate'] ) {
+			if ( 'on' !== $options['acting_settings']['remise']['card_activate'] || 'on' !== $options['acting_settings']['remise']['payquick'] || 'off' === $options['acting_settings']['remise']['activate'] ) {
 				usces_clear_quickcharge( 'remise_pcid' );
 			}
 			$deactivate = array();
@@ -444,6 +568,7 @@ jQuery(document).ready( function($) {
 			$s_paydate       = ( isset( $acting_opts['S_PAYDATE'] ) ) ? $acting_opts['S_PAYDATE'] : '';
 			$conv_pc_ope     = ( isset( $acting_opts['conv_pc_ope'] ) && 'public' === $acting_opts['conv_pc_ope'] ) ? 'public' : 'test';
 			$send_url_cvs_pc = ( isset( $acting_opts['send_url_cvs_pc'] ) ) ? $acting_opts['send_url_cvs_pc'] : '';
+			$show_x_pay_csv  = ( isset( $acting_opts['show_x_pay_csv'] ) && 'on' === $acting_opts['show_x_pay_csv'] ) ? 'on' : 'off';
 			?>
 	<div id="uscestabs_remise">
 	<div class="settlement_service"><span class="service_title"><?php echo esc_html( $this->acting_formal_name ); ?></span></div>
@@ -547,7 +672,7 @@ jQuery(document).ready( function($) {
 		</table>
 		<table class="settle_table">
 			<tr>
-				<th>コンビニ・電子マネー決済</a></th>
+				<th>マルチ決済</a></th>
 				<td><label><input name="conv_activate" type="radio" id="conv_activate_remise_1" value="on"<?php checked( $conv_activate, 'on' ); ?> /><span>利用する</span></label><br />
 					<label><input name="conv_activate" type="radio" id="conv_activate_remise_2" value="off"<?php checked( $conv_activate, 'off' ); ?> /><span>利用しない</span></label>
 				</td>
@@ -568,7 +693,7 @@ jQuery(document).ready( function($) {
 				<th><a class="explanation-label" id="label_ex_send_url_cvs_pc_remise">本番URL(PC)</a></th>
 				<td><input name="send_url_cvs_pc" type="text" id="send_url_cvs_pc_remise" value="<?php echo esc_html( $send_url_cvs_pc ); ?>" class="regular-text" /></td>
 			</tr>
-			<tr id="ex_send_url_cvs_pc_remise" class="explanation conv_form_remise"><td colspan="2">コンビニ・電子マネー決済の本番環境(PC)で接続するURLを設定します。</td></tr>
+			<tr id="ex_send_url_cvs_pc_remise" class="explanation conv_form_remise"><td colspan="2">マルチ決済の本番環境(PC)で接続するURLを設定します。</td></tr>
 			<?php
 			if ( defined( 'WCEX_MOBILE' ) ) :
 				$send_url_cvs_mbl = ( isset( $acting_opts['send_url_cvs_mbl'] ) ) ? $acting_opts['send_url_cvs_mbl'] : '';
@@ -577,8 +702,15 @@ jQuery(document).ready( function($) {
 				<th><a class="explanation-label" id="label_ex_send_url_cvs_mbl_remise">本番URL(携帯)</a></th>
 				<td><input name="send_url_cvs_mbl" type="text" id="send_url_cvs_mbl_remise" value="<?php echo esc_html( $send_url_cvs_mbl ); ?>" class="regular-text" /></td>
 			</tr>
-			<tr id="ex_send_url_cvs_mbl_remise" class="explanation conv_form_remise"><td colspan="2">コンビニ・電子マネー決済の本番環境(携帯)で接続するURLを設定します。</td></tr>
+			<tr id="ex_send_url_cvs_mbl_remise" class="explanation conv_form_remise"><td colspan="2">マルチ決済の本番環境(携帯)で接続するURLを設定します。</td></tr>
 			<?php endif; ?>
+			<tr class="conv_form_remise">
+				<th><a class="explanation-label" id="label_ex_show_x_pay_csv">マルチ決済支払先表示</a></th>
+				<td><label><input name="show_x_pay_csv" type="radio" id="show_x_pay_csv_remise_1" value="on"<?php checked( $show_x_pay_csv, 'on' ); ?> /><span>表示する</span></label><br />
+					<label><input name="show_x_pay_csv" type="radio" id="show_x_pay_csv_remise_2" value="off"<?php checked( $show_x_pay_csv, 'off' ); ?> /><span>表示しない</span></label>
+				</td>
+			</tr>
+			<tr id="ex_show_x_pay_csv" class="explanation conv_form_remise"><td colspan="2">マルチ決済で支払いを行った際に、メールおよびPDFに支払先を表示します。</td></tr>
 		</table>
 		<input name="acting" type="hidden" value="remise" />
 		<input name="usces_option_update" type="submit" class="button button-primary" value="<?php echo esc_attr( $this->acting_name ); ?>の設定を更新する" />
@@ -598,6 +730,54 @@ jQuery(document).ready( function($) {
 	}
 
 	/**
+	 * 受注データから取得する決済情報のキー
+	 * usces_filter_settle_info_field_meta_keys
+	 *
+	 * @param  array $keys Settlement information key.
+	 * @return array
+	 */
+	public function settlement_info_field_meta_keys( $keys ) {
+		$keys = array_merge( $keys, array( 'remise_x_pay_csv' ) );
+
+		return $keys;
+	}
+
+	/**
+	 * 受注編集画面に表示する決済情報のキー
+	 * usces_filter_settle_info_field_keys
+	 *
+	 * @param array $keys Settlement information keys.
+	 * @param array $fields Settlement information fields.
+	 *
+	 * @return array
+	 */
+	public function settlement_info_field_keys( $keys, $fields ) {
+		if ( isset( $fields['remise_x_pay_csv'] ) && isset( self::$x_pay_csv_list[ $fields['remise_x_pay_csv'] ] ) ) {
+			$keys = array_merge( $keys, array( 'remise_x_pay_csv' ) );
+		}
+
+		return $keys;
+	}
+
+	/**
+	 * 受注編集画面に表示する決済情報の値整形
+	 * usces_filter_settle_info_field_value
+	 *
+	 * @param string $value Value.
+	 * @param string $key Key.
+	 * @param string $acting Acting type.
+	 *
+	 * @return string
+	 */
+	public function settlement_info_field_value( $value, $key, $acting ) {
+		if ( 'remise_x_pay_csv' === $key && isset( self::$x_pay_csv_list[ $value ] ) ) {
+			$value = $value . '（' . self::$x_pay_csv_list[ $value ]['label'] . '）';
+		}
+
+		return $value;
+	}
+
+	/**
 	 * 受注データ登録
 	 * Called by usces_reg_orderdata() and usces_new_orderdata().
 	 * usces_action_reg_orderdata
@@ -606,7 +786,7 @@ jQuery(document).ready( function($) {
 	 */
 	public function register_orderdata( $args ) {
 		global $usces;
-		extract( $args ); // phpcs:ignore
+		extract( $args );
 
 		$acting_flg = $payments['settlement'];
 		if ( ! in_array( $acting_flg, $this->pay_method ) ) {
@@ -624,7 +804,49 @@ jQuery(document).ready( function($) {
 				$usces->set_order_meta_value( wp_unslash( $_REQUEST['X-AC_MEMBERID'] ), 'continuation', $order_id );
 				$usces->set_member_meta_value( 'continue_memberid_' . $order_id, wp_unslash( $_REQUEST['X-AC_MEMBERID'] ) );
 			}
+			if ( isset( $_REQUEST['X-PAY_CSV'] ) ) {
+				$usces->set_order_meta_value( 'remise_x_pay_csv', wp_unslash( $_REQUEST['X-PAY_CSV'] ), $order_id );
+			}
 		}
+	}
+
+	/**
+	 * Add payment institution to Thank You Mail payment methods.
+	 *
+	 * @param  string $msg_payment Payment method message.
+	 * @param  int    $order_id Order number.
+	 * @param  array  $payment Payment data.
+	 * @param  array  $cart Cart data.
+	 * @param  array  $entry Entry data.
+	 * @param  array  $data Order data.
+	 * @return string
+	 */
+	public function order_mail_payment( $msg_payment, $order_id, $payment, $cart, $entry, $data ) {
+		global $usces;
+		if ( 'acting_remise_conv' !== $payment['settlement'] ) {
+			return $msg_payment;
+		}
+		$remise_x_pay_csv = $usces->get_order_meta_value( 'remise_x_pay_csv', $order_id );
+		if ( empty( $remise_x_pay_csv ) ) {
+			return $msg_payment;
+		}
+		$acting_opts    = $this->get_acting_settings();
+		$show_x_pay_csv = ( isset( $acting_opts['show_x_pay_csv'] ) && 'on' === $acting_opts['show_x_pay_csv'] ) ? 'on' : 'off';
+		if ( 'off' === $show_x_pay_csv ) {
+			return $msg_payment;
+		}
+		if ( ! isset( self::$x_pay_csv_list[ $remise_x_pay_csv ] ) ) {
+			return $msg_payment;
+		}
+		$remise_x_pay_csv_text = '（' . self::$x_pay_csv_list[ $remise_x_pay_csv ]['label'] . '）';
+		if ( usces_is_html_mail() ) {
+			$msg_payment = '<tr><td colspan="2" style="padding: 0 0 25px 0;">' . $payment['name'] . $remise_x_pay_csv_text . usces_payment_detail( $entry ) . '</td></tr>';
+		} else {
+			$msg_payment  = __( '** Payment method **', 'usces' ) . "\r\n";
+			$msg_payment .= usces_mail_line( 1, $entry['customer']['mailaddress1'] ); // ********************
+			$msg_payment .= $payment['name'] . $remise_x_pay_csv_text . usces_payment_detail( $entry ) . "\r\n\r\n";
+		}
+		return $msg_payment;
 	}
 
 	/**
@@ -645,12 +867,24 @@ jQuery(document).ready( function($) {
 			}
 
 			if ( isset( $_REQUEST['usces_page'] ) && 'member_update_settlement' === wp_unslash( $_REQUEST['usces_page'] ) ) {
+				add_filter( 'usces_filter_states_form_js', array( $this, 'states_form_js' ) );
 				$usces->page = 'member_update_settlement';
 				$this->member_update_settlement_form();
 				exit();
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * クレジットカード登録・変更ページ表示
+	 * usces_filter_states_form_js
+	 *
+	 * @param  string $js Scripts.
+	 * @return string
+	 */
+	public function states_form_js( $js ) {
+		return '';
 	}
 
 	/**
@@ -688,7 +922,7 @@ jQuery(document).ready( function($) {
 					),
 					USCES_MEMBER_URL
 				);
-				$html                 .= '<li><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
+				$html                 .= '<li class="settlement-update gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
 			}
 		}
 		return $html;
@@ -896,19 +1130,98 @@ jQuery(document).ready( function($) {
 		global $usces;
 
 		if ( isset( $_REQUEST['acting'] ) && 'remise_conv' === wp_unslash( $_REQUEST['acting'] ) ) {
-			$html   .= '<div id="status_table"><h5>ルミーズ・コンビニ決済</h5>';
+			$x_pay_csv = wp_unslash( $_REQUEST['X-PAY_CSV'] );
+			$conv_name = usces_get_conv_name( $x_pay_csv );
+			if ( empty( $conv_name ) ) {
+				$conv_name = isset( self::$x_pay_csv_list[ $x_pay_csv ]['label'] ) ? self::$x_pay_csv_list[ $x_pay_csv ]['label'] : '';
+			}
+
+			$html   .= '<div id="status_table"><h5>ルミーズ・マルチ決済</h5>';
 			$html   .= '<table>';
 			$html   .= '<tr><th>ご請求番号</th><td>' . esc_html( wp_unslash( $_REQUEST['X-S_TORIHIKI_NO'] ) ) . '</td></tr>';
 			$html   .= '<tr><th>ご請求合計金額</th><td>' . esc_html( wp_unslash( $_REQUEST['X-TOTAL'] ) ) . '</td></tr>';
 			$paydate = wp_unslash( $_REQUEST['X-PAYDATE'] );
 			$html   .= '<tr><th>お支払期限</th><td>' . esc_html( substr( $paydate, 0, 4 ) . '年' . substr( $paydate, 4, 2 ) . '月' . substr( $paydate, 6, 2 ) . '日' ) . '（期限を過ぎますとお支払ができません）</td></tr>';
-			$html   .= '<tr><th>お支払先</th><td>' . esc_html( usces_get_conv_name( wp_unslash( $_REQUEST['X-PAY_CSV'] ) ) ) . '</td></tr>';
-			$html   .= $this->get_remise_conv_return( wp_unslash( $_REQUEST['X-PAY_CSV'] ) );
+			$html   .= '<tr><th>お支払先</th><td>' . esc_html( $conv_name ) . '</td></tr>';
+			$html   .= $this->get_remise_conv_return( $x_pay_csv );
 			$html   .= '</table>';
 			$html   .= '<p>「お支払いのご案内」は、' . esc_html( $entry['customer']['mailaddress1'] ) . '　宛にメールさせていただいております。</p>';
 			$html   .= '</div>';
 		}
 		return $html;
+	}
+
+	/**
+	 * 管理画面送信メール
+	 * usces_filter_order_confirm_mail_payment
+	 *
+	 * @param  string $msg_payment Default payment message.
+	 * @param  int    $order_id Order number.
+	 * @param  array  $payment Payment information.
+	 * @param  array  $cart Cart data.
+	 * @param  array  $data Order data.
+	 * @return string
+	 */
+	public function order_confirm_mail_payment( $msg_payment, $order_id, $payment, $cart, $data ) {
+		if ( 'acting_remise_conv' !== $payment['settlement'] ) {
+			return $msg_payment;
+		}
+
+		global $usces;
+		$remise_x_pay_csv = $usces->get_order_meta_value( 'remise_x_pay_csv', $order_id );
+		if ( empty( $remise_x_pay_csv ) ) {
+			return $msg_payment;
+		}
+		$acting_opts    = $this->get_acting_settings();
+		$show_x_pay_csv = ( isset( $acting_opts['show_x_pay_csv'] ) && 'on' === $acting_opts['show_x_pay_csv'] ) ? 'on' : 'off';
+		if ( 'off' === $show_x_pay_csv ) {
+			return $msg_payment;
+		}
+		if ( ! isset( self::$x_pay_csv_list[ $remise_x_pay_csv ] ) ) {
+			return $msg_payment;
+		}
+		$remise_x_pay_csv_text = '（' . self::$x_pay_csv_list[ $remise_x_pay_csv ]['label'] . '）';
+
+		if ( usces_is_html_mail() ) {
+			$msg_payment  = '<tr><td colspan="2" style="padding: 0 0 25px 0;">' . $payment['name']  . $remise_x_pay_csv_text . usces_payment_detail_confirm( $data ) . '</td></tr>';
+		} else {
+			$msg_payment  = __( '** Payment method **', 'usces' ) . "\r\n";
+			$msg_payment .= usces_mail_line( 1, $data['order_email'] ); // ********************
+			$msg_payment .= $payment['name'] . $remise_x_pay_csv_text;
+			$msg_payment .= "\r\n\r\n";
+		}
+
+		return $msg_payment;
+	}
+
+	/**
+	 * Add payment institution to PDF payment method.
+	 *
+	 * @param string $payment_name Payment Name..
+	 * @param mixed  $data Order data.
+	 *
+	 * @return mixed|string
+	 */
+	public function pdf_payment_name( $payment_name, $data ) {
+		global $usces;
+
+		$acting_opts    = $this->get_acting_settings();
+		$show_x_pay_csv = ( isset( $acting_opts['show_x_pay_csv'] ) && 'on' === $acting_opts['show_x_pay_csv'] ) ? 'on' : 'off';
+		if ( 'off' === $show_x_pay_csv ) {
+			return $payment_name;
+		}
+
+		$remise_x_pay_csv = $usces->get_order_meta_value( 'remise_x_pay_csv', $data->order['ID'] );
+		if ( empty( $remise_x_pay_csv ) ) {
+			return $payment_name;
+		}
+
+		if ( ! isset( self::$x_pay_csv_list[ $remise_x_pay_csv ] ) ) {
+			return $payment_name;
+		}
+		$remise_x_pay_csv_text = '（' . self::$x_pay_csv_list[ $remise_x_pay_csv ]['label'] . '）';
+
+		return $payment_name . $remise_x_pay_csv_text;
 	}
 
 	/**
@@ -955,6 +1268,19 @@ jQuery(document).ready( function($) {
 			case 'P902': /* コンビニ払込票（郵便振替対応） */
 				$html = '<tr><th>受付番号</th><td>' . esc_html( wp_unslash( $_REQUEST['X-PAY_NO1'] ) ) . '</td></tr>';
 				break;
+			case 'E201':
+			case 'E202':
+			case 'M601':
+			case 'M602':
+			case 'M603':
+			case 'M611':
+			case 'M612':
+			case 'M613':
+			case 'M621':
+			case 'M622':
+			case 'M623':
+				$html = '<tr><th>支払手続きURL</th><td><a href="' . esc_html( wp_unslash( $_REQUEST['X-PAY_NO2'] ) ) . '" target="_blank">' . esc_html( wp_unslash( $_REQUEST['X-PAY_NO2'] ) ) . '</a></td></tr>';
+				break;
 			default:
 				$html = '';
 		}
@@ -985,7 +1311,7 @@ jQuery(document).ready( function($) {
 		$continue           = 0;
 		$continuation_table = $wpdb->prefix . 'usces_continuation';
 		$query              = $wpdb->prepare( "SELECT * FROM {$continuation_table} WHERE `con_member_id` = %d AND `con_status` = 'continuation' ORDER BY `con_price` DESC", $member_id );
-		$continue_order     = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore
+		$continue_order     = $wpdb->get_results( $query, ARRAY_A );
 		if ( $continue_order && 0 < count( $continue_order ) ) {
 			$continue = $continue_order[0]['con_order_id'];
 		}

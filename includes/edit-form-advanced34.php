@@ -148,8 +148,12 @@ wel_esc_script_e( $form_extra );
 wp_nonce_field( 'autosave', 'autosavenonce', false );
 wp_nonce_field( 'meta-box-order', 'meta-box-order-nonce', false );
 wp_nonce_field( 'closedpostboxes', 'closedpostboxesnonce', false );
+
+$nonce_action = 'duplicate_post_' . $post->ID; // アクション名を特定の投稿に紐付ける
+$url          = esc_url( USCES_ADMIN_URL ) . '?page=usces_itemedit&action=duplicate&post=' . $post->ID . '&usces_referer=' . urlencode( esc_url( $usces_referer ) );
+$nonce_url    = wp_nonce_url( $url, $nonce_action );
 ?>
-<div id="refbutton"><a href="<?php echo esc_url( USCES_ADMIN_URL ) . '?page=usces_itemedit&amp;action=duplicate&amp;post=' . $post->ID . '&usces_referer=' . urlencode( esc_url( $usces_referer ) ); ?>">[<?php esc_html_e( 'make a copy', 'usces' ); ?>]</a> <a href="<?php echo esc_url( $usces_referer ); ?>">[<?php esc_html_e( 'back to item list', 'usces' ); ?>]</a></div>
+<div id="refbutton"><a href="<?php echo esc_url( $nonce_url ); ?>">[<?php esc_html_e( 'make a copy', 'usces' ); ?>]</a> <a href="<?php echo esc_url( $usces_referer ); ?>">[<?php esc_html_e( 'back to item list', 'usces' ); ?>]</a></div>
 <!--<div id="poststuff" class="metabox-holder has-right-sidebar">-->
 <div id="poststuff">
 <div id="post-body" class="metabox-holder columns-<?php echo 1 == get_current_screen()->get_columns() ? '1' : '2'; ?>">

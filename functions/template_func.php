@@ -506,10 +506,11 @@ function usces_have_skus() {
 function usces_the_itemSku( $out = '' ) {
 	global $usces;
 
+	$skucode = isset( $usces->itemsku['code'] ) ? $usces->itemsku['code'] : '';
 	if ( 'return' === $out ) {
-		return $usces->itemsku['code'];
+		return $skucode;
 	} else {
-		echo esc_attr( $usces->itemsku['code'] );
+		echo esc_attr( $skucode );
 	}
 }
 
@@ -696,7 +697,10 @@ function usces_get_itemZaiko( $field = 'name', $post_id = null, $sku = null ) {
 		$num      = (int) $usces->itemsku['stock'];
 		$stocknum = $usces->itemsku['stocknum'];
 	} else {
-		$skus     = wel_get_skus( $post_id, 'code' );
+		$skus = wel_get_skus( $post_id, 'code' );
+		if ( null === $skus || ! isset( $skus[ $sku ] ) ) {
+			return false;
+		}
 		$num      = (int) $skus[ $sku ]['stock'];
 		$stocknum = $skus[ $sku ]['stocknum'];
 	}
@@ -727,7 +731,14 @@ function usces_get_itemZaiko( $field = 'name', $post_id = null, $sku = null ) {
 function usces_the_itemZaikoNum( $out = '' ) {
 	global $usces;
 
+	if ( ! isset( $usces->itemsku['stocknum'] ) ) {
+		return false;
+	}
+
 	$num = $usces->itemsku['stocknum'];
+	if ( '' !== $num ) {
+		$num = (int) $num;
+	}
 
 	if ( 'return' === $out ) {
 		return $num;
@@ -745,6 +756,10 @@ function usces_the_itemZaikoNum( $out = '' ) {
 function usces_the_itemSkuDisp( $out = '' ) {
 	global $usces;
 
+	if ( ! isset( $usces->itemsku['name'] ) ) {
+		return false;
+	}
+
 	if ( 'return' === $out ) {
 		return $usces->itemsku['name'];
 	} else {
@@ -760,6 +775,10 @@ function usces_the_itemSkuDisp( $out = '' ) {
  */
 function usces_the_itemSkuUnit( $out = '' ) {
 	global $usces;
+
+	if ( ! isset( $usces->itemsku['unit'] ) ) {
+		return false;
+	}
 
 	if ( 'return' === $out ) {
 		return $usces->itemsku['unit'];
@@ -779,6 +798,10 @@ function usces_the_firstSku( $out = '' ) {
 
 	$post_id = $post->ID;
 	$skus    = wel_get_skus( $post_id );
+
+	if ( null === $skus || ! isset( $skus[0]['code'] ) ) {
+		return false;
+	}
 
 	if ( 'return' === $out ) {
 		return $skus[0]['code'];
@@ -833,6 +856,10 @@ function usces_the_firstCprice( $out = '', $post = null ) {
 	}
 	$post_id = $post->ID;
 	$skus    = wel_get_skus( $post_id );
+
+	if ( null === $skus || ! isset( $skus[0]['cprice'] ) ) {
+		return false;
+	}
 
 	if ( 'return' === $out ) {
 		return $skus[0]['cprice'];
@@ -1548,14 +1575,23 @@ function usces_the_itemImageCaption( $number = 0, $post = '', $out = '' ) {
 		$name = $product['itemName'];
 
 		if ( 0 === (int) $number ) {
-			$pictid    = $usces->get_mainpictid( $code );
-			$attach_ob = get_post( $pictid );
+			$pictid = $usces->get_mainpictid( $code );
+			if ( $pictid ) {
+				$attach_ob = get_post( $pictid );
+				$excerpt   = ( isset( $attach_ob->post_excerpt ) ) ? $attach_ob->post_excerpt : '';
+			} else {
+				$excerpt = '';
+			}
 		} else {
-			$pictids   = $usces->get_pictids( $code );
-			$ind       = $number - 1;
-			$attach_ob = get_post( $pictids[ $ind ] );
+			$pictids = $usces->get_pictids( $code );
+			$ind     = $number - 1;
+			if ( isset( $pictids[ $ind ] ) ) {
+				$attach_ob = get_post( $pictids[ $ind ] );
+				$excerpt   = ( isset( $attach_ob->post_excerpt ) ) ? $attach_ob->post_excerpt : '';
+			} else {
+				$excerpt = '';
+			}
 		}
-		$excerpt = $attach_ob->post_excerpt;
 	}
 
 	if ( 'return' === $out ) {
@@ -1579,8 +1615,8 @@ function usces_the_itemImageDescription( $number = 0, $post = '', $out = '' ) {
 	$ptitle = $number;
 	if ( $ptitle && 0 === (int) $number ) {
 
-		$picposts = new WP_Query( array( 'post_type' => 'attachment', 'name' => $ptitle ) );
-		$excerpt  = ( $picposts->have_posts() ) ? $picposts[0]->post_content : '';
+		$picposts    = new WP_Query( array( 'post_type' => 'attachment', 'name' => $ptitle ) );
+		$description = ( $picposts->have_posts() ) ? $picposts[0]->post_content : '';
 
 	} else {
 
@@ -1597,20 +1633,29 @@ function usces_the_itemImageDescription( $number = 0, $post = '', $out = '' ) {
 		$name = $product['itemName'];
 
 		if ( 0 === (int) $number ) {
-			$pictid    = $usces->get_mainpictid( $code );
-			$attach_ob = get_post( $pictid );
+			$pictid = $usces->get_mainpictid( $code );
+			if ( $pictid ) {
+				$attach_ob   = get_post( $pictid );
+				$description = ( isset( $attach_ob->post_content ) ) ? $attach_ob->post_content : '';
+			} else {
+				$description = '';
+			}
 		} else {
-			$pictids   = $usces->get_pictids( $code );
-			$ind       = $number - 1;
-			$attach_ob = get_post( $pictids[ $ind ] );
+			$pictids = $usces->get_pictids( $code );
+			$ind     = $number - 1;
+			if ( isset( $pictids[ $ind ] ) ) {
+				$attach_ob   = get_post( $pictids[ $ind ] );
+				$description = ( isset( $attach_ob->post_content ) ) ? $attach_ob->post_content : '';
+			} else {
+				$description = '';
+			}
 		}
-		$excerpt = $attach_ob->post_content;
 	}
 
 	if ( 'return' === $out ) {
-		return $excerpt;
+		return $description;
 	} else {
-		echo esc_html( $excerpt );
+		echo esc_html( $description );
 	}
 }
 
@@ -1722,7 +1767,7 @@ function usces_the_itemOption( $name, $label = '#default#', $out = '' ) {
 	}
 
 	$opts = wel_get_opts( $post_id, 'name' );
-	if ( ! $opts ) {
+	if ( ! $opts || ! isset( $opts[ $name ] ) ) {
 		return false;
 	}
 
@@ -3731,8 +3776,9 @@ function usces_member_history( $out = '' ) {
 	$html  = usces_load_filter_purchase_date();
 	$html .= '<div class="history-area">';
 	if ( 0 === $usces_member_history_count ) {
-		$html .= '<table id="history_head"><tr>
-		<td>' . __( 'There is no purchase history for this moment.', 'usces' ) . '</td>
+		$no_history_message = apply_filters( 'usces_filter_no_history_message', __( 'There is no purchase history during the period.', 'usces' ) );
+		$html              .= '<table id="history_head"><tr>
+		<td>' . $no_history_message . '</td>
 		</tr></table>';
 	} else {
 		$management_status = apply_filters( 'usces_filter_management_status', get_option( 'usces_management_status' ) );
@@ -3779,37 +3825,55 @@ function usces_member_history( $out = '' ) {
 				$delivery_company_url = usces_get_delivery_company_url( $delivery_company, $tracking_number );
 			}
 
+			$head_col            = 4;
 			$history_member_head = '<table id="history_head"><thead>
 				<tr class="order_head_label">
 				<th class="historyrow order_number">' . __( 'Order number', 'usces' ) . '</th>
 				<th class="historyrow purchase_date">' . __( 'Purchase date', 'usces' ) . '</th>';
 			if ( ! empty( $p_status ) ) {
 				$history_member_head .= '<th class="historyrow processing_status">' . __( 'Processing status', 'usces' ) . '</th>';
+				$head_col++;
 			}
 			if ( ! empty( $r_status ) ) {
 				$history_member_head .= '<th class="historyrow transfer_statement">' . __( 'transfer statement', 'usces' ) . '</th>';
+				$head_col++;
 			}
 			$history_member_head .= '<th class="historyrow purchase_price">' . __( 'Purchase price', 'usces' ) . '</th>
 				<th class="historyrow discount">' . apply_filters( 'usces_member_discount_label', __( 'Discount', 'usces' ), $umhs['ID'] ) . '</th>';
 			if ( $tax_display && 'products' === $tax_target ) {
 				$history_member_head .= '<th class="historyrow tax">' . $tax_label . '</th>';
+				$head_col++;
 			}
 			if ( $member_system_point && 0 === $point_coverage ) {
 				$history_member_head .= '<th class="historyrow used_point">' . __( 'Used points', 'usces' ) . '</th>';
+				$head_col++;
 			}
-			$history_member_head .= '<th class="historyrow shipping">' . __( 'Shipping', 'usces' ) . '</th>
-				<th class="historyrow cod">' . apply_filters( 'usces_filter_member_history_cod_label', __( 'C.O.D', 'usces' ), $umhs['ID'] ) . '</th>';
+			if ( $shipping ) {
+				$history_member_head .= '<th class="historyrow shipping">' . __( 'Shipping', 'usces' ) . '</th>';
+				$head_col++;
+			}
+			if ( ! empty( $umhs['cod_fee'] ) ) {
+				$payment              = usces_get_payments_by_name( $umhs['payment_name'] );
+				$cod_label            = ( isset( $payment['settlement'] ) && 'COD' === $payment['settlement'] ) ? __( 'C.O.D', 'usces' ) : __( 'Fee', 'usces' );
+				$cod_label            = apply_filters( 'usces_filter_member_history_cod_label', $cod_label, $umhs['ID'] );
+				$history_member_head .= '<th class="historyrow cod">' . $cod_label . '</th>';
+				$head_col++;
+			}
 			if ( $tax_display && 'all' === $tax_target ) {
 				$history_member_head .= '<th class="historyrow tax">' . $tax_label . '</th>';
+				$head_col++;
 			}
 			if ( $member_system_point && 1 === $point_coverage ) {
 				$history_member_head .= '<th class="historyrow used_point">' . __( 'Used points', 'usces' ) . '</th>';
+				$head_col++;
 			}
 			if ( $member_system_point ) {
 				$history_member_head .= '<th class="historyrow get_point">' . __( 'Acquired points', 'usces' ) . '</th>';
+				$head_col++;
 			}
 			if ( ! empty( $tracking_number ) ) {
 				$history_member_head .= '<th class="historyrow">' . __( 'Tracking number', 'usces' ) . '</th>';
+				$head_col++;
 			}
 			$total_price = $umhs['total_items_price'] - $umhs['usedpoint'] + $umhs['discount'] + $umhs['shipping_charge'] + $umhs['cod_fee'] + $umhs['tax'];
 			if ( $total_price < 0 ) {
@@ -3834,8 +3898,12 @@ function usces_member_history( $out = '' ) {
 			if ( $member_system_point && 0 === $point_coverage ) {
 				$history_member_head .= '<td class="rightnum used_point" data-label="' . __( 'Used points', 'usces' ) . '">' . number_format( $umhs['usedpoint'] ) . '</td>';
 			}
-			$history_member_head .= '<td class="rightnum shipping" data-label="' . __( 'Shipping', 'usces' ) . '">' . usces_crform( $umhs['shipping_charge'], true, false, 'return' ) . '</td>
-				<td class="rightnum cod" data-label="' . apply_filters( 'usces_filter_cod_label', __( 'C.O.D', 'usces' ) ) . '">' . usces_crform( $umhs['cod_fee'], true, false, 'return' ) . '</td>';
+			if ( $shipping ) {
+				$history_member_head .= '<td class="rightnum shipping" data-label="' . __( 'Shipping', 'usces' ) . '">' . usces_crform( $umhs['shipping_charge'], true, false, 'return' ) . '</td>';
+			}
+			if ( ! empty( $umhs['cod_fee'] ) ) {
+				$history_member_head .= '<td class="rightnum cod" data-label="' . apply_filters( 'usces_filter_cod_label', __( 'C.O.D', 'usces' ) ) . '">' . usces_crform( $umhs['cod_fee'], true, false, 'return' ) . '</td>';
+			}
 			if ( $tax_display && 'all' === $tax_target ) {
 				$history_member_head .= '<td class="rightnum tax" data-label="' . $tax_label . '">' . usces_order_history_tax( $umhs, $tax_mode ) . '</td>';
 			}
@@ -3854,7 +3922,7 @@ function usces_member_history( $out = '' ) {
 			}
 			$history_member_head .= '</tr>';
 			$html                .= apply_filters( 'usces_filter_history_member_head', $history_member_head, $umhs );
-			$html                .= apply_filters( 'usces_filter_member_history_header', null, $umhs );
+			$html                .= apply_filters( 'usces_filter_member_history_header', null, $umhs, $head_col );
 			$html                .= '</tbody></table>
 					<table id="retail_table_' . $umhs['ID'] . '" class="retail">';
 			$history_cart_head    = '<thead><tr>
@@ -4681,9 +4749,9 @@ function usces_facebook_like() {
 		'action'     => 'like', /* like, recommend */
 	);
 	$like = apply_filters( 'usces_filter_facebook_like', $like, $post->ID );
-?>
+	?>
 <iframe src="//www.facebook.com/plugins/like.php?href=<?php echo esc_url( $like['url'] ); ?>&amp;send=<?php echo esc_attr( $like['send'] ); ?>&amp;layout=<?php echo esc_attr( $like['layout'] ); ?>&amp;width=<?php echo esc_attr( $like['width'] ); ?>&amp;show_faces=<?php echo esc_attr( $like['show_faces'] ); ?>&amp;action=<?php echo esc_attr( $like['action'] ); ?>&amp;colorscheme=light&amp;font=arial&amp;height=<?php echo esc_attr( $like['height'] ); ?>" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:<?php echo esc_attr( $like['width'] ); ?>px; height:<?php echo esc_attr( $like['height'] ); ?>px;" allowTransparency="true"></iframe>
-<?php
+	<?php
 }
 
 /**
@@ -4695,11 +4763,11 @@ function usces_facebook_like() {
  * @return string|void
  */
 function usces_checked( $chk, $key, $out = '' ) {
-	$checked = ( isset( $chk[ $key ] ) && 1 === (int) $chk[ $key ] ) ? ' checked="checked"' : '';
+	$checked = ( isset( $chk[ $key ] ) && 1 === (int) $chk[ $key ] );
 	if ( 'return' === $out ) {
-		return $checked;
+		return checked( $checked, true, false );
 	} else {
-		echo esc_html( $checked );
+		checked( $checked, true, true );
 	}
 }
 
@@ -4732,9 +4800,9 @@ function usces_get_custom_field_value( $field, $key, $id, $out = '' ) {
 	}
 
 	if ( 'return' === $out ) {
-		return $value;
+		return wel_esc_script( $value );
 	} else {
-		echo esc_html( $value );
+		wel_esc_script_e( $value );
 	}
 }
 
@@ -4885,8 +4953,10 @@ function usces_confirm_tax( $out = '' ) {
 		$usces_tax->get_order_tax( $materials );
 		$tax  = sprintf( __( "Applies to %s%%", 'usces' ), $usces->options['tax_rate'] ) . '&nbsp;&nbsp;' . usces_crform( $usces_tax->subtotal_standard + $usces_tax->discount_standard, true, false, 'return' ) . '&nbsp;&nbsp;';
 		$tax .= sprintf( __( "%s%% consumption tax", 'usces' ), $usces->options['tax_rate'] ) . '&nbsp;&nbsp;' . $po . usces_crform( $usces_tax->tax_standard, true, false, 'return' ) . $pc . '<br />';
-		$tax .= sprintf( __( "Applies to %s%%", 'usces' ), $usces->options['tax_rate_reduced'] ) . '&nbsp;&nbsp;' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . '&nbsp;&nbsp;';
-		$tax .= sprintf( __( "%s%% consumption tax", 'usces' ), $usces->options['tax_rate_reduced'] ) . '&nbsp;&nbsp;' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc;
+		if ( 0 < $usces_tax->tax_rate_reduced ) {
+			$tax .= sprintf( __( "Applies to %s%%", 'usces' ), $usces->options['tax_rate_reduced'] ) . '&nbsp;&nbsp;' . usces_crform( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced, true, false, 'return' ) . '&nbsp;&nbsp;';
+			$tax .= sprintf( __( "%s%% consumption tax", 'usces' ), $usces->options['tax_rate_reduced'] ) . '&nbsp;&nbsp;' . $po . usces_crform( $usces_tax->tax_reduced, true, false, 'return' ) . $pc;
+		}
 	} else {
 		$tax = '';
 	}

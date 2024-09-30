@@ -54,6 +54,9 @@ class NEW_PRODUCT_IMAGE_REGISTER {
 		if ( isset( $_POST['usces_newproductimage_option_update'] ) ) {
 
 			check_admin_referer( 'admin_system', 'wc_nonce' );
+			if ( ! current_user_can( 'wel_manage_setting' ) ) {
+				wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+			}
 
 			if ( isset( $_POST['newproductimage_switch_flag'] ) ) {
 				self::$opts['switch_flag'] = (int) $_POST['newproductimage_switch_flag'];

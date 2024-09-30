@@ -110,6 +110,9 @@ class OPERATION_LOG {
 		$action = filter_input( INPUT_POST, 'usces_operation_log_option_update' );
 		if ( ! empty( $action ) ) {
 			check_admin_referer( 'admin_system', 'wc_nonce' );
+			if ( ! current_user_can( 'wel_manage_setting' ) ) {
+				wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+			}
 
 			$status                     = filter_input( INPUT_POST, 'operation_log_status' );
 			$order_status               = filter_input( INPUT_POST, 'order_operation_log_status' );
@@ -207,7 +210,7 @@ class OPERATION_LOG {
 						</tr>
 						<tr height="35" class="metabox_operation_log_status" style="display:none;">
 							<th class="system_th"><a style="cursor:pointer;" onclick="toggleVisibility('ex_admin_log_notice');">
-								<?php _e( 'Operation log retention period', 'usces' ); ?></a>
+								<?php esc_html_e( 'Operation log retention period', 'usces' ); ?></a>
 							</th>
 							<td width="100" colspan="4">
 								<select name="admin_log_retention_period">

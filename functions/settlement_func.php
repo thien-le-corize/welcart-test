@@ -18,8 +18,9 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "get_settlement_log"
+					'action'  : "order_item_ajax",
+					'wc_nonce': "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'    : "get_settlement_log"
 				}
 			}).done( function( retVal, dataType ) {
 				$( "#settlement-log-response" ).html( "" );
@@ -38,9 +39,10 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "get_settlement_log_detail",
-					log_key: log_key
+					'action'  : "order_item_ajax",
+					'wc_nonce': "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'    : "get_settlement_log_detail",
+					'log_key' : log_key
 				}
 			}).done( function( retVal, dataType ) {
 				if ( retVal.status == "OK" ) {
@@ -57,9 +59,10 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "search_settlement_log",
-					log_key: log_key
+					'action'  : "order_item_ajax",
+					'wc_nonce': "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'    : "search_settlement_log",
+					'log_key' : log_key
 				}
 			}).done( function( retVal, dataType ) {
 				$( "#settlement-log-response" ).html( "" );
@@ -78,9 +81,10 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "delete_settlement_log",
-					log_key: log_key
+					'action'  : "order_item_ajax",
+					'wc_nonce': "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'    : "delete_settlement_log",
+					'log_key' : log_key
 				}
 			}).done( function( retVal, dataType ) {
 				if ( retVal.status == "OK" ) {
@@ -98,8 +102,9 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "delete_settlement_log_all"
+					'action'  : "order_item_ajax",
+					'wc_nonce': "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'    : "delete_settlement_log_all"
 				}
 			}).done( function( retVal, dataType ) {
 				if ( retVal.status == "OK" ) {
@@ -117,10 +122,11 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "revival_order_data",
-					log_key: log_key,
-					register_date: register_date
+					'action'       : "order_item_ajax",
+					'mode'         : "revival_order_data",
+					'wc_nonce'     : "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'log_key'      : log_key,
+					'register_date': register_date
 				}
 			}).done( function( retVal, dataType ) {
 				if ( retVal.status == "OK" ) {
@@ -141,8 +147,9 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "get_settlement_error_log"
+					'action'   : "order_item_ajax",
+					'wc_nonce' : "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'     : "get_settlement_error_log"
 				}
 			}).done( function( retVal, dataType ) {
 				$( "#settlement-error-log-response" ).html( "" );
@@ -161,9 +168,10 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "get_settlement_error_log_detail",
-					log_id: log_id
+					'action'   : "order_item_ajax",
+					'wc_nonce' : "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'     : "get_settlement_error_log_detail",
+					'log_id'   : log_id
 				}
 			}).done( function( retVal, dataType ) {
 				if ( retVal.status == "OK" ) {
@@ -180,9 +188,10 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "delete_settlement_error_log",
-					log_id: log_id
+					'action'   : "order_item_ajax",
+					'wc_nonce' : "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'     : "delete_settlement_error_log",
+					'log_id'   : log_id
 				}
 			}).done( function( retVal, dataType ) {
 				if ( retVal.status == "OK" ) {
@@ -204,8 +213,9 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "delete_settlement_error_log_all"
+					'action'   : "order_item_ajax",
+					'wc_nonce' : "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'     : "delete_settlement_error_log_all"
 				}
 			}).done( function( retVal, dataType ) {
 				if ( retVal.status == "OK" ) {
@@ -217,7 +227,7 @@ function usces_order_list_js_settlement_dialog() {
 		},
 
 		output_settlement_error_log: function( log_id ) {
-			location.href = "<?php echo esc_url( USCES_ADMIN_URL ); ?>?page=usces_orderlist&order_action=dlsettlementerrorlog&log_id="+log_id+"&noheader=true";
+			location.href = "<?php echo esc_url( USCES_ADMIN_URL ); ?>?page=usces_orderlist&order_action=dlsettlementerrorlog&log_id="+log_id+"&noheader=true&wc_nonce=<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>";
 		},
 
 		reset_settlement_notice: function() {
@@ -226,8 +236,9 @@ function usces_order_list_js_settlement_dialog() {
 				type: "POST",
 				dataType: "json",
 				data: {
-					action: "order_item_ajax",
-					mode: "reset_settlement_notice"
+					'action'   : "order_item_ajax",
+					'wc_nonce' : "<?php echo esc_js( wp_create_nonce( 'order_list' ) ); ?>",
+					'mode'     : "reset_settlement_notice"
 				}
 			}).done( function( retVal, dataType ) {
 			}).fail( function( retVal ) {
@@ -993,6 +1004,9 @@ function usces_reset_settlement_notice() {
  * 決済エラー通知
  */
 function usces_display_settlement_notice() {
+	if ( ! current_user_can( 'wel_manage_order' ) ) {
+		return false;
+	}
 	$datetime = get_option( 'usces_settlement_notice' );
 	echo '<div class="message error"><p>' . sprintf( __( "Settlement error has occurred. Please check <a href=\"admin.php?page=usces_orderlist&order_action=settlement_notice\">the settlement error log</a>. The date of occurrence:[ %s ]", 'usces' ), $datetime ) . '</p></div>';
 }

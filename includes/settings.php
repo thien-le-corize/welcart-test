@@ -62,5 +62,6 @@ require_once USCES_PLUGIN_DIR . 'classes/settlement.class.php';
 require_once USCES_PLUGIN_DIR . 'classes/tax.class.php';
 require_once USCES_PLUGIN_DIR . 'classes/logger.class.php';
 require_once USCES_PLUGIN_DIR . 'classes/loglist.class.php';
+require_once USCES_PLUGIN_DIR . 'classes/instantPaidyDashboard.class.php';
 
 require USCES_PLUGIN_DIR . 'includes/database/db-update.php';

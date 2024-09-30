@@ -123,7 +123,13 @@ function add_item_sku_meta( $post_ID ) {
 		$value['taxrate']  = $newskutaxrate;
 
 		$value = apply_filters( 'usces_filter_add_item_sku_meta_value', $value );
-		$id    = usces_add_sku( $post_ID, $value, true );
+
+		$res = apply_filters( 'usces_filter_before_add_item_sku_meta', false, $post_id, $value );
+		if ( false !== $res ) {
+			return $res;
+		}
+
+		$id = usces_add_sku( $post_ID, $value, true );
 
 		return $id;
 	} else {
@@ -332,6 +338,7 @@ function _list_item_sku_meta_row( $sku ) {
 	$skugptekiyo       = $sku['gp'];
 	$id                = (int) $sku['meta_id'];
 	$zaikoselectarray  = get_option( 'usces_zaiko_status' );
+	$zaikoselectarray  = apply_filters( 'usces_filter_zaikoselectarray', $zaikoselectarray );
 	$zaikoselect_count = ( $zaikoselectarray && is_array( $zaikoselectarray ) ) ? count( $zaikoselectarray ) : 0;
 	$sort              = (int) $sku['sort'];
 	$sku_colspan       = apply_filters( 'usces_filter_sku_meta_colspan', '6' );
@@ -1053,6 +1060,8 @@ function select_common_option( $post_id ) {
 function order_item2cart_ajax() {
 	global $usces;
 
+	check_ajax_referer( 'order_edit', 'wc_nonce' );
+
 	if ( 'order_item2cart_ajax' !== $_POST['action'] ) {
 		die(0);
 	}
@@ -1076,14 +1085,19 @@ function order_item2cart_ajax() {
 function order_item_ajax() {
 	global $usces;
 
-	if ( 'order_item_ajax' !== $_POST['action'] ) {
+	if ( ! current_user_can( 'wel_manage_order' ) ) {
+		wp_die( __( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
+	}
+
+	if ( 'order_item_ajax' !== wp_unslash( $_POST['action'] ) ) {
 		die(0);
 	}
 
 	$res   = false;
 	$_POST = $usces->stripslashes_deep_post( $_POST );
+	$mode  = sanitize_text_field( wp_unslash( $_POST['mode'] ) );
 
-	switch ( $_POST['mode'] ) {
+	switch ( $mode ) {
 		case 'completionMail':
 		case 'orderConfirmMail':
 		case 'changeConfirmMail':
@@ -1091,66 +1105,99 @@ function order_item_ajax() {
 		case 'mitumoriConfirmMail':
 		case 'cancelConfirmMail':
 		case 'otherConfirmMail':
-			$res = usces_order_confirm_message( $_POST['order_id'] );
+			check_ajax_referer( 'order_edit', 'wc_nonce' );
+			$order_id = (int) wp_unslash( $_POST['order_id'] );
+			$res      = usces_order_confirm_message( $order_id );
 			break;
 		case 'sendmail':
+			// Nonce('wc_send_mail_order_nonce') verification is executed in the usces_ajax_send_mail function.
 			$res = usces_ajax_send_mail();
 			break;
 		case 'get_order_item':
-			$res = get_order_item( $_POST['itemcode'] );
+			check_ajax_referer( 'order_edit', 'wc_nonce' );
+			$itemcode = sanitize_text_field( wp_unslash( $_POST['itemcode'] ) );
+			$res      = get_order_item( $itemcode );
 			break;
 		case 'get_item_select_option':
-			$res = usces_get_item_select_option( $_POST['cat_id'] );
+			check_ajax_referer( 'order_edit', 'wc_nonce' );
+			$cat_id = (int) wp_unslash( $_POST['cat_id'] );
+			$res    = usces_get_item_select_option( $cat_id );
 			break;
 		case 'ordercheckpost':
+			check_ajax_referer( 'order_edit', 'wc_nonce' );
 			$res = usces_update_ordercheck();
 			break;
 		case 'getmember':
+			check_ajax_referer( 'order_edit', 'wc_nonce' );
 			$res = usces_get_member_neworder();
 			break;
 		case 'recalculation':
-			$change_taxrate = ( isset( $_POST['change_taxrate'] ) ) ? $_POST['change_taxrate'] : '';
-			$res            = usces_order_recalculation( $_POST['order_id'], $_POST['mem_id'], $_POST['post_ids'], $_POST['prices'], $_POST['quants'], $_POST['cart_ids'], $_POST['upoint'], $_POST['shipping_charge'], $_POST['cod_fee'], $_POST['discount'], $change_taxrate );
+			check_ajax_referer( 'order_edit', 'wc_nonce' );
+			$change_taxrate = ( isset( $_POST['change_taxrate'] ) ) ? sanitize_text_field( wp_unslash( $_POST['change_taxrate'] ) ) : '';
+			$order_id       = (int) wp_unslash( $_POST['order_id'] );
+			$mem_id         = (int) wp_unslash( $_POST['mem_id'] );
+			$res            = usces_order_recalculation( $order_id, $mem_id, $_POST['post_ids'], $_POST['prices'], $_POST['quants'], $_POST['cart_ids'], $_POST['upoint'], $_POST['shipping_charge'], $_POST['cod_fee'], $_POST['discount'], $change_taxrate );
 			break;
 		case 'recalculation_reduced':
-			$change_taxrate = ( isset( $_POST['change_taxrate'] ) ) ? $_POST['change_taxrate'] : '';
-			$res            = usces_order_recalculation_reduced( $_POST['order_id'], $_POST['mem_id'], $_POST['post_ids'], $_POST['prices'], $_POST['quants'], $_POST['cart_ids'], $_POST['upoint'], $_POST['shipping_charge'], $_POST['cod_fee'], $_POST['discount_standard'], $_POST['discount_reduced'], $change_taxrate );
+			check_ajax_referer( 'order_edit', 'wc_nonce' );
+			$change_taxrate = ( isset( $_POST['change_taxrate'] ) ) ? sanitize_text_field( wp_unslash( $_POST['change_taxrate'] ) ) : '';
+			$order_id       = (int) wp_unslash( $_POST['order_id'] );
+			$mem_id         = (int) wp_unslash( $_POST['mem_id'] );
+			$res            = usces_order_recalculation_reduced( $order_id, $mem_id, $_POST['post_ids'], $_POST['prices'], $_POST['quants'], $_POST['cart_ids'], $_POST['upoint'], $_POST['shipping_charge'], $_POST['cod_fee'], $_POST['discount_standard'], $_POST['discount_reduced'], $change_taxrate );
 			break;
 		case 'get_settlement_log':
+			check_ajax_referer( 'order_list', 'wc_nonce' );
 			$res = usces_get_settlement_log();
 			break;
 		case 'get_settlement_log_detail':
-			$res = usces_get_settlement_log_detail( $_POST['log_key'] );
+			check_ajax_referer( 'order_list', 'wc_nonce' );
+			$log_key = sanitize_text_field( wp_unslash( $_POST['log_key'] ) );
+			$res     = usces_get_settlement_log_detail( $log_key );
 			break;
 		case 'search_settlement_log':
-			$res = usces_get_settlement_log( $_POST['log_key'] );
+			check_ajax_referer( 'order_list', 'wc_nonce' );
+			$log_key = sanitize_text_field( wp_unslash( $_POST['log_key'] ) );
+			$res     = usces_get_settlement_log( $log_key );
 			break;
 		case 'delete_settlement_log':
-			usces_delete_settlement_log( $_POST['log_key'] );
+			check_ajax_referer( 'order_list', 'wc_nonce' );
+			$log_key = sanitize_text_field( wp_unslash( $_POST['log_key'] ) );
+			usces_delete_settlement_log( $log_key );
 			$res = usces_get_settlement_log();
 			break;
 		case 'delete_settlement_log_all':
+			check_ajax_referer( 'order_list', 'wc_nonce' );
 			usces_delete_settlement_log();
 			$res = usces_get_settlement_log();
 			break;
 		case 'revival_order_data':
-			$res = usces_revival_order_data( $_POST['log_key'], $_POST['register_date'] );
+			check_ajax_referer( 'order_list', 'wc_nonce' );
+			$log_key       = sanitize_text_field( wp_unslash( $_POST['log_key'] ) );
+			$register_date = sanitize_text_field( wp_unslash( $_POST['register_date'] ) );
+			$res           = usces_revival_order_data( $log_key, $register_date );
 			break;
 		case 'get_settlement_error_log':
+			check_ajax_referer( 'order_list', 'wc_nonce' );
 			$res = usces_get_settlement_error_log();
 			break;
 		case 'get_settlement_error_log_detail':
-			$res = usces_get_settlement_error_log_detail( $_POST['log_id'] );
+			check_ajax_referer( 'order_list', 'wc_nonce' );
+			$log_id = sanitize_text_field( wp_unslash( $_POST['log_id'] ) );
+			$res    = usces_get_settlement_error_log_detail( $log_id );
 			break;
 		case 'delete_settlement_error_log':
-			usces_delete_settlement_error_log( $_POST['log_id'] );
+			check_ajax_referer( 'order_list', 'wc_nonce' );
+			$log_id = sanitize_text_field( wp_unslash( $_POST['log_id'] ) );
+			usces_delete_settlement_error_log( $log_id );
 			$res = usces_get_settlement_error_log();
 			break;
 		case 'delete_settlement_error_log_all':
+			check_ajax_referer( 'order_list', 'wc_nonce' );
 			usces_delete_settlement_error_log();
 			$res = usces_get_settlement_error_log();
 			break;
 		case 'reset_settlement_notice':
+			check_ajax_referer( 'order_list', 'wc_nonce' );
 			$res = usces_reset_settlement_notice();
 			break;
 	}
@@ -1389,6 +1436,9 @@ function get_order_item( $item_code ) {
 		return false;
 	}
 	$product = wel_get_product( $post_id );
+	if ( null === $product ) {
+		return false;
+	}
 	$post    = $product['_pst'];
 	$res     = apply_filters( 'usce_action_ajax_get_order_item', false, $post );
 	if ( false !== $res ) {
@@ -1557,8 +1607,8 @@ function item_option_ajax() {
 	$inputs = filter_input_array( INPUT_POST, $args );
 
 	check_admin_referer( 'admin_setup', 'wc_nonce' );
-	if ( 4 > usces_get_admin_user_level() ) {
-		die('user_level');
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 	}
 
 	if ( 'item_option_ajax' !== $inputs['action'] || null === $inputs['ID'] ) {
@@ -1618,20 +1668,34 @@ function item_sku_ajax() {
 	$post_id = (int) $_POST['ID'];
 	$msg     = '';
 
+	if ( ! current_user_can( 'wel_publish_products', $post_id ) ) {
+		$response = array(
+			'meta_id'  => 0,
+			'meta_row' => 0,
+			'meta_msg' => __( 'You are not allowed to edit this item.', 'usces' ),
+		);
+		wp_send_json( $response );
+	}
+
 	if ( isset( $_POST['update'] ) ) {
+		check_ajax_referer( 'admin_setup', 'wc_nonce' );
 		$id = up_item_sku_meta( $post_id );
 
 	} elseif ( isset( $_POST['delete'] ) ) {
+		check_ajax_referer( 'admin_setup', 'wc_nonce' );
 		$id = del_item_sku_meta( $post_id );
 
 	} elseif ( isset( $_POST['select'] ) ) {
+		check_ajax_referer( 'admin_setup', 'wc_nonce' );
 		$response = select_item_sku( $post_id );
 		wp_send_json( $response );
 
 	} elseif ( isset( $_POST['sort'] ) ) {
+		check_ajax_referer( 'admin_setup', 'wc_nonce' );
 		$id = usces_sort_item_skus( $post_id, $_POST['meta'] );
 
 	} else {
+		check_ajax_referer( 'admin_setup', 'wc_nonce' );
 		$id = add_item_sku_meta( $post_id );
 
 	}
@@ -1747,7 +1811,7 @@ function item_save_metadata( $post_id, $post ) {
 
 	}
 
-	if ( ! wp_verify_nonce( $inputs['usces_nonce'], 'usc-e-shop' ) ) {
+	if ( ! isset( $inputs['usces_nonce'] ) || ! wp_verify_nonce( $inputs['usces_nonce'], 'usc-e-shop' ) ) {
 		return $post_id;
 	}
 
@@ -2127,66 +2191,56 @@ function usces_has_custom_field_meta( $fieldname ) {
 function usces_getinfo_ajax() {
 	global $wp_version;
 
-	$wcex_str = '';
-	$res      = '';
 	$wcex     = usces_get_wcex();
-	foreach ( (array) $wcex as $key => $values ) {
-		$wcex_str .= $key . '-' . $values['version'] . ',';
-	}
-	$wcex_str = rtrim( $wcex_str, ',' );
-	if ( version_compare( $wp_version, '3.4', '>=' ) ) {
-		$theme_ob             = wp_get_theme();
-		$themedata['Name']    = $theme_ob->get( 'Name' );
-		$themedata['Version'] = $theme_ob->get( 'Version' );
-	} else {
-		$themedata = get_theme_data( get_stylesheet_directory() . '/style.css' );
+	$wcex_str = join( ',', array_map( 
+		function( $key, $values ) {
+			return $key . '-' . $values['version'];
+		},
+		array_keys( $wcex ), $wcex ) 
+	);
+
+	$theme_data = wp_get_theme();
+	$theme      = urlencode( $theme_data->get( 'Name' ) . '-' . $theme_data->get( 'Version' ) );
+
+	$args = array(
+		'timeout'   => 30,
+		'headers'   => array( 'Content-Type' => 'application/x-www-form-urlencoded' ),
+		'body'      => array(
+			'v'     => urlencode( USCES_VERSION ),
+			'wcid'  => urlencode( get_option( 'usces_wcid' ) ),
+			'locale'=> urlencode( get_locale() ),
+			'theme' => $theme,
+			'wcex'  => urlencode( $wcex_str ),
+			'wcurl' => urlencode( get_home_url() )
+		)
+	);
+
+	$response = wp_remote_post( 'https://www.welcart.com/util/welcart_information2.php', $args );
+
+	if ( is_wp_error( $response ) ) {
+		die( 'ERROR' );
 	}
 
-	$v             = urlencode( USCES_VERSION );
-	$wcid          = urlencode( get_option( 'usces_wcid' ) );
-	$locale        = urlencode( get_locale() );
-	$theme         = urlencode( $themedata['Name'] . '-' . $themedata['Version'] );
-	$wcex          = urlencode( $wcex_str );
-	$interface_url = 'http://www.welcart.com/util/welcart_information2.php';
-	$wcurl         = urlencode( get_home_url() );
-	$interface     = parse_url( $interface_url );
+	$body = wp_remote_retrieve_body( $response );
+	if ( empty( $body ) ) {
+		die( 'ERROR' );
+	}
 
-	$vars    = "v=$v&wcid=$wcid&locale=$locale&theme=$theme&wcex=$wcex&wcurl=$wcurl";
-	$header  = 'POST ' . $interface_url . " HTTP/1.1\r\n";
-	$header .= 'Host: ' . $_SERVER['HTTP_HOST'] . "\r\n";
-	$header .= 'User-Agent: ' . $_SERVER['HTTP_USER_AGENT'] . "\r\n";
-	$header .= "Content-Type: application/x-www-form-urlencoded\r\n";
-	$header .= 'Content-Length: ' . strlen( $vars ) . "\r\n";
-	$header .= "Connection: close\r\n\r\n";
-	$header .= $vars;
-	$fp      = fsockopen( $interface['host'], 80, $errno, $errstr, 30 );
-	if ( $fp ) {
-		fwrite( $fp, $header );
-		$i = 0;
-		while ( ! feof( $fp ) ) {
-			$scr = fgets( $fp, 10240 );
-			preg_match( "/<(title|data)>(.*)<(\/title|\/data)>$/", $scr, $match );
-			if ( ! empty( $match[2] ) ) {
-				switch ( $match[1] ) {
-					case'title':
-						$res .= '<div style="text-align: center;border-bottom: 1px dotted #CCCCCC;width: 80%;margin-bottom: 10px;padding-bottom: 3px; margin-right: auto; margin-left: auto;"><stlong>' . $match[2] . '</strong></div><ul>';
-						break;
-					case 'data':
-						$res .= '<li>' . $match[2] . '</li>';
-						break;
-				}
-			}
-			$i++;
-			if ( $i > 50 ) {
-				$res = 'ERROR';
+	$res = '';
+	preg_match_all( "/<(title|data)>(.*?)<\/(title|data)>/s", $body, $matches, PREG_SET_ORDER );
+
+	foreach ( $matches as $match ) {
+		switch ( $match[1] ) {
+			case 'title':
+				$res .= '<div style="text-align: center;border-bottom: 1px dotted #CCCCCC;width: 80%;margin-bottom: 10px;padding-bottom: 3px; margin-right: auto; margin-left: auto;"><strong>' . $match[2] . '</strong></div><ul>';
 				break;
-			}
+			case 'data':
+				$res .= '<li>' . $match[2] . '</li>';
+				break;
 		}
-		$res .= '</ul>';
-		fclose( $fp );
-	} else {
-		$res = 'ERROR';
 	}
+	$res .= '</ul>';
+
 	die( $res );
 }
 
@@ -2197,6 +2251,10 @@ function custom_field_ajax() {
 	global $usces;
 
 	check_admin_referer( 'custom_field_ajax', 'wc_nonce' );
+	if ( ! current_user_can( 'wel_manage_setting' ) ) {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+	}
+
 	$_POST = $usces->stripslashes_deep_post( $_POST );
 	$data  = array(
 		'status' => 'OK',

@@ -50,6 +50,8 @@ for($ap=0; $ap < $apct; $ap++){
 <script type="text/javascript">
 jQuery(function($){
 
+	var wc_nonce = $( "#wc_nonce" ).val();
+
 	$("input[name='allcheck']").click(function () {
 		if( $(this).prop("checked") ){
 			$("input[name*='listcheck']").prop( "checked", true );
@@ -256,7 +258,7 @@ jQuery(function($){
 		if($('#chk_header').prop('checked')) {
 			args += '&chk_header=on';
 		}
-		location.href = "<?php echo USCES_ADMIN_URL; ?>?page=usces_itemedit&action=dlitemlist&noheader=true"+args<?php echo apply_filters( 'usces_filter_item_list_dlargs', '' ); ?>;
+		location.href = "<?php echo USCES_ADMIN_URL; ?>?page=usces_itemedit&action=dlitemlist&wc_nonce=" + wc_nonce +"&noheader=true"+args<?php echo apply_filters( 'usces_filter_item_list_dlargs', '' ); ?>;
 	});
 	$('#dl_itemlist').click(function() {
 		$('#dlItemListDialog').dialog('open');
@@ -322,6 +324,7 @@ operation.change_search_field();
 <h1>Welcart Shop <?php _e('Item list','usces'); ?></h1>
 <p class="version_info">Version <?php echo USCES_VERSION; ?></p>
 <?php usces_admin_action_status( $status, $message ); ?>
+<?php wp_nonce_field( 'item_master_list', 'wc_nonce' ); ?>
 
 <div id="datatable">
 <div id="tablenavi"><?php wel_esc_script_e( $dataTableNavigation ); ?></div>
@@ -352,7 +355,7 @@ operation.change_search_field();
 		<td id="searchlabel"></td>
 		<td id="searchfield"></td>
 		<td><input name="searchIn" type="submit" class="searchbutton button" value="<?php _e('Search', 'usces'); ?>" />
-		<input name="searchOut" type="submit" class="searchbutton button"" value="<?php _e('Cancellation', 'usces'); ?>" />
+		<input name="searchOut" type="submit" class="searchbutton button" value="<?php _e('Cancellation', 'usces'); ?>" />
 		</td>
 		</tr>
 		</table>
@@ -450,9 +453,14 @@ operation.change_search_field();
 				&nbsp;
 			<?php endif; ?>
 			<ul class="item_list_navi">
+			<?php
+			if ( current_user_can( 'edit_post', $post_id ) ) {
+				?>
 				<li><a href="<?php echo USCES_ADMIN_URL . '?page=usces_itemedit&action=edit&post=' . $post_id . '&usces_referer=' . $curent_url; ?>"><?php _e( 'edit', 'usces' ); ?></a></li>
 				<li>&nbsp;|&nbsp;</li>
-<?php
+				<?php
+			}
+
 			if ( current_user_can( 'delete_post', $post_id ) ) {
 				if ( 'trash' === $post->post_status ){
 					$actions['untrash'] = "<li><a title='" . esc_attr( __( 'Restore this post from the Trash' ) ) . "' href='" . wp_nonce_url( "post.php?action=untrash&amp;post=$post_id", 'untrash-post_' . $post_id ) . "'>" . __( 'Restore' ) . "</a></li><li>&nbsp;|&nbsp;</li>";
@@ -553,6 +561,12 @@ operation.change_search_field();
 <?php echo apply_filters( 'usces_filter_item_list_footer', '' ); ?>
 </form>
 <div id="upload_dialog" class="upload_dialog">
+	<?php if ( ! current_user_can( 'wel_others_products' ) ) : ?>
+
+		<p><?php _e( 'You have no permission to upload files.', 'usces' ); ?></p>
+
+	<?php else : ?>
+
 	<p id="dialogExp"></p>
 	<form action="<?php echo USCES_ADMIN_URL.'?page=usces_itemedit'; ?>" method="post" enctype="multipart/form-data" name="upform" id="upform" onsubmit="if( jQuery('#usces_upcsv').val() == '' ){alert('ファイルが選択されていません。'); return false; }else{jQuery('#dialogExp').html('<span>アップロード中</span>');}">
 	<fieldset>
@@ -571,6 +585,9 @@ operation.change_search_field();
 	<input name="action" type="hidden" value="upload_register" />
 	</form>
 	<p><?php _e('Indication is updated after upload completion.', 'usces'); ?></p>
+
+	<?php endif; ?>
+
 </div>
 <div id="dlItemListDialog" title="<?php _e('Download Item List', 'usces'); ?>">
 	<p><?php _e('Choose the file format, and push the download.', 'usces'); ?></p>

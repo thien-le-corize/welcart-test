@@ -7,6 +7,9 @@
  * @package Welcart
  */
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL
+// phpcs:disable WordPress.PHP.DevelopmentFunctions, WordPress.PHP.NoSilencedErrors
+
 /**
  * Get postmeta.
  *
@@ -105,6 +108,24 @@ function usces_action_reg_orderdata_stocks( $args ) {
 				do_action( 'usces_action_outofstock', $cartrow['post_id'], $sku, $cartrow, $args );
 			}
 		}
+	}
+}
+
+/**
+ * Add security headers (member, cart).
+ * send_headers
+ *
+ * @return void
+ */
+function usces_add_security_headers() {
+	global $usces;
+	if ( is_customize_preview() ) {
+		return;
+	}
+	$request_uri = esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ) );
+	if ( $usces->is_member_page( $request_uri ) || $usces->is_cart_page( $request_uri ) ) {
+		header( 'X-Frame-Options: DENY' );
+		header( "Content-Security-Policy: frame-ancestors 'none'" );
 	}
 }
 
@@ -498,7 +519,7 @@ function fiter_mainTitle( $title, $sep = '' ) {
 	global $usces;
 
 	if ( empty( $sep ) ) {
-		$sep = '|';
+		$sep = apply_filters( 'document_title_separator', '|' );
 	}
 
 	switch ( $usces->page ) {
@@ -1302,7 +1323,7 @@ function usces_Classic_trackPageview_by_Yoast( $push ) {
  */
 function usces_monsterinsights() {
 	$monsterinsights_current_version = usces_MonsterInsights_get_version();
-	if ( version_compare( $monsterinsights_current_version, '6.0.11', '>' ) ) {
+	if ( null !== $monsterinsights_current_version && version_compare( $monsterinsights_current_version, '6.0.11', '>' ) ) {
 		add_filter( 'monsterinsights_frontend_tracking_options_analytics_end', 'usces_Universal_trackPageview_by_Yoast' );
 		add_filter( 'monsterinsights_frontend_tracking_options_gtag_end', 'usces_Universal_trackPageview_by_monsterInsight' );
 		if ( version_compare( $monsterinsights_current_version, '8.0.0', '>=' ) ) {
@@ -1518,16 +1539,26 @@ function usces_responce_wcsite() {
  * Welcart activate.
  */
 function usces_wcsite_activate() {
-	$usces                       = get_option( 'usces', array() );
-	$metas['usces_company_name'] = $usces['company_name'];
-	$metas['usces_inquiry_mail'] = $usces['inquiry_mail'];
-	$metas['usces_base_country'] = $usces['system']['base_country'];
-	$acting_settings             = get_option( 'usces_settlement_selected', array() );
-	$metas['usces_used_sett']    = '';
-	foreach ( $acting_settings as $acting ) {
-		$metas['usces_used_sett'] .= $acting . ',';
-	}
-	$metas['usces_used_sett'] = trim( $metas['usces_used_sett'], ',' );
+	$usces       = get_option( 'usces', array() );
+	$circulating = wel_get_circulating_amount();
+	$sku_num     = wel_get_sku_total_num();
+	$cat_num     = wel_get_cat_total_num();
+
+	$metas['usces_company_name']       = $usces['company_name'];
+	$metas['usces_company_tel']        = $usces['tel_number'];
+	$metas['usces_company_number']     = $usces['business_registration_number'];
+	$metas['usces_company_zip']        = $usces['zip_code'];
+	$metas['usces_company_location']   = $usces['address1'] . ' ' . $usces['address2'];
+	$metas['usces_inquiry_mail']       = $usces['inquiry_mail'];
+	$metas['usces_base_country']       = $usces['system']['base_country'];
+	$metas['usces_circulating_amount'] = $circulating['amount'];
+	$metas['usces_circulating_count']  = $circulating['count'];
+	$metas['usces_categories']         = wel_get_categories();
+	$metas['usces_cat_num']            = $cat_num;
+	$metas['usces_sku_num']            = $sku_num;
+	$metas['usces_themes']             = wel_get_themes();
+	$metas['usces_plugins']            = wel_get_plugins();
+	$metas['usces_used_sett']          = wel_get_activ_pay_methd();
 
 	$base_metas = array(
 		'wcid'   => get_option( 'usces_wcid' ),
@@ -1667,7 +1698,7 @@ function usces_instance_settlement() {
  * plugins_loaded
  */
 function usces_instance_extentions() {
-	global $ganbare_tencho, $order_stock_linkage, $data_list_upgrade, $data_google_recaptcha, $brute_force;
+	global $ganbare_tencho, $order_stock_linkage, $data_list_upgrade, $verify_members_email, $data_google_recaptcha, $brute_force;
 
 	require_once USCES_EXTENSIONS_DIR . '/GanbareTencho/GanbareTencho.class.php';
 	$ganbare_tencho = new USCES_GANBARE_TENCHO();
@@ -1679,7 +1710,7 @@ function usces_instance_extentions() {
 	$data_list_upgrade = new USCES_DATALIST_UPGRADE();
 
 	require_once USCES_EXTENSIONS_DIR . '/VerifyMembersEmail/verify_members_email.php';
-	$data_list_upgrade = new USCES_VERIFY_MEMBERS_EMAIL();
+	$verify_members_email = new USCES_VERIFY_MEMBERS_EMAIL();
 
 	require_once USCES_EXTENSIONS_DIR . '/GoogleRecaptcha/google_recaptcha.php';
 	$data_google_recaptcha = new USCES_GOOGLE_RECAPTCHA();
@@ -1784,7 +1815,7 @@ function usces_wp_enqueue_scripts() {
 			wp_enqueue_script( 'usces_ajaxzip3', 'https://ajaxzip3.github.io/ajaxzip3.js', array(), current_time( 'timestamp' ), false );
 		}
 
-		if ( 'confirm' === $usces->page ) {
+		if ( isset( $usces->page ) && 'confirm' === $usces->page ) {
 			$cart_comfirm = USCES_FRONT_PLUGIN_URL . '/js/cart_confirm.js';
 			wp_enqueue_script( 'usces_cart_comfirm', $cart_comfirm, array( 'jquery' ), current_time( 'timestamp' ), false );
 		}
@@ -1801,33 +1832,44 @@ function usces_wp_enqueue_scripts() {
  * wp_ajax_welcart_confirm_check
  */
 function welcart_confirm_check_ajax() {
-	$nonce  = isset( $_POST['wc_nonce'] ) ? $_POST['wc_nonce'] : '';
-	$action = isset( $_POST['action'] ) ? $_POST['action'] : '';
+	global $usces;
 
-	if ( 'welcart_confirm_check' != $action ) {
-		die( 'not permitted1' );
+	$nonce     = filter_input( INPUT_POST, 'wc_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
+	$ajax      = filter_input( INPUT_POST, 'action', FILTER_SANITIZE_SPECIAL_CHARS );
+	$uscesid   = filter_input( INPUT_POST, 'uscesid', FILTER_SANITIZE_SPECIAL_CHARS );
+	$condition = filter_input( INPUT_POST, 'wc_condition' );
+
+	if ( 'welcart_confirm_check' !== $ajax ) {
+		$res = 'not permitted1';
+		wp_send_json_error( $res );
 	}
 
 	if ( ! wp_verify_nonce( $nonce, 'wc_confirm' ) ) {
-		die( 'not permitted2' );
+		$res = 'not permitted2';
+		wp_send_json_error( $res );
+	}
+	if ( PHP_SESSION_NONE === session_status() && $uscesid ) {
+		$sessid = $usces->uscesdc( $uscesid );
+		session_id( $sessid );
+		@session_start(); // phpcs:ignore
 	}
 
-	global $usces;
 	$current['entry'] = $usces->cart->get_entry();
 	$current['cart']  = $usces->cart->get_cart();
-	$condition        = $_POST['wc_condition'];
-	$condition        = unserialize( urldecode( $condition ) );
+	session_write_close();
 
-	if ( $condition == $current ) {
+	$condition = json_decode( urldecode( $condition ), true );
+
+	if ( $condition == $current ) { // phpcs:ignore WordPress.PHP.StrictComparisons.LooseComparison
 		$res = 'same';
 	} elseif ( empty( $current['cart'] ) ) {
 		$res = 'timeover';
-	} elseif ( $current['cart'] == $condition['cart'] && $current['entry'] != $condition['entry'] ) {
+	} elseif ( $current['cart'] == $condition['cart'] && $current['entry'] != $condition['entry'] ) { // phpcs:ignore WordPress.PHP.StrictComparisons.LooseComparison
 		$res = 'entrydiff';
 	} else {
 		$res = 'different';
 	}
-	die( $res );
+	wp_send_json_success( $res );
 }
 
 /**
@@ -1846,7 +1888,7 @@ function usces_confirm_uscesL10n( $nouse, $post_id ) {
 		$condition['cart']  = $usces->cart->get_cart();
 
 		$js  = '';
-		$js .= "'condition': '" . urlencode( serialize( $condition ) ) . "',\n";
+		$js .= "'condition': '" . urlencode( wp_json_encode( $condition ) ) . "',\n";
 		$js .= "'cart_url': '" . USCES_CART_URL . "',\n";
 		$js .= "'check_mes': '" . __( 'Purchase information has been updated. Please repeat the procedure.\n\nPlease do not open and work more than one tab (window).\n', 'usces' ) . "',\n";
 		return $js;
@@ -2159,12 +2201,12 @@ function wc_purchase_nonce( $html, $payments, $acting_flag, $rand, $purchase_dis
 	global $usces;
 
 	$nonacting_settlements = apply_filters( 'usces_filter_nonacting_settlements', $usces->nonacting_settlements );
-	if ( strpos( $html, 'wc_nonce' ) || ! in_array( $payments['settlement'], $nonacting_settlements ) ) {
+	if ( strpos( $html, '_purchase_nonce' ) || in_array( $payments['settlement'], $nonacting_settlements ) ) {
 		return $html;
 	}
 
 	$noncekey = 'wc_purchase_nonce' . $usces->get_uscesid( false );
-	$html    .= wp_nonce_field( $noncekey, 'wc_nonce', false, false ) . "\n";
+	$html    .= wp_nonce_field( $noncekey, '_purchase_nonce', false, false ) . "\n";
 	return $html;
 }
 
@@ -2183,13 +2225,13 @@ function wc_purchase_nonce_check() {
 
 	$nonacting_settlements = apply_filters( 'usces_filter_nonacting_settlements', $usces->nonacting_settlements );
 	$payments              = usces_get_payments_by_name( $entry['order']['payment_name'] );
-	if ( ! in_array( $payments['settlement'], $nonacting_settlements ) ) {
+	if ( in_array( $payments['settlement'], $nonacting_settlements ) ) {
 		return true;
 	}
 
-	$nonce    = isset( $_REQUEST['wc_nonce'] ) ? $_REQUEST['wc_nonce'] : '';
+	$nonce    = isset( $_REQUEST['_purchase_nonce'] ) ? $_REQUEST['_purchase_nonce'] : '';
 	$noncekey = 'wc_purchase_nonce' . $usces->get_uscesid( false );
-	if ( wp_verify_nonce( $nonce, $noncekey ) ) {
+	if ( empty( $nonce ) || wp_verify_nonce( $nonce, $noncekey ) ) {
 		return true;
 	}
 
@@ -2367,7 +2409,10 @@ function usces_add_google_recaptcha_v3_script() {
 	}
 
 	if ( ( $usces->is_cart_page( $_SERVER['REQUEST_URI'] ) && 'customer' === $usces->page ) ) {
-		print_google_recaptcha_response( 'customer_order_page', 'memberpages', 'customer_form' );
+		print_google_recaptcha_response( 'customer_order_page', 'customer-info', 'customer_form' );
+	}
+	if ( ( $usces->is_cart_page( $_SERVER['REQUEST_URI'] ) && 'delivery' === $usces->page ) ) {
+		print_google_recaptcha_response( 'delivery_order_page', 'delivery-info', '' );
 	}
 }
 
@@ -2387,11 +2432,7 @@ function print_google_recaptcha_response( $action, $parent_element_id, $form_nam
 		echo '<script>';
 		echo 'grecaptcha.ready(function() {';
 		echo '	grecaptcha.execute(\'' . esc_js( $site_key ) . '\', {action: "' . esc_js( $action ) . '"}).then(function(token) {';
-		if ( '' != $form_name ) {
-			echo '		jQuery("form[name=\'' . esc_js( $form_name ) . '\']").append(\'<input type="hidden" id="elm_recaptcha_response" name="recaptcha_response" value="\'+ token +\'">\');';
-		} else {
-			echo '		jQuery("#' . esc_js( $parent_element_id ) . '").find("form").append(\'<input type="hidden" id="elm_recaptcha_response" name="recaptcha_response" value="\'+ token +\'">\');';
-		}
+		echo '		jQuery("form").append(\'<input type="hidden" id="elm_recaptcha_response" name="recaptcha_response" value="\'+ token +\'">\');';
 		echo '		if(!jQuery("input[type=hidden]").is("[name=recaptcha_response]")) { jQuery("input[name=member_regmode]").after(\'<input type="hidden" id="elm_recaptcha_response" name="recaptcha_response" value="\'+ token +\'">\'); }';
 		echo '	});';
 		echo '});';
@@ -2408,11 +2449,7 @@ function print_google_recaptcha_response( $action, $parent_element_id, $form_nam
 		echo '		google_reload_times = google_reload_times + 1;';
 		echo '		grecaptcha.ready(function() {';
 		echo '			grecaptcha.execute(\'' . esc_js( $site_key ) . '\', {action: "' . esc_js( $action ) . '"}).then(function(token) {';
-		if ( $form_name ) {
-			echo '				jQuery("form[name=\'' . esc_js( $form_name ) . '\'] #elm_recaptcha_response").val(token);';
-		} else {
-			echo '				jQuery("#' . esc_js( $parent_element_id ) . ' #elm_recaptcha_response").val(token);';
-		}
+		echo '				jQuery("form #elm_recaptcha_response").val(token);';
 		echo '			});';
 		echo '		});';
 		echo '	}';
@@ -2537,7 +2574,7 @@ function usces_create_product_type() {
  */
 function wel_execute_release_card_update_lock( $member_action ) {
 	if ( 'editpost' === $member_action ) {
-		$flag      = filter_input( INPUT_POST, 'release_card_update_lock', FILTER_SANITIZE_STRING );
+		$flag      = filter_input( INPUT_POST, 'release_card_update_lock', FILTER_DEFAULT );
 		$member_id = filter_input( INPUT_POST, 'member_id', FILTER_VALIDATE_INT );
 		if ( 'release' === $flag && ! empty( $member_id ) ) {
 			wel_release_card_update_lock( $member_id );

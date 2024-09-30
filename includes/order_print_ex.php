@@ -48,12 +48,12 @@ function usces_pdf_out( $pdf, $data ) {
 	$pdf->setPrintFooter( false );
 
 	/* Template file */
-	if ( isset( $usces->options['print_size'] ) && 'A4' === $usces->options['print_size'] ) {
-		$tplfile = USCES_PLUGIN_DIR . '/images/orderform_A4.pdf';
-	} else {
-		$tplfile = USCES_PLUGIN_DIR . '/images/orderform_B5.pdf';
-	}
-	$tplfile = apply_filters( 'usces_filter_pdf_template', $tplfile );
+	// if ( isset( $usces->options['print_size'] ) && 'A4' === $usces->options['print_size'] ) {
+	// 	$tplfile = USCES_PLUGIN_DIR . '/images/orderform_A4.pdf';
+	// } else {
+	// 	$tplfile = USCES_PLUGIN_DIR . '/images/orderform_B5.pdf';
+	// }
+	// $tplfile = apply_filters( 'usces_filter_pdf_template', $tplfile );
 
 	$pdf->SetLeftMargin( 0 );
 	$pdf->SetTopMargin( 0 );
@@ -67,7 +67,7 @@ function usces_pdf_out( $pdf, $data ) {
 
 	/* PDF type */
 	$creator_name = apply_filters( 'usces_filter_pdf_creator_name', html_entity_decode( get_option( 'blogname' ), ENT_QUOTES ) );
-	$author_name  = apply_filters( 'usces_filter_pdf_author_name', html_entity_decode( $usces->options['company_name'] ) );
+	$author_name  = apply_filters( 'usces_filter_pdf_author_name', html_entity_decode( $usces->options['company_name'], ENT_COMPAT ) );
 	$pdf->SetCreator( $creator_name );
 	$pdf->SetAuthor( $author_name );
 	switch ( $type ) {
@@ -96,7 +96,7 @@ function usces_pdf_out( $pdf, $data ) {
 			$pdf->SetTitle( $title );
 			$filename = trim( $type ) . '_' . usces_get_deco_order_id( $data->order['ID'] ) . '.pdf';
 	}
-	$filename = apply_filters( 'usces_filter_pdf_filename', $filename, $_REQUEST['type'], $data );
+	$filename = apply_filters( 'usces_filter_pdf_filename', $filename, $type, $data );
 
 	$pdf->SetDisplayMode( 'real', 'continuous' );
 
@@ -434,6 +434,8 @@ function usces_pdfSetHeader( $pdf, $data, $page, $font ) {
 	$numbering_label = apply_filters( 'usces_filter_pdf_numbering_label', 'No.', $type, $data );
 	$order_number    = apply_filters( 'usces_filter_pdf_order_number', usces_get_deco_order_id( $data->order['ID'] ), $type, $data );
 	$juchubi         = apply_filters( 'usces_filter_pdf_purchase_date', $juchubi, $type, $data );
+	$free_note       = apply_filters( 'usces_filter_pdf_free_note', '', $type, $data );
+	$siharai         = apply_filters( 'usces_filter_pdf_payment_method', $siharai, $type, $data );
 
 	$pdf->SetLineWidth( 0.4 );
 	$pdf->Line( 65, 23, 110, 23 );
@@ -505,7 +507,8 @@ function usces_pdfSetHeader( $pdf, $data, $page, $font ) {
 			list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['customer_attn'] );
 			$pdf->SetFont( $font, '', $fontsize );
 			$pdf->SetXY( $leftside, $y );
-			$pdf->MultiCell( $width, $lineheight, usces_conv_euc( __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ) ), 0, 'L' );
+			$person = apply_filters( 'usces_filter_pdf_contact_person', __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ), $type, $company, $data->order['ID'] );
+			$pdf->MultiCell( $width, $lineheight, usces_conv_euc( $person ), 0, 'L' );
 			$y = $pdf->GetY() + $linetop + 1;
 		}
 
@@ -564,7 +567,8 @@ function usces_pdfSetHeader( $pdf, $data, $page, $font ) {
 					list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['customer_attn'] );
 					$pdf->SetFont( $font, '', $fontsize );
 					$pdf->SetXY( $leftside, $y );
-					$pdf->MultiCell( $width, $lineheight, usces_conv_euc( __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ) ), 0, 'L' );
+					$person = apply_filters( 'usces_filter_pdf_contact_person', __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ), $type, $company, $data->order['ID'] );
+					$pdf->MultiCell( $width, $lineheight, usces_conv_euc( $person ), 0, 'L' );
 					$y = $pdf->GetY() + $linetop + 2;
 				}
 
@@ -606,7 +610,8 @@ function usces_pdfSetHeader( $pdf, $data, $page, $font ) {
 					list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['customer_attn'] );
 					$pdf->SetFont( $font, '', $fontsize );
 					$pdf->SetXY( $leftside, $y );
-					$pdf->MultiCell( $width, $lineheight, usces_conv_euc( __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_shipping_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ) ), 0, 'L' );
+					$person = apply_filters( 'usces_filter_pdf_contact_person', __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_shipping_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ), $type, $delivery_company, $data->order['ID'] );
+					$pdf->MultiCell( $width, $lineheight, usces_conv_euc( $person ), 0, 'L' );
 					$y = $pdf->GetY() + $linetop + 2;
 				}
 
@@ -653,7 +658,8 @@ function usces_pdfSetHeader( $pdf, $data, $page, $font ) {
 				list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['customer_attn'] );
 				$pdf->SetFont( $font, '', $fontsize );
 				$pdf->SetXY( $leftside, $y );
-				$pdf->MultiCell( $width, $lineheight, usces_conv_euc( __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ) ), 0, 'L' );
+				$person = apply_filters( 'usces_filter_pdf_contact_person', __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ), $type, $company, $data->order['ID'] );
+				$pdf->MultiCell( $width, $lineheight, usces_conv_euc( $person ), 0, 'L' );
 				$y = $pdf->GetY() + $linetop + 2;
 			}
 
@@ -719,7 +725,8 @@ function usces_pdfSetHeader( $pdf, $data, $page, $font ) {
 						list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['delivery_address'] );
 						$pdf->SetFont( $font, '', $fontsize );
 						$pdf->SetXY( $leftside, $y );
-						$pdf->MultiCell( $width, $lineheight, usces_conv_euc( __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_shipping_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ) ), 0, 'L' );
+						$person = apply_filters( 'usces_filter_pdf_contact_person', __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_shipping_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ), $type, $delivery_company, $data->order['ID'] );
+						$pdf->MultiCell( $width, $lineheight, usces_conv_euc( $person ), 0, 'L' );
 						$y = $pdf->GetY() + $linetop;
 					}
 
@@ -784,7 +791,8 @@ function usces_pdfSetHeader( $pdf, $data, $page, $font ) {
 			list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['customer_attn'] );
 			$pdf->SetFont( $font, '', $fontsize );
 			$pdf->SetXY( $leftside, $y );
-			$pdf->MultiCell( $width, $lineheight, usces_conv_euc( __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ) ), 0, 'L' );
+			$person = apply_filters( 'usces_filter_pdf_contact_person', __( 'Attn', 'usces' ) . ' : ' . usces_conv_euc( usces_get_pdf_name( $data ) ) . apply_filters( 'usces_filters_pdf_person_honor', $person_honor ), $type, $company, $data->order['ID'] );
+			$pdf->MultiCell( $width, $lineheight, usces_conv_euc( $person ), 0, 'L' );
 			$y = $pdf->GetY() + $linetop + 2;
 		}
 
@@ -825,6 +833,13 @@ function usces_pdfSetHeader( $pdf, $data, $page, $font ) {
 		$pdf->SetXY( $leftside + 68, $y );
 		$pdf->Cell( 75, $lineheight, usces_conv_euc( $siharai ), 0, 1, 'L' );
 	}
+
+	/* Free note */
+	list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['order_date'] );
+	$pdf->SetFont( $font, '', $fontsize );
+	$y = 85;
+	$pdf->SetXY( $leftside, $y );
+	$pdf->MultiCell( 150, $lineheight, usces_conv_euc( $free_note ), 0, 'L' );
 
 	/* My company */
 	if ( ! empty( $sign_image ) ) {
@@ -1132,9 +1147,12 @@ function usces_pdfSetFooter( $pdf, $data, $font, $usces_tax ) {
 	$transfers = apply_filters( 'usces_filter_pdf_transfer', array( 'transferAdvance', 'transferDeferred' ), $data );
 	$note_text = '';
 	if ( 'bill' === $type && in_array( $payment['settlement'], $transfers ) ) {
-		$transferee  = __( 'Transfer', 'usces' ) . " : \r\n";
-		$transferee .= $usces->options['transferee'] . "\r\n";
-		$note_text   = apply_filters( 'usces_filter_mail_transferee', $transferee, $payment );
+		$transferee = '';
+		if ( ! empty( $usces->options['transferee'] ) ) {
+			$transferee  = __( 'Transfer', 'usces' ) . " : \r\n";
+			$transferee .= $usces->options['transferee'] . "\r\n";
+		}
+		$note_text = apply_filters( 'usces_filter_mail_transferee', $transferee, $payment );
 	} else {
 		if ( ! empty( $data->order['note'] ) ) {
 			if ( false === strpos( $data->order['note'], "\r\n" ) ) {
@@ -1214,6 +1232,8 @@ function usces_pdfSetFooter( $pdf, $data, $font, $usces_tax ) {
 	$pdf->Line( 103.5, $line_y, $line_right, $line_y );
 	// $pdf->Line( 15.4, $line_y, $line_right, $line_y );
 
+	$reduced_output_even_empty = apply_filters( 'usces_filter_pdf_reduced_output_even_empty', false, $usces_tax, $type, $tax_mode );
+
 	if ( 'activate' === $tax_display && 'all' === $tax_target ) {
 		$line_y += 1;
 		if ( 'include' === $tax_mode ) {
@@ -1226,36 +1246,44 @@ function usces_pdfSetFooter( $pdf, $data, $font, $usces_tax ) {
 		$pdf->SetXY( 53, $line_y );
 		$pdf->MultiCell( 5, $lineheight, usces_conv_euc( '(' ), 0, 'C' );
 		$pdf->SetXY( 44.3, $line_y );
-		$pdf->MultiCell( 37.7, $lineheight, usces_conv_euc( sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_standard ) ), 0, 'C' );
+		$pdf->MultiCell( 40.7, $lineheight, usces_conv_euc( sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_standard ) ), 0, 'C' );
 		$pdf->SetXY( 82.9, $line_y );
 		$pdf->MultiCell( 22.6, $lineheight, usces_conv_euc( $usces->get_currency( $usces_tax->subtotal_standard + $usces_tax->discount_standard ) ), 0, 'R' );
 		$pdf->SetXY( 104.3, $line_y );
-		$pdf->MultiCell( 37.7, $lineheight, usces_conv_euc( sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_standard ) ), 0, 'C' );
+		$standard_tax_label = apply_filters( 'usces_filter_pdf_standard_tax_label', sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_standard ), $usces_tax, $type, $tax_mode );
+		$pdf->MultiCell( 40.7, $lineheight, usces_conv_euc( $standard_tax_label ), 0, 'C' );
 		$pdf->SetXY( 142.9, $line_y );
 		$pdf->MultiCell( 22.6, $lineheight, usces_conv_euc( $po . $usces->get_currency( $usces_tax->tax_standard ) . $pc ), 0, 'R' );
 		$pdf->SetXY( 163.5, $line_y );
 		$pdf->MultiCell( 5, $lineheight, usces_conv_euc( ')' ), 0, 'C' );
-		$line_y += 5.2;
-		$pdf->SetXY( 53, $line_y );
-		$pdf->MultiCell( 5, $lineheight, usces_conv_euc( '(' ), 0, 'C' );
-		$pdf->SetXY( 44.3, $line_y );
-		$pdf->MultiCell( 37.7, $lineheight, usces_conv_euc( sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ) ), 0, 'C' );
-		$pdf->SetXY( 82.9, $line_y );
-		$pdf->MultiCell( 22.6, $lineheight, usces_conv_euc( $usces->get_currency( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced ) ), 0, 'R' );
-		$pdf->SetXY( 104.3, $line_y );
-		$pdf->MultiCell( 37.7, $lineheight, usces_conv_euc( sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ) ), 0, 'C' );
-		$pdf->SetXY( 142.9, $line_y );
-		$pdf->MultiCell( 22.6, $lineheight, usces_conv_euc( $po . $usces->get_currency( $usces_tax->tax_reduced ) . $pc ), 0, 'R' );
-		$pdf->SetXY( 163.5, $line_y );
-		$pdf->MultiCell( 5, $lineheight, usces_conv_euc( ')' ), 0, 'C' );
+		if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+			$line_y += 5.2;
+			$pdf->SetXY( 53, $line_y );
+			$pdf->MultiCell( 5, $lineheight, usces_conv_euc( '(' ), 0, 'C' );
+			$pdf->SetXY( 44.3, $line_y );
+			$reduced_applies_label = apply_filters( 'usces_filter_pdf_reduced_applies_label', sprintf( __( 'Applies to %s%%', 'usces' ), $usces_tax->tax_rate_reduced ), $usces_tax, $type, $tax_mode );
+			$pdf->MultiCell( 40.7, $lineheight, usces_conv_euc( $reduced_applies_label ), 0, 'C' );
+			$pdf->SetXY( 82.9, $line_y );
+			$pdf->MultiCell( 22.6, $lineheight, usces_conv_euc( $usces->get_currency( $usces_tax->subtotal_reduced + $usces_tax->discount_reduced ) ), 0, 'R' );
+			$pdf->SetXY( 104.3, $line_y );
+			$reduced_tax_label = apply_filters( 'usces_filter_pdf_reduced_tax_label', sprintf( __( '%s%% consumption tax', 'usces' ), $usces_tax->tax_rate_reduced ), $usces_tax, $type, $tax_mode );
+			$pdf->MultiCell( 40.7, $lineheight, usces_conv_euc( $reduced_tax_label ), 0, 'C' );
+			$pdf->SetXY( 142.9, $line_y );
+			$pdf->MultiCell( 22.6, $lineheight, usces_conv_euc( $po . $usces->get_currency( $usces_tax->tax_reduced ) . $pc ), 0, 'R' );
+			$pdf->SetXY( 163.5, $line_y );
+			$pdf->MultiCell( 5, $lineheight, usces_conv_euc( ')' ), 0, 'C' );
+		}
 		$line_y += 3.2;
 	}
 
-	$line_y += 1;
-	list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['footer_note'] );
-	$pdf->SetFont( $font, '', $fontsize );
-	$pdf->SetXY( 125.5, $line_y );
-	$pdf->MultiCell( 40, $lineheight, usces_conv_euc( $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ) ), 0, 'R' );
+	if ( 0 < $usces_tax->tax_rate_reduced || $reduced_output_even_empty ) {
+		$line_y += 1;
+		list( $fontsize, $lineheight, $linetop ) = usces_set_font_size( $fontsizes['footer_note'] );
+		$pdf->SetFont( $font, '', $fontsize );
+		$pdf->SetXY( 125.5, $line_y );
+		$reduced_comment_label = apply_filters( 'usces_filter_pdf_reduced_comment_label', $usces_tax->reduced_taxrate_mark . __( ' is reduced tax rate', 'usces' ), $usces_tax, $type, $tax_mode );
+		$pdf->MultiCell( 40, $lineheight, usces_conv_euc( $reduced_comment_label ), 0, 'R' );
+	}
 
 	do_action( 'usces_action_order_print_footer', $pdf, $data, 'end' );
 	do_action( 'usces_action_pdf_footer', $pdf, $data, $font, 'end' );
@@ -1292,6 +1320,7 @@ function usces_get_pdf_name( $data ) {
 		default:
 			$name = $data->customer['name2'] . ' ' . $data->customer['name1'];
 	}
+	$name = apply_filters( 'usces_filter_pdf_customer_name', $name, $data );
 	return $name;
 }
 
@@ -1314,6 +1343,7 @@ function usces_get_pdf_shipping_name( $data ) {
 		default:
 			$name = $data->deliveri['name2'] . ' ' . $data->deliveri['name1'];
 	}
+	$name = apply_filters( 'usces_filter_pdf_shipping_name', $name, $data );
 	return $name;
 }
 
@@ -1415,8 +1445,10 @@ function usces_get_pdf_myaddress( $pdf, $lineheight ) {
 	switch ( $applyform ) {
 		case 'JP':
 			$address = ( empty( $options['address2'] ) ) ? $options['address1'] : $options['address1'] . "\n" . $options['address2'];
-			if( !empty( $options['zip_code'] ) ) {
-				$pdf->MultiCell( 60, $lineheight, usces_conv_euc( __( 'zip code', 'usces' ) . ' ' . $options['zip_code'] ), 0, 'L' );
+			$address = apply_filters( 'usces_filter_pdf_mycompany_address', $address );
+			if ( ! empty( $options['zip_code'] ) ) {
+				$zip_code = apply_filters( 'usces_filter_pdf_mycompany_zip', __( 'zip code', 'usces' ) . ' ' . $options['zip_code'] );
+				$pdf->MultiCell( 60, $lineheight, usces_conv_euc( $zip_code ), 0, 'L' );
 			}
 			$pdf->MultiCell( 60, $lineheight, usces_conv_euc( $address ), 0, 'L' );
 			break;

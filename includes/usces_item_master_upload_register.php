@@ -106,7 +106,7 @@ $logfile             = WP_CONTENT_URL . USCES_UPLOAD_TEMP . '/log.txt';
 $_REQUEST['action'] = 'itemcsv';
 $tempfilename       = usces_item_uploadcsv();
 
-$upload_mode = isset( $_REQUEST['upload_mode'] ) ? $_REQUEST['upload_mode'] : '';
+$upload_mode = isset( $_REQUEST['upload_mode'] ) ? sanitize_text_field( $_REQUEST['upload_mode'] ) : '';
 $check_mode  = isset( $_REQUEST['checkcsv'] ) ? 1 : 0;
 ?>
 <script type='text/javascript'>
@@ -115,8 +115,8 @@ $check_mode  = isset( $_REQUEST['checkcsv'] ) ? 1 : 0;
 	var progress_ajax_nonce = '<?php echo( $progress_ajax_nonce ); ?>';
 	var tempfilename = '<?php echo( $tempfilename ); ?>';
 	var logfile = '<?php echo( $logfile ); ?>';
-	var check_mode = '<?php echo( $check_mode ); ?>';
-	var upload_mode = '<?php echo( $upload_mode ); ?>';
+	var check_mode = '<?php echo esc_attr( $check_mode ); ?>';
+	var upload_mode = '<?php echo esc_attr( $upload_mode ); ?>';
 
 	checkPRG = {
 		settings: {

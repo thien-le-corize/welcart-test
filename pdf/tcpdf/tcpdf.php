@@ -4130,6 +4130,9 @@ class TCPDF {
 	 * @since 5.9.000 (2010-09-28)
 	 */
 	public function getRawCharWidth($char) {
+		if ( is_float( $char ) ) {
+			$char = intval( $char );
+		}
 		if ($char == 173) {
 			// SHY character will not be printed
 			return (0);
@@ -16349,7 +16352,7 @@ class TCPDF {
 			}
 		}
 		// create a special tag to contain the CSS array (used for table content)
-		$csstagarray = '<cssarray>'.htmlentities(json_encode($css)).'</cssarray>';
+		$csstagarray = '<cssarray>' . htmlentities( json_encode( $css ), ENT_COMPAT ) . '</cssarray>';
 		// remove head and style blocks
 		$html = preg_replace('/<head([^\>]*)>(.*?)<\/head>/siU', '', $html);
 		$html = preg_replace('/<style([^\>]*)>([^\<]*)<\/style>/isU', '', $html);

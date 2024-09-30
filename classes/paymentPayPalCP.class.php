@@ -215,6 +215,7 @@ class PAYPAL_CP_SETTLEMENT {
 		$options['acting_settings']['paypal_cp']['cp_activate']        = ( isset( $options['acting_settings']['paypal_cp']['cp_activate'] ) ) ? $options['acting_settings']['paypal_cp']['cp_activate'] : 'off';
 		$options['acting_settings']['paypal_cp']['card_activate']      = ( isset( $options['acting_settings']['paypal_cp']['card_activate'] ) ) ? $options['acting_settings']['paypal_cp']['card_activate'] : 'off';
 		$options['acting_settings']['paypal_cp']['card_vault']         = ( isset( $options['acting_settings']['paypal_cp']['card_vault'] ) ) ? $options['acting_settings']['paypal_cp']['card_vault'] : 'off';
+		$options['acting_settings']['paypal_cp']['card_prefix']        = ( isset( $options['acting_settings']['paypal_cp']['card_prefix'] ) ) ? $options['acting_settings']['paypal_cp']['card_prefix'] : '';
 		$options['acting_settings']['paypal_cp']['card_3ds']           = ( isset( $options['acting_settings']['paypal_cp']['card_3ds'] ) ) ? $options['acting_settings']['paypal_cp']['card_3ds'] : 'off';
 		$options['acting_settings']['paypal_cp']['environment']        = ( isset( $options['acting_settings']['paypal_cp']['environment'] ) ) ? $options['acting_settings']['paypal_cp']['environment'] : 'live';
 		$options['acting_settings']['paypal_cp']['bncode']             = ( isset( $options['acting_settings']['paypal_cp']['bncode'] ) ) ? $options['acting_settings']['paypal_cp']['bncode'] : '';
@@ -936,6 +937,7 @@ jQuery( document ).ready( function( $ ) {
 		$options['acting_settings']['paypal_cp']['cp_activate']        = ( isset( $post_data['cp_activate'] ) ) ? $post_data['cp_activate'] : 'off';
 		$options['acting_settings']['paypal_cp']['card_activate']      = ( isset( $post_data['card_activate'] ) ) ? $post_data['card_activate'] : 'off';
 		$options['acting_settings']['paypal_cp']['card_vault']         = ( isset( $post_data['card_vault'] ) ) ? $post_data['card_vault'] : 'off';
+		$options['acting_settings']['paypal_cp']['card_prefix']        = ( isset( $post_data['card_prefix'] ) ) ? $post_data['card_prefix'] : '';
 		$options['acting_settings']['paypal_cp']['card_3ds']           = ( isset( $post_data['card_3ds'] ) ) ? $post_data['card_3ds'] : 'off';
 		$options['acting_settings']['paypal_cp']['environment']        = ( isset( $post_data['cp_environment'] ) ) ? $post_data['cp_environment'] : 'live';
 		$options['acting_settings']['paypal_cp']['client_id']          = ( isset( $post_data['cp_client_id'] ) ) ? trim( $post_data['cp_client_id'] ) : '';
@@ -966,6 +968,11 @@ jQuery( document ).ready( function( $ ) {
 				}
 				if ( WCUtils::is_blank( $post_data['cp_secret'] ) ) {
 					$this->error_mes .= __( '* Enter Secret.', 'usces' ) . '<br />';
+				}
+				if ( 'on' === $options['acting_settings']['paypal_cp']['card_activate'] && 'on' === $options['acting_settings']['paypal_cp']['card_vault'] ) {
+					if ( ! $this->check_prefix( $options['acting_settings']['paypal_cp']['card_prefix'] ) ) {
+						$this->error_mes .= __( '* The prefix must be at least one and no more than four single-byte uppercase alphabetic characters.', 'usces' ) . '<br />';
+					}
 				}
 				if ( empty( $options['acting_settings']['paypal_cp']['agree'] ) ) {
 					$this->error_mes .= __( '* There was no agreement on terms of use.', 'usces' ) . '<br />';
@@ -1067,6 +1074,8 @@ jQuery( document ).ready( function( $ ) {
 			'to_address'   => 'welcart-setting-update@paypal.com',
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => get_option( 'admin_email' ),
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => get_option( 'admin_email' ),
 			'subject'      => '[Welcart]PayPal決済設定通知',
 			'message'      => $message,
@@ -1098,6 +1107,7 @@ jQuery( document ).ready( function( $ ) {
 			$cp_activate    = ( isset( $acting_opts['cp_activate'] ) && 'on' === $acting_opts['cp_activate'] ) ? 'on' : 'off';
 			$card_activate  = ( isset( $acting_opts['card_activate'] ) && 'on' === $acting_opts['card_activate'] ) ? 'on' : 'off';
 			$card_vault     = ( isset( $acting_opts['card_vault'] ) && 'on' === $acting_opts['card_vault'] ) ? 'on' : 'off';
+			$card_prefix    = ( isset( $acting_opts['card_prefix'] ) ) ? $acting_opts['card_prefix'] : '';
 			$card_3ds       = ( isset( $acting_opts['card_3ds'] ) && 'on' === $acting_opts['card_3ds'] ) ? 'on' : 'off';
 			$cp_environment = ( isset( $acting_opts['environment'] ) && 'live' === $acting_opts['environment'] ) ? 'live' : 'sandbox';
 			$cp_client_id   = ( isset( $acting_opts['client_id'] ) ) ? $acting_opts['client_id'] : '';
@@ -1192,7 +1202,8 @@ jQuery( document ).ready( function( $ ) {
 			<tr id="ex_card_activate_paypal_cp" class="explanation"><td colspan="2"><?php esc_html_e( 'Advanced credit and debit cards requires that your business account be evaluated and approved by PayPal.', 'usces' ); ?></td></tr>
 			<tr class="paypal_card_form">
 				<th><a class="explanation-label" id="label_ex_card_vault_paypal_cp"><?php esc_html_e( 'Save credit card information', 'usces' ); ?></a></th>
-				<td><label><input type="radio" name="card_vault" value="on"<?php checked( $card_vault, 'on' ); ?>/><span><?php esc_html_e( 'Save', 'usces' ); ?></span></label><br />
+				<td><label><input type="radio" name="card_vault" value="on"<?php checked( $card_vault, 'on' ); ?>/><span><?php esc_html_e( 'Save', 'usces' ); ?></span></label>
+					<label><input type="text" name="card_prefix" value="<?php echo esc_attr( $card_prefix ); ?>" class="small-text"><span><?php esc_html_e( '* Prefix', 'usces' ); ?></span></label><br />
 					<label><input type="radio" name="card_vault" value="off"<?php checked( $card_vault, 'off' ); ?>/><span><?php esc_html_e( 'Not save', 'usces' ); ?></span></label>
 				</td>
 			</tr>
@@ -2152,6 +2163,7 @@ jQuery( document ).ready( function( $ ) {
 	private function get_client_token( $customer_id = '' ) {
 		$acting_opts     = $this->get_acting_settings();
 		$api_request_url = ( isset( $acting_opts['api_request_url'] ) ) ? $acting_opts['api_request_url'] : '';
+		$card_prefix     = ( isset( $acting_opts['card_prefix'] ) ) ? $acting_opts['card_prefix'] : '';
 
 		/* Get Access Token */
 		$access_token = $this->get_access_token();
@@ -2166,7 +2178,7 @@ jQuery( document ).ready( function( $ ) {
 		);
 		if ( ! empty( $customer_id ) ) {
 			$body                = array();
-			$body['customer_id'] = $customer_id;
+			$body['customer_id'] = $card_prefix . $customer_id;
 			$params['body']      = wp_json_encode( $body );
 		}
 		$response      = wp_remote_post( $api_request_url . '/v1/identity/generate-token', $params );
@@ -2476,6 +2488,8 @@ jQuery( document ).ready( function( $ ) {
 			$cp_intent       = ( isset( $acting_opts['intent'] ) ) ? $acting_opts['intent'] : '';
 			$api_request_url = ( isset( $acting_opts['api_request_url'] ) ) ? $acting_opts['api_request_url'] : '';
 			$bn_code         = self::API_BN_CODE_PCP;
+			$correlation_id  = '';
+			$payment_source  = array();
 
 			/* Get Access Token */
 			$access_token = $this->get_access_token();
@@ -2958,12 +2972,17 @@ jQuery( document ).ready( function( $ ) {
 				$purchase_units = $response_data['purchase_units'][0];
 				if ( isset( $purchase_units['payments']['captures'] ) ) {
 					$payments = $purchase_units['payments']['captures'][0];
+					if ( isset( $payments['status'] ) ) {
+						if ( 'COMPLETED' !== $payments['status'] && 'PENDING' !== $payments['status'] ) {
+							$status = $payments['status'];
+						}
+					}
 				} elseif ( isset( $purchase_units['payments']['authorizations'] ) ) {
 					$payments = $purchase_units['payments']['authorizations'][0];
-				}
-				if ( isset( $payments['status'] ) ) {
-					if ( 'COMPLETED' !== $payments['status'] && 'PENDING' !== $payments['status'] ) {
-						$status = $payments['status'];
+					if ( isset( $payments['status'] ) ) {
+						if ( 'CREATED' !== $payments['status'] && 'PENDING' !== $payments['status'] ) {
+							$status = $payments['status'];
+						}
 					}
 				}
 			}
@@ -3435,6 +3454,7 @@ jQuery( document ).ready( function( $ ) {
 	public function api_get_payment_tokens( $access_token, $customer_id, $payment_token_id = '' ) {
 		$acting_opts     = $this->get_acting_settings();
 		$api_request_url = ( isset( $acting_opts['api_request_url'] ) ) ? $acting_opts['api_request_url'] : '';
+		$card_prefix     = ( isset( $acting_opts['card_prefix'] ) ) ? $acting_opts['card_prefix'] : '';
 
 		$params = array(
 			'method'  => 'GET',
@@ -3448,7 +3468,7 @@ jQuery( document ).ready( function( $ ) {
 		if ( ! empty( $payment_token_id ) ) {
 			$response = wp_remote_get( $api_request_url . '/v2/vault/payment-tokens/' . $payment_token_id, $params );
 		} else {
-			$response = wp_remote_get( $api_request_url . '/v2/vault/payment-tokens?customer_id=' . $customer_id . '&total_required=true', $params );
+			$response = wp_remote_get( $api_request_url . '/v2/vault/payment-tokens?customer_id=' . $card_prefix . $customer_id . '&total_required=true', $params );
 		}
 		if ( is_wp_error( $response ) ) {
 			$response_data = array();
@@ -3704,7 +3724,7 @@ jQuery( document ).ready( function( $ ) {
 					),
 					USCES_MEMBER_URL
 				);
-				$form                 .= '<li class="gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
+				$form                 .= '<li class="settlement-update gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
 			} else {
 				$register_settlement_url = add_query_arg(
 					array(
@@ -3713,7 +3733,7 @@ jQuery( document ).ready( function( $ ) {
 					),
 					USCES_MEMBER_URL
 				);
-				$form                   .= '<li class="gotoedit"><a href="' . $register_settlement_url . '">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
+				$form                   .= '<li class="settlement-register gotoedit"><a href="' . $register_settlement_url . '">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
 			}
 		}
 		return $form;
@@ -3989,6 +4009,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $member['mailaddress1'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
@@ -4011,6 +4033,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject . '( ' . sprintf( _x( '%s', 'honorific', 'usces' ), $name ) . ' )',
 			'message'      => do_shortcode( $admin_message ),
@@ -5721,6 +5745,8 @@ jQuery.event.add( window, "load", function() {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -5769,6 +5795,8 @@ jQuery.event.add( window, "load", function() {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -6046,6 +6074,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $admin_subject,
 			'message'      => do_shortcode( $admin_message ),
@@ -6307,6 +6337,7 @@ jQuery.event.add( window, "load", function() {
 		$ba_id       = $this->get_regular_ba_id( $member_id, $reg_id );
 		$tracking_id = usces_acting_key();
 		$usces->set_order_meta_value( 'reference_id', $tracking_id, $order_id );
+		$settltment_errmsg = '';
 
 		if ( ! empty( $ba_id ) ) {
 			$acting_opts = $this->get_acting_settings();
@@ -7045,5 +7076,25 @@ jQuery.event.add( window, "load", function() {
 				$locale = get_locale();
 		}
 		return $locale;
+	}
+
+	/**
+	 * Check prefix.
+	 *
+	 * @param string $prefix Prefix.
+	 * @return bool
+	 */
+	private function check_prefix( $prefix ) {
+		if ( 0 === strlen( $prefix ) ) {
+			return true;
+		}
+		$check = false;
+		if ( 1 > strlen( $prefix ) || 4 < strlen( $prefix ) ) {
+			return $check;
+		}
+		if ( preg_match( '/[A-Z0-9]/', $prefix ) ) {
+			$check = true;
+		}
+		return $check;
 	}
 }

@@ -3,10 +3,10 @@
  * Settlement Class.
  * ZEUS
  *
- * @package  Welcart
- * @author   Collne Inc.
- * @version  1.1.0
- * @since    2.4.0
+ * @package Welcart
+ * @author  Welcart Inc.
+ * @version 1.1.0
+ * @since   2.4.0
  */
 
 /**
@@ -179,9 +179,6 @@ class ZEUS_SETTLEMENT {
 
 		if ( $this->is_validity_acting( 'card' ) ) {
 			if ( $this->is_activate_card( 'api' ) && 1 === (int) $this->acting_opts['3dsecur'] ) {
-				remove_action( 'wp_ajax_welcart_confirm_check', 'welcart_confirm_check_ajax' );
-				remove_action( 'wp_ajax_nopriv_welcart_confirm_check', 'welcart_confirm_check_ajax' );
-				remove_filter( 'usces_filter_uscesL10n', 'usces_confirm_uscesL10n', 11, 2 );
 				add_action( 'wp_ajax_zeus_3dsecure_enrol', array( $this, 'zeus_3dsecure_enrol' ) );
 				add_action( 'wp_ajax_nopriv_zeus_3dsecure_enrol', array( $this, 'zeus_3dsecure_enrol' ) );
 			}
@@ -1533,6 +1530,7 @@ jQuery(document).ready(function($) {
 			if ( ! empty( $order_id ) ) {
 				if ( '03' === $data['status'] ) {
 					$res = usces_change_order_receipt( $order_id, 'receipted' );
+					do_action( 'usces_action_zeus_bank_receipted', $order_id, $data );
 				} else {
 					$res = usces_change_order_receipt( $order_id, 'noreceipt' );
 				}
@@ -1586,6 +1584,7 @@ jQuery(document).ready(function($) {
 				if ( '05' !== $data['status'] ) {
 					if ( '04' === $data['status'] ) {
 						$res = usces_change_order_receipt( $order_id, 'receipted' );
+						do_action( 'usces_action_zeus_conv_receipted', $order_id, $data );
 					} else {
 						$res = usces_change_order_receipt( $order_id, 'noreceipt' );
 					}
@@ -2054,6 +2053,7 @@ jQuery(document).ready(function($) {
 					$page_sale = $this->secure_link_batch( $acting_opts['card_url'], $params );
 					if ( false !== strpos( $page_sale, 'Success_order' ) ) {
 						$status = 'OK';
+						$params = apply_filters( 'usces_filter_zeus_card_sale_log', $params, $order_id, $tracking_id );
 						wel_zeus_save_acting_log( $params, 'zeus_card', 'sale', $status, $order_id, $tracking_id );
 						$status_name   = $this->get_status_name( 'sale' );
 						$res          .= '<div class="zeus-settlement-admin card-sale">' . $status_name . '</div>';
@@ -2151,6 +2151,7 @@ jQuery(document).ready(function($) {
 					$page_cancel = $this->secure_link_batch( $acting_opts['card_url'], $params );
 					if ( false !== strpos( $page_cancel, 'SuccessOK' ) ) {
 						$status = 'OK';
+						$params = apply_filters( 'usces_filter_zeus_card_cancel_log', $params, $order_id, $tracking_id );
 						wel_zeus_save_acting_log( $params, 'zeus_card', 'cancel', $status, $order_id, $tracking_id );
 						$status_name   = $this->get_status_name( 'cancel' );
 						$res          .= '<div class="zeus-settlement-admin card-cancel">' . $status_name . '</div>';
@@ -2255,6 +2256,7 @@ jQuery(document).ready(function($) {
 								$order_ref = wel_zeus_get_order_ref( $new_order_no );
 								if ( 'payment' === $order_ref['status'] ) {
 									$status_name = $this->get_status_name( $order_ref['status'] );
+									$order_ref   = apply_filters( 'usces_filter_zeus_card_change_log', $order_ref, $order_id, $tracking_id );
 									wel_zeus_save_acting_log( $order_ref, 'zeus_card', 'payment', $status, $order_id, $tracking_id );
 									$res          .= '<div class="zeus-settlement-admin card-payment">' . $status_name . '</div>';
 									$res          .= '<table class="settlement-admin-table">';
@@ -2269,6 +2271,7 @@ jQuery(document).ready(function($) {
 									$acting_status = '<span class="acting-status card-payment">' . $status_name . '</span>';
 								} elseif ( 'auth' === $order_ref['status'] ) {
 									$status_name = $this->get_status_name( $order_ref['status'] );
+									$order_ref   = apply_filters( 'usces_filter_zeus_card_change_log', $order_ref, $order_id, $tracking_id );
 									wel_zeus_save_acting_log( $order_ref, 'zeus_card', 'auth', $status, $order_id, $tracking_id );
 									$res .= '<div class="zeus-settlement-admin card-auth">' . $status_name . '</div>';
 									$res .= '<table class="settlement-admin-table">';
@@ -2410,6 +2413,7 @@ jQuery(document).ready(function($) {
 						$order_ref = wel_zeus_get_order_ref( $new_order_no );
 						if ( 'payment' === $order_ref['status'] ) {
 							$status_name = $this->get_status_name( $order_ref['status'] );
+							$order_ref   = apply_filters( 'usces_filter_zeus_card_re_settlement_log', $order_ref, $order_id, $tracking_id );
 							wel_zeus_save_acting_log( $order_ref, 'zeus_card', 'payment', $status, $order_id, $tracking_id );
 							$res          .= '<div class="zeus-settlement-admin card-payment">' . $status_name . '</div>';
 							$res          .= '<table class="settlement-admin-table">';
@@ -2424,6 +2428,7 @@ jQuery(document).ready(function($) {
 							$acting_status = '<span class="acting-status card-payment">' . $status_name . '</span>';
 						} elseif ( 'auth' === $order_ref['status'] ) {
 							$status_name = $this->get_status_name( $order_ref['status'] );
+							$order_ref   = apply_filters( 'usces_filter_zeus_card_re_settlement_log', $order_ref, $order_id, $tracking_id );
 							wel_zeus_save_acting_log( $order_ref, 'zeus_card', 'auth', $status, $order_id, $tracking_id );
 							$res .= '<div class="zeus-settlement-admin card-auth">' . $status_name . '</div>';
 							$res .= '<table class="settlement-admin-table">';
@@ -2443,6 +2448,7 @@ jQuery(document).ready(function($) {
 							if ( ! isset( $params['ordd'] ) ) {
 								$params['ordd'] = $new_order_no;
 							}
+							$params = apply_filters( 'usces_filter_zeus_card_re_settlement_log', $params, $order_id, $tracking_id );
 							wel_zeus_save_acting_log( $params, 'zeus_card', 'payment', $status, $order_id, $tracking_id );
 							$res          .= '<div class="zeus-settlement-admin card-payment">' . $status_name . '</div>';
 							$res          .= '<table class="settlement-admin-table">';
@@ -2458,6 +2464,7 @@ jQuery(document).ready(function($) {
 						}
 					} else {
 						$status_name = $this->get_status_name( 'payment' );
+						$params      = apply_filters( 'usces_filter_zeus_card_re_settlement_log', $params, $order_id, $tracking_id );
 						wel_zeus_save_acting_log( $params, 'zeus_card', 'payment', $status, $order_id, $tracking_id );
 						$res          .= '<div class="zeus-settlement-admin card-payment">' . $status_name . '</div>';
 						$res          .= '<table class="settlement-admin-table">';
@@ -3316,10 +3323,12 @@ jQuery(document).ready(function($) {
 				if ( $this->is_activate_card( 'api' ) && 1 === (int) $acting_opts['3dsecur'] ) {
 					$form .= '<div id="3dscontainer"></div>';
 				}
+				$amount = apply_filters( 'zeus_secure_payreq_amount', usces_crform( $entry['order']['total_full_price'], false, false, 'return', false ), $entry );
+
 				$form .= '<form name="purchase_form" id="purchase_form" action="' . USCES_CART_URL . '" method="post" onKeyDown="if (event.keyCode == 13) {return false;}">
 				<input type="hidden" name="card_option" id="card_option" value="' . $zeus_card_option . '">
 				<input type="hidden" name="token_key" id="token_key" value="' . $zeus_token_value . '">
-				<input type="hidden" name="money" value="' . usces_crform( $entry['order']['total_full_price'], false, false, 'return', false ) . '">
+				<input type="hidden" name="money" value="' . $amount . '">
 				<input type="hidden" name="telno" value="' . esc_attr( str_replace( '-', '', $entry['customer']['tel'] ) ) . '">
 				<input type="hidden" name="email" value="' . esc_attr( $entry['customer']['mailaddress1'] ) . '">
 				<input type="hidden" name="sendid" id="sendid" value="' . $mem_id . '">
@@ -3846,8 +3855,10 @@ jQuery(document).ready(function($) {
 					$order_ref = wel_zeus_get_order_ref( $results['zeusordd'] );
 					$status    = ( empty( $order_ref['status'] ) ) ? 'payment' : $order_ref['status'];
 					if ( ! isset( $results['money'] ) ) {
-						$results['money'] = usces_crform( $entry['order']['total_full_price'], false, false, 'return', false );
+						$amount           = apply_filters( 'zeus_secure_payreq_amount', usces_crform( $entry['order']['total_full_price'], false, false, 'return', false ), $entry );
+						$results['money'] = $amount;
 					}
+					$results = apply_filters( 'usces_filter_zeus_card_register_orderdata_log', $results, $args );
 					wel_zeus_save_acting_log( $results, 'zeus_card', $status, 'OK', $order_id, $tracking_id );
 				}
 
@@ -3880,6 +3891,7 @@ jQuery(document).ready(function($) {
 
 					$order_ref = wel_zeus_get_order_ref( $results['ordd'] );
 					$status    = ( empty( $order_ref['status'] ) ) ? 'payment' : $order_ref['status'];
+					$results   = apply_filters( 'usces_filter_zeus_card_register_orderdata_log', $results, $args );
 					wel_zeus_save_acting_log( $results, 'zeus_card', $status, 'OK', $order_id, $tracking_id );
 				}
 			}
@@ -3950,12 +3962,20 @@ jQuery(document).ready(function($) {
 					$form .= '<br />カードの有効期限が正しくないようです。';
 				} elseif ( in_array( $code, array( '02130922' ), true ) ) {
 					$form .= '<br />カードの有効期限が切れているようです。';
+				} elseif ( in_array( $code, array( '02131014', '02131017' ), true ) ) {
+					$form .= '<br />セキュリティコードが正しくないようです。';
 				} elseif ( in_array( $code, array( '02131117', '02131123', '02131124' ), true ) ) {
 					$form .= '<br />カードの名義が正しくないようです。';
+				} elseif ( in_array( $code, array( '02131317', '02131325', '02131310', '02131326' ), true ) ) {
+					$form .= '<br />指定の支払い回数はご利用いただけません。';
 				} elseif ( in_array( $code, array( '02131414', '02131417', '02131437' ), true ) ) {
 					$form .= '<br />お客様情報の電話番号が正しくないようです。';
 				} elseif ( in_array( $code, array( '02131527', '02131528', '02131529', '02131537' ), true ) ) {
 					$form .= '<br />お客様情報のEメールアドレスが正しくないようです。';
+				} elseif ( in_array( $code, array( '02100431' ), true ) ) {
+					$form .= '<br />今回のお申し込みは受け付けられませんでした。ご利用サイトは3Dセキュアの認証が必要のため、お使いのクレジットカードではお取扱出来ません。';
+				} else {
+					$form .= '<br />今回のお申し込みは受け付けられませんでした。';
 				}
 				$form .= '<br />
 				<br />
@@ -3967,7 +3987,7 @@ jQuery(document).ready(function($) {
 				$form .= '<br />
 				カード番号を再入力する場合はこちらをクリックしてください。<br />
 				<br />
-				<a href="' . USCES_CUSTOMER_URL . '&re-enter=1">カード番号の再入力 》</a><br />';
+				<a href="' . USCES_CUSTOMER_URL . '">もう一度決済を行う 》</a><br />';
 			}
 			$form .= '<br />
 			株式会社ゼウス カスタマーサポート　（24時間365日対応）<br />
@@ -3986,6 +4006,8 @@ jQuery(document).ready(function($) {
 					$form .= '<br />お申し込み情報が正しく入力されていないか、通信時にエラーが発生している可能性がございます。入力情報を再度ご確認いただいた上でお申し込みをいただくか、カスタマーサポートまでお問い合わせください。';
 				} elseif ( in_array( $code, array( '0008' ), true ) ) {
 					$form .= '<br />このコンビニはお取り扱いできません。別のコンビニをご選択いただき、再度お申し込みをいただくか、カスタマーサポートまでお問い合わせください。';
+				} else {
+					$form .= '<br />詳細に関してはカスタマーサポートまでお問い合わせください。';
 				}
 			} else {
 				if ( 'zeus_conv' === $acting ) {
@@ -4047,6 +4069,7 @@ jQuery(document).ready(function($) {
 				);
 				$l10n                    .= "'zeus_cardupdate_url': '" . urlencode( $member_update_settlement ) . "',\n";
 			}
+			$l10n .= "'zeus_card_error': '" . __( 'Credit card information is not appropriate.', 'usces' ) . "',\n";
 		} elseif ( $usces->is_member_page( $_SERVER['REQUEST_URI'] ) ) {
 			if ( isset( $_GET['usces_page'] ) && ( 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page' ) || 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page' ) ) ) {
 				$acting_opts = $this->get_acting_settings();
@@ -4060,6 +4083,7 @@ jQuery(document).ready(function($) {
 				$l10n       .= "'zeus_thismonth': '" . date_i18n( 'm' ) . "',\n";
 				$l10n       .= "'zeus_pcid': '" . $pcid . "',\n";
 				$l10n       .= "'zeus_partofcard': '" . $partofcard . "',\n";
+				$l10n       .= "'zeus_card_error': '" . __( 'Credit card information is not appropriate.', 'usces' ) . "',\n";
 			}
 		}
 		return $l10n;
@@ -4132,7 +4156,6 @@ var zeusTokenIpcode = "<?php echo esc_attr( $acting_opts['clientip'] ); ?>";
 			}).then( function(res) {
 				return res.json();
 			}).then( function(data) {
-				//console.log('EnrolReq='+data);
 				if( 'stock' == data.action && 'error' == data.status ) {
 					location.href = "<?php echo esc_js( USCES_CART_URL ); ?>";
 				}
@@ -4162,7 +4185,6 @@ var zeusTokenIpcode = "<?php echo esc_attr( $acting_opts['clientip'] ); ?>";
 					location.href = "<?php echo esc_js( trailingslashit( USCES_CART_URL ) ); ?>?acting=zeus_card&acting_return=0&status="+data.status+"&code="+data.code;
 				}
 			}).catch((reason) => {
-				//console.log(reason);
 				loading_img.style.display = 'none';
 			});
 		}
@@ -4309,7 +4331,7 @@ jQuery(document).ready(function($) {
 					),
 					USCES_MEMBER_URL
 				);
-				$form                 .= '<li class="gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
+				$form                 .= '<li class="settlement-update gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
 			} elseif ( 'on' === $acting_opts['batch'] ) {
 				$register_settlement_url = add_query_arg(
 					array(
@@ -4318,7 +4340,7 @@ jQuery(document).ready(function($) {
 					),
 					USCES_MEMBER_URL
 				);
-				$form                   .= '<li class="gotoedit"><a href="' . $register_settlement_url . '">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
+				$form                   .= '<li class="settlement-register gotoedit"><a href="' . $register_settlement_url . '">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
 			}
 		}
 		return $form;
@@ -4502,6 +4524,8 @@ jQuery.event.add(window,'load',function() {
 			'to_address'   => $member['mailaddress1'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
@@ -4530,6 +4554,8 @@ jQuery.event.add(window,'load',function() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject . '( ' . $to_name . ' )',
 			'message'      => do_shortcode( $admin_message ),
@@ -5056,6 +5082,7 @@ jQuery.event.add(window,'load',function() {
 			if ( ! empty( $new_order_no ) ) {
 				$order_ref = wel_zeus_get_order_ref( $new_order_no );
 				if ( 'payment' === $order_ref['status'] || 'auth' === $order_ref['status'] ) {
+					$order_ref = apply_filters( 'usces_filter_zeus_card_auto_continuation_charging_log', $order_ref, $order_id, $tracking_id );
 					wel_zeus_save_acting_log( $order_ref, 'zeus_card', $order_ref['status'], $status, $order_id, $tracking_id );
 					$this->auto_settlement_mail( $member_id, $order_id, $data, $continue_data );
 					do_action( 'usces_action_auto_continuation_charging', $member_id, $order_id, $continue_data, $order_ref );
@@ -5063,12 +5090,14 @@ jQuery.event.add(window,'load',function() {
 					if ( ! isset( $params['ordd'] ) ) {
 						$params['ordd'] = $new_order_no;
 					}
+					$params = apply_filters( 'usces_filter_zeus_card_auto_continuation_charging_log', $params, $order_id, $tracking_id );
 					wel_zeus_save_acting_log( $params, 'zeus_card', 'payment', $status, $order_id, $tracking_id );
 					$this->auto_settlement_mail( $member_id, $order_id, $data, $continue_data );
 					$order_ref = wel_zeus_get_order_ref( $new_order_no );
 					do_action( 'usces_action_auto_continuation_charging', $member_id, $order_id, $continue_data, $params );
 				}
 			} else {
+				$params = apply_filters( 'usces_filter_zeus_card_auto_continuation_charging_log', $params, $order_id, $tracking_id );
 				wel_zeus_save_acting_log( $params, 'zeus_card', 'payment', $status, $order_id, $tracking_id );
 				$this->auto_settlement_mail( $member_id, $order_id, $data, $continue_data );
 				do_action( 'usces_action_auto_continuation_charging', $member_id, $order_id, $continue_data, $params );
@@ -5127,6 +5156,8 @@ jQuery.event.add(window,'load',function() {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -5175,6 +5206,8 @@ jQuery.event.add(window,'load',function() {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -5400,6 +5433,8 @@ jQuery.event.add(window,'load',function() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $admin_subject,
 			'message'      => do_shortcode( $admin_message ),
@@ -5663,7 +5698,28 @@ jQuery.event.add(window,'load',function() {
 
 		$request_body = file_get_contents( 'php://input' );
 		$body         = json_decode( $request_body, true );
-		if ( ! empty( $body['MD'] ) && ! empty( $body['PaRes'] ) ) {
+		if ( ! empty( $body['MD'] ) && ! empty( $body['PaRes'] ) && ! empty( $body['status'] ) ) {
+			if ( 'failure' === $body['status'] || 'invalid' === $body['status'] || 'maintenance' === $body['status'] ) {
+				$log = array(
+					'acting' => 'zeus_card_API(3D Auth)',
+					'key'    => $sendpoint,
+					'result' => 'PaRes Error',
+					'data'   => $body,
+				);
+				usces_save_order_acting_error( $log );
+				wp_redirect(
+					add_query_arg(
+						array(
+							'acting'        => 'zeus_card',
+							'acting_return' => '0',
+							'status'        => $body['status'],
+						),
+						USCES_CART_URL
+					)
+				);
+				exit();
+			}
+
 			$data          = array();
 			$data['xid']   = $body['MD'];
 			$data['PaRes'] = $body['PaRes'];
@@ -5686,8 +5742,7 @@ jQuery.event.add(window,'load',function() {
 						array(
 							'acting'        => 'zeus_card',
 							'acting_return' => '0',
-							'status'        => 'AuthReq',
-							'code'          => '0',
+							'status'        => 'error',
 						),
 						USCES_CART_URL
 					)
@@ -5739,8 +5794,7 @@ jQuery.event.add(window,'load',function() {
 						array(
 							'acting'        => 'zeus_card',
 							'acting_return' => '0',
-							'status'        => 'PayRes',
-							'code'          => '0',
+							'status'        => 'error',
 						),
 						USCES_CART_URL
 					)
@@ -5871,8 +5925,7 @@ jQuery.event.add(window,'load',function() {
 					array(
 						'acting'        => 'zeus_card',
 						'acting_return' => '0',
-						'status'        => 'PayReq',
-						'code'          => '0',
+						'status'        => 'error',
 					),
 					USCES_CART_URL
 				)

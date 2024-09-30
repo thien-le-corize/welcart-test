@@ -19,6 +19,7 @@ $cal2                             = new calendarData();
 $cal2->setToday( $nextyy, $nextmm, $nextdd );
 $cal2->setCalendarData();
 $caption2 = __( 'Next month', 'usces' ) . '(' . sprintf( __( '%2$s/%1$s', 'usces' ), $nextyy, $nextmm ) . ')';
+ob_start();
 ?>
 <div class="this-month">
 <table cellspacing="0" class="usces_calendar">
@@ -102,6 +103,12 @@ for ( $i = 0; $i < $cal2_row; $i++ ) :
 </tbody>
 </table>
 </div>
+<?php
+$html = ob_get_contents();
+ob_end_clean();
+$html = apply_filters( 'usces_filter_widget_calendar_form', $html );
+echo $html;
+?>
 <?php
 $afterword = '(<span class="business_days_exp_box businessday">&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;' . __( 'Holiday for Shipping Operations', 'usces' ) . ')' . "\n";
 echo apply_filters( 'usces_filter_widget_calendar', $afterword );

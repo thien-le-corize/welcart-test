@@ -130,9 +130,19 @@ class PAIDY_SETTLEMENT {
 		$options = get_option( 'usces', array() );
 		$options['acting_settings']['paidy']['activate']       = ( isset( $options['acting_settings']['paidy']['activate'] ) ) ? $options['acting_settings']['paidy']['activate'] : 'off';
 		$options['acting_settings']['paidy']['paidy_activate'] = ( isset( $options['acting_settings']['paidy']['paidy_activate'] ) ) ? $options['acting_settings']['paidy']['paidy_activate'] : 'off';
-		$options['acting_settings']['paidy']['public_key']     = ( isset( $options['acting_settings']['paidy']['public_key'] ) ) ? $options['acting_settings']['paidy']['public_key'] : '';
-		$options['acting_settings']['paidy']['secret_key']     = ( isset( $options['acting_settings']['paidy']['secret_key'] ) ) ? $options['acting_settings']['paidy']['secret_key'] : '';
-		$options['acting_settings']['paidy']['webhook_url']    = ( isset( $options['acting_settings']['paidy']['webhook_url'] ) ) ? $options['acting_settings']['paidy']['webhook_url'] : '';
+		if ( false !== strpos( $options['acting_settings']['paidy']['public_key'], '_test_' ) ) {
+			$options['acting_settings']['paidy']['environment']     = 'test';
+			$options['acting_settings']['paidy']['public_key']      = ( ! empty( $options['acting_settings']['paidy']['public_key'] ) ) ? $options['acting_settings']['paidy']['public_key'] : '';
+			$options['acting_settings']['paidy']['secret_key']      = ( ! empty( $options['acting_settings']['paidy']['secret_key'] ) ) ? $options['acting_settings']['paidy']['secret_key'] : '';
+			$options['acting_settings']['paidy']['public_key_test'] = ( ! empty( $options['acting_settings']['paidy']['public_key'] ) ) ? $options['acting_settings']['paidy']['public_key'] : '';
+			$options['acting_settings']['paidy']['secret_key_test'] = ( ! empty( $options['acting_settings']['paidy']['secret_key'] ) ) ? $options['acting_settings']['paidy']['secret_key'] : '';
+		} else {
+			$options['acting_settings']['paidy']['environment']     = ( isset( $options['acting_settings']['paidy']['environment'] ) ) ? $options['acting_settings']['paidy']['environment'] : 'live';
+			$options['acting_settings']['paidy']['public_key']      = ( isset( $options['acting_settings']['paidy']['public_key'] ) ) ? $options['acting_settings']['paidy']['public_key'] : '';
+			$options['acting_settings']['paidy']['secret_key']      = ( isset( $options['acting_settings']['paidy']['secret_key'] ) ) ? $options['acting_settings']['paidy']['secret_key'] : '';
+			$options['acting_settings']['paidy']['public_key_test'] = ( isset( $options['acting_settings']['paidy']['public_key_test'] ) ) ? $options['acting_settings']['paidy']['public_key_test'] : '';
+			$options['acting_settings']['paidy']['secret_key_test'] = ( isset( $options['acting_settings']['paidy']['secret_key_test'] ) ) ? $options['acting_settings']['paidy']['secret_key_test'] : '';
+		}
 		update_option( 'usces', $options );
 
 		$available_settlement = get_option( 'usces_available_settlement', array() );
@@ -152,8 +162,8 @@ class PAIDY_SETTLEMENT {
 	 * @return boolean
 	 */
 	public function is_validity_acting( $type = '' ) {
-		$acting_opts = $this->get_acting_settings();
-		if ( empty( $acting_opts ) ) {
+		$options = get_option( 'usces', array() );
+		if ( empty( $options['acting_settings']['paidy'] ) ) {
 			return false;
 		}
 
@@ -175,7 +185,7 @@ class PAIDY_SETTLEMENT {
 				}
 				break;
 			default:
-				if ( isset( $acting_opts['activate'] ) && 'on' === $acting_opts['activate'] ) {
+				if ( isset( $options['acting_settings']['paidy']['activate'] ) && 'on' === $options['acting_settings']['paidy']['activate'] ) {
 					return true;
 				} else {
 					return false;
@@ -189,9 +199,9 @@ class PAIDY_SETTLEMENT {
 	 * @return boolean
 	 */
 	public function is_activate_paidy() {
-		$acting_opts = $this->get_acting_settings();
-		if ( ( isset( $acting_opts['activate'] ) && 'on' === $acting_opts['activate'] ) &&
-			( isset( $acting_opts['paidy_activate'] ) && 'on' === $acting_opts['paidy_activate'] ) ) {
+		$options = get_option( 'usces', array() );
+		if ( ( isset( $options['acting_settings']['paidy']['activate'] ) && 'on' === $options['acting_settings']['paidy']['activate'] ) &&
+			( isset( $options['acting_settings']['paidy']['paidy_activate'] ) && 'on' === $options['acting_settings']['paidy']['paidy_activate'] ) ) {
 			$res = true;
 		} else {
 			$res = false;
@@ -210,17 +220,18 @@ class PAIDY_SETTLEMENT {
 			case 'usces_settlement':
 				$settlement_selected = get_option( 'usces_settlement_selected', array() );
 				if ( in_array( $this->paymod_id, (array) $settlement_selected, true ) ) :
-					$acting_opts = $this->get_acting_settings();
+					$options        = get_option( 'usces', array() );
+					$paidy_activate = ( isset( $options['acting_settings']['paidy']['paidy_activate'] ) ) ? $options['acting_settings']['paidy']['paidy_activate'] : 'off';
 					?>
 <script type="text/javascript">
 jQuery(document).ready( function($) {
-	var paidy_activate = "<?php echo esc_js( $acting_opts['paidy_activate'] ); ?>";
+	var paidy_activate = "<?php echo esc_js( $paidy_activate ); ?>";
 	if( "on" == paidy_activate ) {
 		$(".paidy_form").css("display","");
 	} else {
 		$(".paidy_form").css("display","none");
 	}
-	$(document).on( "change", ".activate_paidy", function() {
+	$(document).on( "change", ".paidy_activate", function() {
 		if( "on" == $(this).val() ) {
 			$(".paidy_form").css("display","");
 		} else {
@@ -480,17 +491,28 @@ jQuery(document).ready( function($) {
 		$post_data       = wp_unslash( $_POST );
 
 		unset( $options['acting_settings']['paidy'] );
-		$options['acting_settings']['paidy']['paidy_activate'] = ( isset( $post_data['paidy_activate'] ) ) ? $post_data['paidy_activate'] : 'off';
-		$options['acting_settings']['paidy']['public_key']     = ( isset( $post_data['public_key'] ) ) ? $post_data['public_key'] : '';
-		$options['acting_settings']['paidy']['secret_key']     = ( isset( $post_data['secret_key'] ) ) ? $post_data['secret_key'] : '';
-		$options['acting_settings']['paidy']['webhook_url']    = ( isset( $post_data['webhook_url'] ) ) ? $post_data['webhook_url'] : '';
+		$options['acting_settings']['paidy']['paidy_activate']  = ( isset( $post_data['paidy_activate'] ) ) ? $post_data['paidy_activate'] : 'off';
+		$options['acting_settings']['paidy']['environment']     = ( isset( $post_data['environment'] ) ) ? $post_data['environment'] : 'live';
+		$options['acting_settings']['paidy']['public_key']      = ( isset( $post_data['public_key'] ) ) ? $post_data['public_key'] : '';
+		$options['acting_settings']['paidy']['secret_key']      = ( isset( $post_data['secret_key'] ) ) ? $post_data['secret_key'] : '';
+		$options['acting_settings']['paidy']['public_key_test'] = ( isset( $post_data['public_key_test'] ) ) ? $post_data['public_key_test'] : '';
+		$options['acting_settings']['paidy']['secret_key_test'] = ( isset( $post_data['secret_key_test'] ) ) ? $post_data['secret_key_test'] : '';
 
 		if ( 'on' === $options['acting_settings']['paidy']['paidy_activate'] ) {
-			if ( WCUtils::is_blank( $options['acting_settings']['paidy']['public_key'] ) ) {
-				$this->error_mes .= '※パブリックキーを入力してください<br />';
-			}
-			if ( WCUtils::is_blank( $options['acting_settings']['paidy']['secret_key'] ) ) {
-				$this->error_mes .= '※シークレットキーを入力してください<br />';
+			if ( 'live' === $options['acting_settings']['paidy']['environment'] ) {
+				if ( WCUtils::is_blank( $options['acting_settings']['paidy']['public_key'] ) ) {
+					$this->error_mes .= '※本番用パブリックキーを入力してください<br />';
+				}
+				if ( WCUtils::is_blank( $options['acting_settings']['paidy']['secret_key'] ) ) {
+					$this->error_mes .= '※本番用シークレットキーを入力してください<br />';
+				}
+			} else {
+				if ( WCUtils::is_blank( $options['acting_settings']['paidy']['public_key_test'] ) ) {
+					$this->error_mes .= '※テスト用パブリックキーを入力してください<br />';
+				}
+				if ( WCUtils::is_blank( $options['acting_settings']['paidy']['secret_key_test'] ) ) {
+					$this->error_mes .= '※テスト用シークレットキーを入力してください<br />';
+				}
 			}
 		}
 
@@ -510,17 +532,6 @@ jQuery(document).ready( function($) {
 			}
 			if ( 'on' === $options['acting_settings']['paidy']['paidy_activate'] ) {
 				$options['acting_settings']['paidy']['activate'] = 'on';
-				$options['acting_settings']['paidy']['api_url']  = 'https://api.paidy.com/payments/';
-				$options['acting_settings']['paidy']['apps_url'] = 'https://apps.paidy.com/';
-				if ( false === strpos( $options['acting_settings']['paidy']['public_key'], '_test_' ) ) {
-					$options['acting_settings']['paidy']['ope']       = 'public';
-					$options['acting_settings']['paidy']['send_url']  = 'https://link.paidy.co.jp/v/u/request';
-					$options['acting_settings']['paidy']['token_url'] = 'https://token.paidy.co.jp/js/PaygentToken.js';
-				} else {
-					$options['acting_settings']['paidy']['ope']       = 'test';
-					$options['acting_settings']['paidy']['send_url']  = 'https://sandbox.paidy.co.jp/v/u/request';
-					$options['acting_settings']['paidy']['token_url'] = 'https://sandbox.paidy.co.jp/js/PaygentToken.js';
-				}
 				usces_admin_orderlist_show_wc_trans_id();
 				if ( 0 < count( $toactive ) ) {
 					$usces->action_message .= __( 'Please update the payment method to "Activate". <a href="admin.php?page=usces_initial#payment_method_setting">General Setting > Payment Methods</a>', 'usces' );
@@ -585,10 +596,12 @@ jQuery(document).ready( function($) {
 	 * usces_action_settlement_tab_body
 	 */
 	public function settlement_tab_body() {
-		$acting_opts         = $this->get_acting_settings();
 		$settlement_selected = get_option( 'usces_settlement_selected', array() );
 		if ( in_array( $this->paymod_id, $settlement_selected, true ) ) :
-			$paidy_activate = ( isset( $acting_opts['paidy_activate'] ) && ( 'on' === $acting_opts['paidy_activate'] ) ) ? 'on' : 'off';
+			$options        = get_option( 'usces', array() );
+			$activate       = ( isset( $options['acting_settings']['paidy']['activate'] ) && 'on' === $options['acting_settings']['paidy']['activate'] ) ? true : false;
+			$paidy_activate = ( isset( $options['acting_settings']['paidy']['paidy_activate'] ) && ( 'on' === $options['acting_settings']['paidy']['paidy_activate'] ) ) ? 'on' : 'off';
+			$environment    = ( isset( $options['acting_settings']['paidy']['environment'] ) ) ? $options['acting_settings']['paidy']['environment'] : 'live';
 			?>
 	<div id="uscestabs_paidy">
 	<div class="settlement_service"><span class="service_title"><?php echo esc_html( $this->acting_name ); ?></span></div>
@@ -598,7 +611,7 @@ jQuery(document).ready( function($) {
 					?>
 	<div class="error_message"><?php wel_esc_script_e( $this->error_mes ); ?></div>
 					<?php
-				elseif ( isset( $acting_opts['activate'] ) && 'on' === $acting_opts['activate'] ) :
+				elseif ( $activate ) :
 					?>
 	<div class="message">十分にテストを行ってから運用してください。</div>
 					<?php
@@ -609,25 +622,36 @@ jQuery(document).ready( function($) {
 		<table class="settle_table">
 			<tr>
 				<th><?php echo esc_html( $this->acting_name ); ?></th>
-				<td><label><input name="paidy_activate" type="radio" class="activate_paidy" id="paidy_activate_on" value="on"<?php checked( $paidy_activate, 'on' ); ?> /><span>利用する</span></label><br />
-					<label><input name="paidy_activate" type="radio" class="activate_paidy" id="paidy_activate_off" value="off"<?php checked( $paidy_activate, 'off' ); ?> /><span>利用しない</span></label>
+				<td><label><input name="paidy_activate" type="radio" class="paidy_activate" id="paidy_activate_on" value="on"<?php checked( $paidy_activate, 'on' ); ?> /><span>利用する</span></label><br />
+					<label><input name="paidy_activate" type="radio" class="paidy_activate" id="paidy_activate_off" value="off"<?php checked( $paidy_activate, 'off' ); ?> /><span>利用しない</span></label>
 				</td>
 			</tr>
 			<tr class="paidy_form">
-				<th><a class="explanation-label" id="label_ex_public_key_paidy">パブリックキー</a></th>
-				<td><input name="public_key" type="text" id="public_key_paidy" value="<?php echo esc_attr( $acting_opts['public_key'] ); ?>" class="regular-text" /></td>
+				<th>動作環境</th>
+				<td><label><input name="environment" type="radio" class="paidy_environment" id="paidy_environment_live" value="live"<?php checked( $environment, 'live' ); ?> /><span>本番環境</span></label><br />
+					<label><input name="environment" type="radio" class="paidy_environment" id="paidy_environment_test" value="test"<?php checked( $environment, 'test' ); ?> /><span>テスト環境</span></label>
+				</td>
 			</tr>
-			<tr id="ex_public_key_paidy" class="explanation paidy_form"><td colspan="2">ペイディ加盟店管理画面の設定より「パブリックキー」を取得してください。（半角英数字）</td></tr>
 			<tr class="paidy_form">
-				<th><a class="explanation-label" id="label_ex_secret_key_paidy">シークレットキー</a></th>
-				<td><input name="secret_key" type="text" id="secret_key_paidy" value="<?php echo esc_attr( $acting_opts['secret_key'] ); ?>" class="regular-text" /></td>
+				<th><a class="explanation-label" id="label_ex_public_key_paidy">本番用パブリックキー</a></th>
+				<td><input name="public_key" type="text" id="public_key_paidy" value="<?php echo esc_attr( $options['acting_settings']['paidy']['public_key'] ); ?>" class="regular-text" /></td>
 			</tr>
-			<tr id="ex_secret_key_paidy" class="explanation paidy_form"><td colspan="2">ペイディ加盟店管理画面の設定より「シークレットキー」を取得してください。（半角英数字）</td></tr>
-			<!--<tr class="paidy_form">
-				<th><a class="explanation-label" id="label_ex_webhook_url_paidy">Webhook URL</a></th>
-				<td><input name="webhook_url" type="text" id="webhook_url_paidy" value="<?php echo esc_attr( $acting_opts['webhook_url'] ); ?>" class="regular-text" /></td>
+			<tr id="ex_public_key_paidy" class="explanation paidy_form"><td colspan="2">ペイディ加盟店管理画面の設定より本番用の「パブリックキー」を取得してください。（半角英数字）</td></tr>
+			<tr class="paidy_form">
+				<th><a class="explanation-label" id="label_ex_secret_key_paidy">本番用シークレットキー</a></th>
+				<td><input name="secret_key" type="text" id="secret_key_paidy" value="<?php echo esc_attr( $options['acting_settings']['paidy']['secret_key'] ); ?>" class="regular-text" /></td>
 			</tr>
-			<tr id="ex_webhook_url_paidy" class="explanation paidy_form"><td colspan="2">ペイディ加盟店管理画面の設定より「Webhook URL」を取得してください。（半角英数字）</td></tr>-->
+			<tr id="ex_secret_key_paidy" class="explanation paidy_form"><td colspan="2">ペイディ加盟店管理画面の設定より本番用の「シークレットキー」を取得してください。（半角英数字）</td></tr>
+			<tr class="paidy_form">
+				<th><a class="explanation-label" id="label_ex_public_key_test_paidy">テスト用パブリックキー</a></th>
+				<td><input name="public_key_test" type="text" id="public_key_test_paidy" value="<?php echo esc_attr( $options['acting_settings']['paidy']['public_key_test'] ); ?>" class="regular-text" /></td>
+			</tr>
+			<tr id="ex_public_key_test_paidy" class="explanation paidy_form"><td colspan="2">ペイディ加盟店管理画面の設定よりテスト用の「パブリックキー」を取得してください。（半角英数字）</td></tr>
+			<tr class="paidy_form">
+				<th><a class="explanation-label" id="label_ex_secret_key_test_paidy">テスト用シークレットキー</a></th>
+				<td><input name="secret_key_test" type="text" id="secret_key_test_paidy" value="<?php echo esc_attr( $options['acting_settings']['paidy']['secret_key_test'] ); ?>" class="regular-text" /></td>
+			</tr>
+			<tr id="ex_secret_key_test_paidy" class="explanation paidy_form"><td colspan="2">ペイディ加盟店管理画面の設定よりテスト用の「シークレットキー」を取得してください。（半角英数字）</td></tr>
 		</table>
 		<input name="acting" type="hidden" value="paidy" />
 		<input name="usces_option_update" type="submit" class="button button-primary" value="<?php echo esc_attr( $this->acting_name ); ?>の設定を更新する" />
@@ -640,15 +664,20 @@ jQuery(document).ready( function($) {
 		<p>【ご利用までの流れ】<br>
 		お申し込み前に「特定商取引法に基づく表示」と「プライバシーポリシー（個人情報の第三者提供含む）」ページのご準備をお願いいたします。<br>
 		<ol>
-		<li>加盟店申請：<a href="https://paidy.com/merchant/application/" target="_blank">こちら</a>のWebページからお申し込みください。</li>
-		<li>加盟店審査：お申し込みから約2週間程度で、審査結果メールが株式会社Paidyより届きます。添付されている条件通知書で、「契約日」と「経済条件」をご確認ください。</li>
-		<li>利用開始 ：WelcartでAPIキーの設定が完了したら、ご利用開始となります。</li>
+		<li>加盟店申請：ダッシュボードのペイディ決済らくらく設定、または<a href="https://paidy.com/merchant/application/" target="_blank">ペイディWebサイト</a>からお申し込みください。</li>
+		<li>加盟店審査：お申し込みから最大10営業日で、審査結果メールが株式会社Paidyより届きます。添付されている条件通知書で、「契約日」と「経済条件」をご確認ください。</li>
+		<li>利用開始 ：
+			<ol>
+			<li type="a">ペイディ決済らくらく設定から申し込んだ場合、ダッシュボードに表示されるボタンによりご利用開始が可能です。</li>
+			<li type="a">ペイディWebサイトから申し込んだ場合、WelcartでAPIキーの設定が完了したら、ご利用開始となります。</li>
+			</ol>
+		</li>
 		</ol>
 		</p>
-		<p>APIキーの確認方法は、<a href="https://download.paidy.com/merchant/paidy_intro_guide.pdf" target="_blank">Paidy導入ガイド</a>の Paidy APIキー をご確認ください。</p>
+		<p>APIキーの確認方法は、<a href="https://download.paidy.com/merchant/paidy_intro_guide.pdf" target="_blank">ペイディ導入ガイド</a>の Paidy APIキー をご確認ください。</p>
 		<p>【資料】<br>
 		操作方法などについては下記をご覧ください。<br>
-		<a href="https://download.paidy.com/merchant/paidy_intro_guide.pdf" target="_blank">Paidy導入ガイド</a><br>
+		<a href="https://download.paidy.com/merchant/paidy_intro_guide.pdf" target="_blank">ペイディ導入ガイド</a><br>
 		<a href="https://download.paidy.com/merchant/PaidyMerchantWebUserGuide.pdf" target="_blank">ペイディ加盟店管理画面マニュアル</a><br>
 		<a href="https://merchant-support.paidy.com/hc/ja" target="_blank">加盟店FAQ</a></p>
 	</div>
@@ -1121,7 +1150,7 @@ jQuery(document).ready( function($) {
 		if ( 'new' !== $order_action && ! empty( $order_id ) ) {
 			$payment = usces_get_payments_by_name( $data['order_payment_name'] );
 			if ( isset( $payment['settlement'] ) && 'acting_paidy' === $payment['settlement'] ) {
-				$trans_id    = $usces->get_order_meta_value( 'trans_id', $order_id );
+				$trans_id    = $this->get_trans_id( $order_id );
 				$acting_data = usces_unserialize( $usces->get_order_meta_value( $payment['settlement'], $order_id ) );
 				if ( ! empty( $trans_id ) && isset( $acting_data['id'] ) ) {
 					echo '<input type="button" class="button settlement-information" id="settlement-information-' . esc_html( $trans_id ) . '" data-trans_id="' . esc_attr( $trans_id ) . '" data-num="1" value="' . esc_attr__( 'Settlement info', 'usces' ) . '">';
@@ -1167,7 +1196,7 @@ jQuery(document).ready( function($) {
 	 * @return array
 	 */
 	public function settlement_info_field_meta_keys( $keys ) {
-		$keys = array_merge( $keys, array( 'acting', 'trans_id' ) );
+		$keys = array_merge( $keys, array( 'acting', 'trans_id', 'trading_id' ) );
 		return $keys;
 	}
 
@@ -1181,7 +1210,7 @@ jQuery(document).ready( function($) {
 	 */
 	public function settlement_info_field_keys( $keys, $fields ) {
 		if ( isset( $fields['acting'] ) && 'paidy' === $fields['acting'] ) {
-			$keys = array( 'acting', 'trans_id' );
+			$keys = array( 'acting', 'trans_id', 'trading_id' );
 		}
 		return $keys;
 	}
@@ -1213,6 +1242,8 @@ jQuery(document).ready( function($) {
 	public function get_link_key( $linkkey, $results ) {
 		if ( isset( $results['trans_id'] ) ) {
 			$linkkey = $results['trans_id'];
+		} elseif ( isset( $results['trading_id'] ) ) {
+			$linkkey = $results['trading_id'];
 		}
 		return $linkkey;
 	}
@@ -1526,7 +1557,7 @@ jQuery(document).ready( function($) {
 					$number_of_points = '';
 				}
 				$amount = usces_crform( $entry['order']['total_full_price'], false, false, 'return', false );
-				// if ( isset( $acting_opts['ope'] ) && 'public' === $acting_opts['ope'] ) {
+				// if ( isset( $acting_opts['environment'] ) && 'live' === $acting_opts['environment'] ) {
 				$email = trim( $entry['customer']['mailaddress1'] );
 				if ( ! empty( $entry['customer']['tel'] ) ) {
 					$phone = '"phone": "' . str_replace( '-', '', mb_convert_kana( $entry['customer']['tel'], 'a', 'UTF-8' ) ) . '"' . "\n";
@@ -1777,9 +1808,24 @@ function paidyPay() {
 	 * @return array
 	 */
 	protected function get_acting_settings() {
-		global $usces;
-
-		$acting_settings = ( isset( $usces->options['acting_settings'][ $this->paymod_id ] ) ) ? $usces->options['acting_settings'][ $this->paymod_id ] : array();
+		$options         = get_option( 'usces', array() );
+		$acting_settings = array();
+		if ( isset( $options['acting_settings']['paidy'] ) ) {
+			$environment                 = ( ! empty( $options['acting_settings']['paidy']['environment'] ) ) ? $options['acting_settings']['paidy']['environment'] : 'live';
+			$acting_settings['api_url']  = 'https://api.paidy.com/payments/';
+			$acting_settings['apps_url'] = 'https://apps.paidy.com/';
+			if ( 'live' === $environment ) {
+				$acting_settings['send_url']   = 'https://link.paidy.co.jp/v/u/request';
+				$acting_settings['token_url']  = 'https://token.paidy.co.jp/js/PaygentToken.js';
+				$acting_settings['public_key'] = ( ! empty( $options['acting_settings']['paidy']['public_key'] ) ) ? $options['acting_settings']['paidy']['public_key'] : '';
+				$acting_settings['secret_key'] = ( ! empty( $options['acting_settings']['paidy']['secret_key'] ) ) ? $options['acting_settings']['paidy']['secret_key'] : '';
+			} else {
+				$acting_settings['send_url']   = 'https://sandbox.paidy.co.jp/v/u/request';
+				$acting_settings['token_url']  = 'https://sandbox.paidy.co.jp/js/PaygentToken.js';
+				$acting_settings['public_key'] = ( ! empty( $options['acting_settings']['paidy']['public_key_test'] ) ) ? $options['acting_settings']['paidy']['public_key_test'] : '';
+				$acting_settings['secret_key'] = ( ! empty( $options['acting_settings']['paidy']['secret_key_test'] ) ) ? $options['acting_settings']['paidy']['secret_key_test'] : '';
+			}
+		}
 		return $acting_settings;
 	}
 
@@ -1798,7 +1844,7 @@ function paidyPay() {
 	}
 
 	/**
-	 * マーチャント取引ID 取得
+	 * 取引ID 取得
 	 *
 	 * @param  int $order_id Order number.
 	 * @return string
@@ -1807,6 +1853,9 @@ function paidyPay() {
 		global $usces;
 
 		$trans_id = $usces->get_order_meta_value( 'trans_id', $order_id );
+		if ( empty( $trans_id ) ) {
+			$trans_id = $usces->get_order_meta_value( 'trading_id', $order_id );
+		}
 		return $trans_id;
 	}
 

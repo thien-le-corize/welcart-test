@@ -70,7 +70,7 @@ class usces_settlement {
 			$this->available_settlement = array_merge( $settlement, $this->available_settlement );
 		}
 		if ( ! in_array( 'paidy', $this->available_settlement, true ) ) {
-			$this->available_settlement['paidy'] = 'Paidy';
+			$this->available_settlement['paidy'] = 'ペイディ';
 		}
 		update_option( 'usces_available_settlement', $this->available_settlement );
 

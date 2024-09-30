@@ -21,6 +21,7 @@ add_action( 'admin_head', array( &$usces, 'admin_head' ) );
 add_action( 'admin_head-welcart-shop_page_usces_itemnew', 'admin_new_prodauct_header' );
 add_action( 'admin_head-welcart-shop_page_usces_itemedit', 'admin_prodauct_header' );
 add_action( 'current_screen', 'admin_prodauct_current_screen' );
+add_action( 'send_headers', 'usces_add_security_headers' );
 add_action( 'wp_head', array( &$usces, 'shop_head' ) );
 add_action( 'wp_head', 'usces_action_ogp_meta' );
 add_action( 'wp_head', 'usces_action_structured_data_json' );
@@ -201,6 +202,7 @@ add_action( 'usces_action_confirm_page_point_inform', 'usces_use_point_nonce' );
 
 add_action( 'usces_action_newmember_page_inform', 'usces_post_member_nonce' );
 add_action( 'usces_action_memberinfo_page_inform', 'usces_post_member_nonce' );
+add_action( 'usces_action_memberedit_page_inform', 'usces_post_member_nonce' );
 add_action( 'usces_action_newpass_page_inform', 'usces_post_member_nonce' );
 add_action( 'usces_action_changepass_page_inform', 'usces_post_member_nonce' );
 add_action( 'usces_action_customer_page_inform', 'usces_post_member_nonce' );
@@ -253,5 +255,12 @@ add_filter( 'usces_filter_admin_custom_field_input_value', 'usces_filter_admin_c
 // Operation log.
 add_filter( 'set_screen_option_usces_admin_log_screen_options', array( 'Log_List_Table', 'set_screen_options' ), 10, 3 );
 
+// Receiver for activating Paidy payment.
+add_action( 'init', 'usces_paidyapi' );
+
 /* CreditCard Security */
 add_action( 'wp_ajax_credit_security_unlock', 'wel_credit_security_unlock' );
+
+// Paidy application.
+add_action( 'wp_dashboard_setup', array( InstantPaidyDashboard::get_instance(), 'register_widget' ) );
+add_action( 'wp_ajax_paidy_application', array( InstantPaidyDashboard::get_instance(), 'handle_ajax' ) );

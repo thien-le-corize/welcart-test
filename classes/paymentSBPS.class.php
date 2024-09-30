@@ -137,6 +137,7 @@ class SBPS_SETTLEMENT extends SBPS_MAIN {
 		$options['acting_settings']['sbps']['payeasy_activate']     = ( isset( $options['acting_settings']['sbps']['payeasy_activate'] ) ) ? $options['acting_settings']['sbps']['payeasy_activate'] : 'off';
 		$options['acting_settings']['sbps']['wallet_yahoowallet']   = ( isset( $options['acting_settings']['sbps']['wallet_yahoowallet'] ) ) ? $options['acting_settings']['sbps']['wallet_yahoowallet'] : 'off';
 		$options['acting_settings']['sbps']['wallet_rakuten']       = ( isset( $options['acting_settings']['sbps']['wallet_rakuten'] ) ) ? $options['acting_settings']['sbps']['wallet_rakuten'] : 'off';
+		$options['acting_settings']['sbps']['wallet_rakutenv2']     = ( isset( $options['acting_settings']['sbps']['wallet_rakutenv2'] ) ) ? $options['acting_settings']['sbps']['wallet_rakutenv2'] : 'off';
 		$options['acting_settings']['sbps']['wallet_paypal']        = ( isset( $options['acting_settings']['sbps']['wallet_paypal'] ) ) ? $options['acting_settings']['sbps']['wallet_paypal'] : 'off';
 		$options['acting_settings']['sbps']['wallet_netmile']       = 'off';
 		$options['acting_settings']['sbps']['wallet_alipay']        = ( isset( $options['acting_settings']['sbps']['wallet_alipay'] ) ) ? $options['acting_settings']['sbps']['wallet_alipay'] : 'off';
@@ -316,10 +317,57 @@ jQuery( document ).ready( function( $ ) {
 			});
 			return false;
 		},
-						<?php
-						/* 指定売上 */
-						if ( 'manual' === $acting_opts['sales'] ) :
-							?>
+		manualSettlementCard : function( amount, trans_id ) {
+			$( "#settlement-response" ).html( "" );
+			$( "#settlement-response-loading" ).html( '<img src="' + uscesL10n.USCES_PLUGIN_URL + '/images/loading.gif" />' );
+			$.ajax({
+				url: ajaxurl,
+				type: "POST",
+				cache: false,
+				dataType: 'json',
+				data: {
+					action: "usces_admin_ajax",
+					mode: "manual_sbps_card",
+					order_id: $( "#order_id" ).val(),
+					order_num: $( "#order_num" ).val(),
+					member_id: $( "#member_id" ).val(),
+					amount: amount,
+					trans_id: trans_id,
+					wc_nonce: $( "#wc_nonce" ).val()
+				}
+			}).done( function( retVal, dataType ) {
+				$( "#settlement-response" ).html( retVal.result );
+				if ( "OK" == retVal.status && 0 < retVal.acting_status.length ) {
+					$( "#settlement-status" ).html( retVal.acting_status );
+					if ( undefined != $( "#settlement-status-"+$( "#order_num" ).val() ) ) {
+						$( "#settlement-status-"+$( "#order_num" ).val() ).html( retVal.acting_status );
+					}
+					if ( undefined != $( "#settlement-amount-"+$( "#order_num" ).val() ) ) {
+						$( "#settlement-amount-"+$( "#order_num" ).val() ).html( amount );
+					}
+				}
+				if ( $( "#refund-settlement" ).length ) {
+					$( "#refund-settlement" ).prop( "disabled", true );
+				}
+				if ( 0 < retVal.tracking_id.length ) {
+					$( "#tracking_id" ).val( retVal.tracking_id );
+					if ( undefined != $( "#settlement-tracking_id-"+$( "#order_num" ).val() ) ) {
+						$( "#settlement-tracking_id-"+$( "#order_num" ).val() ).html( retVal.tracking_id );
+					}
+					if ( undefined != $( "#settlement-information-"+trans_id ) ) {
+						$( "#settlement-information-"+trans_id ).attr( "data-tracking_id", retVal.tracking_id );
+						$( "#settlement-information-"+trans_id ).attr( "id", "settlement-information-"+retVal.tracking_id );
+					}
+				}
+				$( "#settlement-response-loading" ).html( "" );
+			}).fail( function( jqXHR, textStatus, errorThrown ) {
+				console.log( textStatus );
+				console.log( jqXHR.status );
+				console.log( errorThrown.message );
+				$( "#settlement-response-loading" ).html( "" );
+			});
+			return false;
+		},
 		salesSettlementCard : function( amount ) {
 			$( "#settlement-response" ).html( "" );
 			$( "#settlement-response-loading" ).html( '<img src="' + uscesL10n.USCES_PLUGIN_URL + '/images/loading.gif" />' );
@@ -341,6 +389,9 @@ jQuery( document ).ready( function( $ ) {
 				$( "#settlement-response" ).html( retVal.result );
 				if ( "OK" == retVal.status && 0 < retVal.acting_status.length ) {
 					$( "#settlement-status" ).html( retVal.acting_status );
+					if ( undefined != $( "#settlement-status-"+$( "#order_num" ).val() ) ) {
+						$( "#settlement-status-"+$( "#order_num" ).val() ).html( retVal.acting_status );
+					}
 				}
 				if ( $( "#refund-settlement" ).length ) {
 					$( "#refund-settlement" ).prop( "disabled", true );
@@ -354,9 +405,6 @@ jQuery( document ).ready( function( $ ) {
 			});
 			return false;
 		},
-							<?php
-						endif;
-						?>
 		cancelSettlementCard : function() {
 			$( "#settlement-response" ).html( "" );
 			$( "#settlement-response-loading" ).html( '<img src="' + uscesL10n.USCES_PLUGIN_URL + '/images/loading.gif" />' );
@@ -377,6 +425,9 @@ jQuery( document ).ready( function( $ ) {
 				$( "#settlement-response" ).html( retVal.result );
 				if ( "OK" == retVal.status && 0 < retVal.acting_status.length ) {
 					$( "#settlement-status" ).html( retVal.acting_status );
+					if ( undefined != $( "#settlement-status-"+$( "#order_num" ).val() ) ) {
+						$( "#settlement-status-"+$( "#order_num" ).val() ).html( retVal.acting_status );
+					}
 				}
 				if ( $( "#refund-settlement" ).length ) {
 					$( "#refund-settlement" ).prop( "disabled", true );
@@ -411,6 +462,9 @@ jQuery( document ).ready( function( $ ) {
 				$( "#settlement-response" ).html( retVal.result );
 				if ( "OK" == retVal.status && 0 < retVal.acting_status.length ) {
 					$( "#settlement-status" ).html( retVal.acting_status );
+					if ( undefined != $( "#settlement-status-"+$( "#order_num" ).val() ) ) {
+						$( "#settlement-status-"+$( "#order_num" ).val() ).html( retVal.acting_status );
+					}
 				}
 				if ( $( "#refund-settlement" ).length ) {
 					$( "#refund-settlement" ).prop( "disabled", true );
@@ -653,18 +707,36 @@ jQuery( document ).ready( function( $ ) {
 
 	$( document ).on( "click", ".settlement-information", function() {
 		var tracking_id = $( this ).attr( "data-tracking_id" );
+		var order_num = $( this ).attr( "data-num" );
 		$( "#tracking_id" ).val( tracking_id );
+		$( "#order_num" ).val( order_num );
 		$( "#settlement_dialog" ).dialog( "option", "title", "<?php echo esc_js( $dialog_title ); ?>" );
 		$( "#settlement_dialog" ).dialog( "open" );
 	});
 
 					<?php
 					if ( 'acting_sbps_card' === $acting_flg ) :
-						if ( 'manual' === $acting_opts['sales'] ) :
-							?>
+						?>
+	$( document ).on( "click", "#manual-settlement", function() {
+		var amount_change = parseInt( $( "#amount_change" ).val() ) || 0;
+		var trans_id = $( this ).attr( "data-trans_id" );
+		if ( 0 >= amount_change ) {
+			alert( "金額が不正です。" );
+			return;
+		}
+		if ( ! confirm( amount_change + "円の与信処理を実行します。よろしいですか？" ) ) {
+			return;
+		}
+		adminOrderEdit.manualSettlementCard( amount_change, trans_id );
+	});
+
 	$( document ).on( "click", "#sales-settlement", function() {
 		var amount_original = parseInt( $( "#amount_original" ).val() ) || 0;
 		var amount_change = parseInt( $( "#amount_change" ).val() ) || 0;
+		if ( 0 >= amount_change ) {
+			alert( "金額が不正です。" );
+			return;
+		}
 		if ( amount_change > amount_original ) {
 			alert( "与信金額を超える金額は売上計上できません。" );
 			return;
@@ -678,9 +750,6 @@ jQuery( document ).ready( function( $ ) {
 		}
 		adminOrderEdit.salesSettlementCard( amount_change );
 	});
-							<?php
-						endif;
-						?>
 
 	$( document ).on( "click", "#cancel-settlement", function() {
 		if ( ! confirm( "<?php esc_html_e( 'Are you sure you want to cancellation processing?', 'usces' ); ?>" ) ) {
@@ -941,6 +1010,7 @@ jQuery( document ).ready( function( $ ) {
 		$options['acting_settings']['sbps']['payeasy_activate']     = ( isset( $post_data['payeasy_activate'] ) ) ? $post_data['payeasy_activate'] : 'off';
 		$options['acting_settings']['sbps']['wallet_yahoowallet']   = ( isset( $post_data['wallet_yahoowallet'] ) ) ? $post_data['wallet_yahoowallet'] : 'off';
 		$options['acting_settings']['sbps']['wallet_rakuten']       = ( isset( $post_data['wallet_rakuten'] ) ) ? $post_data['wallet_rakuten'] : 'off';
+		$options['acting_settings']['sbps']['wallet_rakutenv2']     = ( isset( $post_data['wallet_rakutenv2'] ) ) ? $post_data['wallet_rakutenv2'] : 'off';
 		$options['acting_settings']['sbps']['wallet_paypal']        = ( isset( $post_data['wallet_paypal'] ) ) ? $post_data['wallet_paypal'] : 'off';
 		$options['acting_settings']['sbps']['wallet_netmile']       = 'off';
 		$options['acting_settings']['sbps']['wallet_alipay']        = ( isset( $post_data['wallet_alipay'] ) ) ? $post_data['wallet_alipay'] : 'off';
@@ -998,6 +1068,10 @@ jQuery( document ).ready( function( $ ) {
 			}
 		}
 
+		if ( 'on' === $options['acting_settings']['sbps']['wallet_rakuten'] && 'on' === $options['acting_settings']['sbps']['wallet_rakutenv2'] ) {
+			$this->error_mes .= '※楽天ペイと楽天ペイV2の併用はできません。楽天ペイV2をご利用ください。<br />';
+		}
+
 		if ( '' === $this->error_mes ) {
 			$usces->action_status  = 'success';
 			$usces->action_message = __( 'Options are updated.', 'usces' );
@@ -1034,6 +1108,7 @@ jQuery( document ).ready( function( $ ) {
 			}
 			if ( 'on' === $options['acting_settings']['sbps']['wallet_yahoowallet'] ||
 				'on' === $options['acting_settings']['sbps']['wallet_rakuten'] ||
+				'on' === $options['acting_settings']['sbps']['wallet_rakutenv2'] ||
 				'on' === $options['acting_settings']['sbps']['wallet_paypal'] ||
 				'on' === $options['acting_settings']['sbps']['wallet_alipay'] ) {
 				$options['acting_settings']['sbps']['wallet_activate'] = 'on';
@@ -1309,9 +1384,22 @@ jQuery( document ).ready( function( $ ) {
 				</td>
 			</tr>
 			<tr>
-				<th>楽天ペイ（オンライン決済）</th>
+				<th><a class="explanation-label" id="label_ex_wallet_rakuten_sbps">楽天ペイ（オンライン決済）</a></th>
+			<?php if ( 'on' === $acting_opts['wallet_rakuten'] ) : ?>
 				<td><label><input name="wallet_rakuten" type="radio" id="wallet_rakuten_sbps_1" value="on"<?php checked( $acting_opts['wallet_rakuten'], 'on' ); ?> /><span><?php esc_html_e( 'Use', 'usces' ); ?></span></label><br />
 					<label><input name="wallet_rakuten" type="radio" id="wallet_rakuten_sbps_2" value="off"<?php checked( $acting_opts['wallet_rakuten'], 'off' ); ?> /><span><?php esc_html_e( 'Do not Use', 'usces' ); ?></span></label>
+				</td>
+			<?php else : ?>
+				<td><label><input name="wallet_rakuten" type="radio" id="wallet_rakuten_sbps_1" value="on" disabled="disabled" /><span><?php esc_html_e( 'Use', 'usces' ); ?></span></label><br />
+					<label><input name="wallet_rakuten" type="radio" id="wallet_rakuten_sbps_2" value="off" checked="checked" /><span><?php esc_html_e( 'Do not Use', 'usces' ); ?></span></label>
+				</td>
+			<?php endif; ?>
+			</tr>
+			<tr id="ex_wallet_rakuten_sbps" class="explanation"><td colspan="2">楽天ペイの新規ご契約は終了しました。楽天ペイV2をご利用ください。</td></tr>
+			<tr>
+				<th>楽天ペイV2（オンライン決済）</th>
+				<td><label><input name="wallet_rakutenv2" type="radio" id="wallet_rakutenv2_sbps_1" value="on"<?php checked( $acting_opts['wallet_rakutenv2'], 'on' ); ?> /><span><?php esc_html_e( 'Use', 'usces' ); ?></span></label><br />
+					<label><input name="wallet_rakutenv2" type="radio" id="wallet_rakutenv2_sbps_2" value="off"<?php checked( $acting_opts['wallet_rakutenv2'], 'off' ); ?> /><span><?php esc_html_e( 'Do not Use', 'usces' ); ?></span></label>
 				</td>
 			</tr>
 			<tr>
@@ -1441,6 +1529,7 @@ jQuery( document ).ready( function( $ ) {
 				check_admin_referer( 'order_edit', 'wc_nonce' );
 				$order_id    = ( isset( $_POST['order_id'] ) ) ? wp_unslash( $_POST['order_id'] ) : '';
 				$tracking_id = ( isset( $_POST['tracking_id'] ) ) ? wp_unslash( $_POST['tracking_id'] ) : '';
+				$member_id   = ( isset( $_POST['member_id'] ) ) ? wp_unslash( $_POST['member_id'] ) : '';
 				if ( empty( $order_id ) || empty( $tracking_id ) ) {
 					$data['status'] = 'NG';
 					wp_send_json( $data );
@@ -1508,14 +1597,183 @@ jQuery( document ).ready( function( $ ) {
 						$res        .= '<div class="sbps-settlement-admin card-error">' . $status_name . '</div>';
 					}
 				} else {
+					$result     = 'NG';
+					$latest_log = $this->get_acting_latest_log( $order_id, 0, 'ALL' );
+					if ( 'NG' === $latest_log['result'] && 10 === strlen( $tracking_id ) ) {
+						$cust_ref = $this->api_customer_reference( $member_id );
+						if ( isset( $cust_ref['result'] ) && 'OK' === $cust_ref['result'] ) {
+							$amount = 0;
+							$res   .= '<table class="sbps-settlement-admin-table">
+								<tr><th>' . __( 'Settlement amount', 'usces' ) . '</th>
+									<td><input type="tel" class="settlement-amount" id="amount_change" value="' . intval( $amount ) . '" />' . __( usces_crcode( 'return' ), 'usces' ) . '</td>
+								</tr></table>';
+							$res   .= '<div class="sbps-settlement-admin-button">';
+							$res   .= '<input id="manual-settlement" type="button" class="button" data-trans_id="' . $tracking_id . '" value="与信済" />';
+							$res   .= '</div>';
+						} else {
+							$status      = 'error';
+							$status_name = $this->get_status_name( $status );
+							$res        .= '<div class="sbps-settlement-admin card-error">' . $status_name . '</div>';
+						}
+					} else {
+						$status      = 'error';
+						$status_name = $this->get_status_name( $status );
+						$res        .= '<div class="sbps-settlement-admin card-error">' . $status_name . '</div>';
+					}
+				}
+				$res           .= $this->settlement_history( $order_id, $tracking_id );
+				$data['status'] = $result;
+				$data['result'] = $res;
+				wp_send_json( $data );
+				break;
+
+			/* クレジットカード与信済 */
+			case 'manual_sbps_card':
+				check_admin_referer( 'order_edit', 'wc_nonce' );
+				$order_id  = ( isset( $_POST['order_id'] ) ) ? wp_unslash( $_POST['order_id'] ) : '';
+				$order_num = ( isset( $_POST['order_num'] ) ) ? (int) wp_unslash( $_POST['order_num'] ) : 0;
+				$member_id = ( isset( $_POST['member_id'] ) ) ? wp_unslash( $_POST['member_id'] ) : '';
+				$amount    = ( isset( $_POST['amount'] ) ) ? wp_unslash( $_POST['amount'] ) : 0;
+				$trans_id  = ( isset( $_POST['trans_id'] ) ) ? wp_unslash( $_POST['trans_id'] ) : '';
+				if ( empty( $order_id ) || empty( $member_id ) || empty( $amount ) || empty( $amount ) ) {
+					$data['status'] = 'NG';
+					wp_send_json( $data );
+					break;
+				}
+
+				$res           = '';
+				$acting_status = '';
+				$acting_flg    = 'acting_sbps_card';
+				$tracking_id   = '';
+
+				$acting_opts = $this->get_acting_settings();
+				$rand        = $trans_id;
+				$cust_code   = $member_id;
+				$cust_ref    = $this->api_customer_reference( $cust_code );
+				if ( isset( $cust_ref['result'] ) && 'OK' === $cust_ref['result'] ) {
+					$cart      = usces_get_ordercartdata( $order_id );
+					$cart_row  = current( $cart );
+					$item_id   = mb_convert_kana( $usces->getItemCode( $cart_row['post_id'] ), 'a', 'UTF-8' );
+					$item_name = $usces->getCartItemName_byOrder( $cart_row );
+					if ( 1 < count( $cart ) ) {
+						$item_name .= ' ' . __( 'Others', 'usces' );
+					}
+					if ( 36 < mb_strlen( $item_name, 'UTF-8' ) ) {
+						$item_name = mb_substr( $item_name, 0, 30, 'UTF-8' ) . '...';
+					}
+					$item_name     = trim( mb_convert_encoding( $item_name, 'SJIS', 'UTF-8' ) );
+					$free1         = $acting_flg;
+					$order_rowno   = '1';
+					$encrypted_flg = '1';
+					$request_date  = wp_date( 'YmdHis' );
+					$sps_hashcode  = $acting_opts['merchant_id'] . $acting_opts['service_id'] . $cust_code . $rand . $item_id . $item_name . $amount . $free1 . $order_rowno . $encrypted_flg . $request_date . $acting_opts['hash_key'];
+					$sps_hashcode  = sha1( $sps_hashcode );
+					$connection    = $this->get_connection();
+
+					/* 決済要求 */
+					$request_settlement  = '<?xml version="1.0" encoding="Shift_JIS"?>
+<sps-api-request id="ST01-00131-101">
+	<merchant_id>' . $acting_opts['merchant_id'] . '</merchant_id>
+	<service_id>' . $acting_opts['service_id'] . '</service_id>
+	<cust_code>' . $cust_code . '</cust_code>
+	<order_id>' . $rand . '</order_id>
+	<item_id>' . $item_id . '</item_id>
+	<item_name>' . base64_encode( $item_name ) . '</item_name>
+	<amount>' . $amount . '</amount>
+	<free1>' . base64_encode( $free1 ) . '</free1>
+	<order_rowno>' . $order_rowno . '</order_rowno>
+	<encrypted_flg>' . $encrypted_flg . '</encrypted_flg>
+	<request_date>' . $request_date . '</request_date>
+	<sps_hashcode>' . $sps_hashcode . '</sps_hashcode>
+</sps-api-request>';
+					$xml_settlement      = $this->get_xml_response( $connection['api_url'], $request_settlement );
+					$response_settlement = $this->xml2assoc( $xml_settlement, $this->acting_card, $encrypted_flg );
+					if ( isset( $response_settlement['res_result'] ) && 'OK' === $response_settlement['res_result'] ) {
+						$sps_transaction_id = $response_settlement['res_sps_transaction_id'];
+						$tracking_id        = $response_settlement['res_tracking_id'];
+						$request_date       = wp_date( 'YmdHis' );
+						$sps_hashcode       = $acting_opts['merchant_id'] . $acting_opts['service_id'] . $sps_transaction_id . $tracking_id . $request_date . $acting_opts['hash_key'];
+						$sps_hashcode       = sha1( $sps_hashcode );
+
+						/* 確定要求 */
+						$request_credit  = '<?xml version="1.0" encoding="Shift_JIS"?>
+<sps-api-request id="ST02-00101-101">
+	<merchant_id>' . $acting_opts['merchant_id'] . '</merchant_id>
+	<service_id>' . $acting_opts['service_id'] . '</service_id>
+	<sps_transaction_id>' . $sps_transaction_id . '</sps_transaction_id>
+	<tracking_id>' . $tracking_id . '</tracking_id>
+	<processing_datetime></processing_datetime>
+	<request_date>' . $request_date . '</request_date>
+	<sps_hashcode>' . $sps_hashcode . '</sps_hashcode>
+</sps-api-request>';
+						$xml_credit      = $this->get_xml_response( $connection['api_url'], $request_credit );
+						$response_credit = $this->xml2assoc( $xml_credit, $this->acting_card );
+						$response_credit = apply_filters( 'usces_filter_sbps_card_manual_log', $response_credit, $order_id );
+						if ( isset( $response_credit['res_result'] ) ) {
+							$status = 'manual';
+							$result = $response_credit['res_result'];
+							if ( 'OK' === $result ) {
+								if ( ! isset( $response_credit['amount'] ) ) {
+									$response_credit['amount'] = $amount;
+								}
+								if ( 1 < (int) $order_num ) {
+									$this->update_acting_log( $this->acting_card, $order_id, $tracking_id, $trans_id );
+									$this->save_acting_log( $response_credit, $this->acting_card, $status, $result, $order_id, $tracking_id );
+								} else {
+									$this->save_acting_log( $response_credit, $this->acting_card, $status, $result, $order_id, $tracking_id );
+									$usces->set_order_meta_value( 'res_tracking_id', $tracking_id, $order_id );
+									$usces->set_order_meta_value( 'wc_trans_id', $tracking_id, $order_id );
+									if ( ! isset( $response_credit['acting'] ) ) {
+										$response_credit['acting'] = $this->acting_card;
+									}
+									$usces->set_order_meta_value( $acting_flg, usces_serialize( $response_credit ), $order_id );
+								}
+
+								$class         = ' card-' . $status;
+								$status_name   = $this->get_status_name( $status );
+								$res          .= '<div class="sbps-settlement-admin' . $class . '">' . $status_name . '</div>';
+								$acting_status = '<span class="acting-status' . $class . '">' . $status_name . '</span>';
+								$res          .= '<table class="sbps-settlement-admin-table">
+									<tr><th>' . __( 'Settlement amount', 'usces' ) . '</th>
+										<td><input type="tel" class="settlement-amount" id="amount_change" value="' . intval( $amount ) . '" />' . __( usces_crcode( 'return' ), 'usces' ) . '<input type="hidden" id="amount_original" value="' . intval( $amount ) . '" /></td>
+									</tr></table>';
+								$res          .= '<div class="sbps-settlement-admin-button">';
+								$res          .= '<input id="sales-settlement" type="button" class="button" value="売上確定" />';
+								if ( ! $this->is_status( array( 'cancel', 'refund' ), $order_id, $tracking_id ) ) {
+									$res .= '<input id="cancel-settlement" type="button" class="button" value="取消" />';
+								}
+								$res .= '</div>';
+							} else {
+								$usces->set_order_meta_value( 'trans_id', $rand, $order_id );
+								$this->save_acting_log( $response_credit, $this->acting_card, $status, $response_credit['res_result'], $order_id, $tracking_id );
+								$status      = $response_credit['res_result'];
+								$class       = ' card-' . $status;
+								$status_name = $this->get_status_name( $status );
+								$res        .= '<div class="sbps-settlement-admin' . $class . '">' . $status_name . '</div>';
+							}
+						} else {
+							$result      = 'NG';
+							$status      = 'error';
+							$status_name = $this->get_status_name( $status );
+							$res        .= '<div class="sbps-settlement-admin card-error">' . $status_name . '</div>';
+						}
+					} else {
+						$result      = 'NG';
+						$status      = 'error';
+						$status_name = $this->get_status_name( $status );
+						$res        .= '<div class="sbps-settlement-admin card-error">' . $status_name . '</div>';
+					}
+				} else {
 					$result      = 'NG';
 					$status      = 'error';
 					$status_name = $this->get_status_name( $status );
 					$res        .= '<div class="sbps-settlement-admin card-error">' . $status_name . '</div>';
 				}
-				$res           .= $this->settlement_history( $order_id, $tracking_id );
-				$data['status'] = $result;
-				$data['result'] = $res;
+				$res                  .= $this->settlement_history( $order_id, $tracking_id );
+				$data['status']        = $result;
+				$data['result']        = $res;
+				$data['acting_status'] = $acting_status;
+				$data['tracking_id']   = $tracking_id;
 				wp_send_json( $data );
 				break;
 
@@ -1779,6 +2037,66 @@ jQuery( document ).ready( function( $ ) {
 
 			/* クレジットカード決済エラー */
 			case 'error_sbps_card':
+				break;
+
+			/* 継続課金情報更新 */
+			case 'continuation_update':
+				check_admin_referer( 'order_edit', 'wc_nonce' );
+				$order_id         = ( isset( $_POST['order_id'] ) ) ? wp_unslash( $_POST['order_id'] ) : '';
+				$member_id        = ( isset( $_POST['member_id'] ) ) ? wp_unslash( $_POST['member_id'] ) : '';
+				$contracted_year  = ( isset( $_POST['contracted_year'] ) ) ? wp_unslash( $_POST['contracted_year'] ) : '';
+				$contracted_month = ( isset( $_POST['contracted_month'] ) ) ? wp_unslash( $_POST['contracted_month'] ) : '';
+				$contracted_day   = ( isset( $_POST['contracted_day'] ) ) ? wp_unslash( $_POST['contracted_day'] ) : '';
+				$charged_year     = ( isset( $_POST['charged_year'] ) ) ? wp_unslash( $_POST['charged_year'] ) : '';
+				$charged_month    = ( isset( $_POST['charged_month'] ) ) ? wp_unslash( $_POST['charged_month'] ) : '';
+				$charged_day      = ( isset( $_POST['charged_day'] ) ) ? wp_unslash( $_POST['charged_day'] ) : '';
+				$price            = ( isset( $_POST['price'] ) ) ? wp_unslash( $_POST['price'] ) : 0;
+				$status           = ( isset( $_POST['status'] ) ) ? wp_unslash( $_POST['status'] ) : '';
+
+				$continue_data = $this->get_continuation_data( $member_id, $order_id );
+				if ( ! $continue_data ) {
+					$data['status'] = 'NG';
+					wp_send_json( $data );
+					break;
+				}
+
+				/* 継続中→停止 */
+				if ( 'continuation' === $continue_data['status'] && 'cancellation' === $status ) {
+					$this->update_continuation_data( $member_id, $order_id, $continue_data, true );
+				} else {
+					if ( ! empty( $contracted_year ) && ! empty( $contracted_month ) && ! empty( $contracted_day ) ) {
+						$contracted_date = ( empty( $continue_data['contractedday'] ) ) ? dlseller_next_contracting( $order_id ) : $continue_data['contractedday'];
+						if ( $contracted_date ) {
+							$new_contracted_date = $contracted_year . '-' . $contracted_month . '-' . $contracted_day;
+							if ( ! $this->isdate( $new_contracted_date ) ) {
+								$data['status']  = 'NG';
+								$data['message'] = __( 'Next contract renewal date is incorrect.', 'dlseller' );
+								wp_send_json( $data );
+							}
+						}
+					} else {
+						$new_contracted_date = '';
+					}
+					$new_charged_date = $charged_year . '-' . $charged_month . '-' . $charged_day;
+					if ( ! $this->isdate( $new_charged_date ) ) {
+						$data['status']  = 'NG';
+						$data['message'] = __( 'Next settlement date is incorrect.', 'dlseller' );
+						wp_send_json( $data );
+					}
+					$tomorrow = date_i18n( 'Y-m-d', strtotime( '+1 day' ) );
+					if ( $new_charged_date < $tomorrow ) {
+						$data['status']  = 'NG';
+						$data['message'] = sprintf( __( 'The next settlement date must be after %s.', 'dlseller' ), $tomorrow );
+						wp_send_json( $data );
+					}
+					$continue_data['contractedday'] = $new_contracted_date;
+					$continue_data['chargedday']    = $new_charged_date;
+					$continue_data['price']         = usces_crform( $price, false, false, 'return', false );
+					$continue_data['status']        = $status;
+					$this->update_continuation_data( $member_id, $order_id, $continue_data );
+				}
+				$data['status'] = 'OK';
+				wp_send_json( $data );
 				break;
 
 			/* PayPay参照 */
@@ -2287,11 +2605,20 @@ jQuery( document ).ready( function( $ ) {
 		$acting_flg = ( isset( $payment['settlement'] ) ) ? $payment['settlement'] : '';
 		if ( 'acting_sbps_card' === $acting_flg || 'acting_sbps_paypay' === $acting_flg ) {
 			$tracking_id = $usces->get_order_meta_value( 'res_tracking_id', $order_id );
-			if ( defined( 'WCEX_AUTO_DELIVERY' ) && empty( $tracking_id ) ) {
+			if ( 'acting_sbps_card' === $acting_flg && defined( 'WCEX_AUTO_DELIVERY' ) && empty( $tracking_id ) ) {
 				$trans_id   = $usces->get_order_meta_value( 'trans_id', $order_id );
 				$regular_id = $usces->get_order_meta_value( 'regular_id', $order_id );
 				if ( ! empty( $regular_id ) && empty( $trans_id ) ) {
 					$acting_status = 'error';
+				} else {
+					$latest_log = $this->get_acting_latest_log( $order_id, 0, 'ALL' );
+					if ( isset( $latest_log['result'] ) && 'OK' !== $latest_log['result'] ) {
+						$cust_ref = $this->api_customer_reference( $order_data['mem_id'] );
+						if ( isset( $cust_ref['result'] ) && 'OK' === $cust_ref['result'] ) {
+						} else {
+							$acting_status = 'error';
+						}
+					}
 				}
 			} else {
 				$acting_status = $this->get_acting_status( $order_id, $tracking_id );
@@ -2336,8 +2663,25 @@ jQuery( document ).ready( function( $ ) {
 			$payment    = usces_get_payments_by_name( $data['order_payment_name'] );
 			$acting_flg = ( isset( $payment['settlement'] ) ) ? $payment['settlement'] : '';
 			if ( 'acting_sbps_card' === $acting_flg || 'acting_sbps_paypay' === $acting_flg ) {
-				$tracking_id   = $usces->get_order_meta_value( 'res_tracking_id', $order_id );
-				$acting_status = $this->get_acting_status( $order_id, $tracking_id );
+				$tracking_id = $usces->get_order_meta_value( 'res_tracking_id', $order_id );
+				if ( 'acting_sbps_card' === $acting_flg && defined( 'WCEX_AUTO_DELIVERY' ) && empty( $tracking_id ) ) {
+					$trans_id   = $usces->get_order_meta_value( 'trans_id', $order_id );
+					$regular_id = $usces->get_order_meta_value( 'regular_id', $order_id );
+					if ( ! empty( $regular_id ) && empty( $trans_id ) ) {
+						$acting_status = 'error';
+					} else {
+						$latest_log = $this->get_acting_latest_log( $order_id, 0, 'ALL' );
+						if ( isset( $latest_log['result'] ) && 'OK' !== $latest_log['result'] ) {
+							$cust_ref = $this->api_customer_reference( $data['mem_id'] );
+							if ( isset( $cust_ref['result'] ) && 'OK' === $cust_ref['result'] ) {
+							} else {
+								$acting_status = 'error';
+							}
+						}
+					}
+				} else {
+					$acting_status = $this->get_acting_status( $order_id, $tracking_id );
+				}
 				if ( ! empty( $acting_status ) ) {
 					$status_name = '';
 					$class       = '';
@@ -2386,6 +2730,9 @@ jQuery( document ).ready( function( $ ) {
 				if ( empty( $tracking_id ) ) {
 					$acting_data = usces_unserialize( $usces->get_order_meta_value( $payment['settlement'], $order_id ) );
 					$tracking_id = ( isset( $acting_data['res_tracking_id'] ) ) ? $acting_data['res_tracking_id'] : '';
+				}
+				if ( 'acting_sbps_card' === $payment['settlement'] && empty( $tracking_id ) ) {
+					$tracking_id = $usces->get_order_meta_value( 'trans_id', $order_id );
 				}
 				if ( ! empty( $tracking_id ) ) {
 					echo '<input type="button" class="button settlement-information" id="settlement-information-' . esc_attr( $tracking_id ) . '" data-tracking_id="' . esc_attr( $tracking_id ) . '" data-num="1" value="' . esc_html__( 'Settlement info', 'usces' ) . '">';
@@ -2509,6 +2856,7 @@ jQuery( document ).ready( function( $ ) {
 						if ( ! isset( $response_settlement['amount'] ) ) {
 							$response_settlement['amount'] = usces_crform( $entry['order']['total_full_price'], false, false, 'return', false );
 						}
+						$response_settlement = apply_filters( 'usces_filter_' . $acting . '_register_orderdata_log', $response_settlement, $args );
 						$this->save_acting_log( $response_settlement, $this->acting_card, 'sales', $response_settlement['res_result'], $order_id, $tracking_id );
 					}
 				}
@@ -2534,6 +2882,7 @@ jQuery( document ).ready( function( $ ) {
 						if ( ! isset( $response_settlement['amount'] ) ) {
 							$response_settlement['amount'] = usces_crform( $entry['order']['total_full_price'], false, false, 'return', false );
 						}
+						$response_settlement = apply_filters( 'usces_filter_' . $acting . '_register_orderdata_log', $response_settlement, $args );
 						$this->save_acting_log( $response_settlement, $this->acting_paypay, 'sales', $response_settlement['res_result'], $order_id, $tracking_id );
 					}
 				}
@@ -2592,7 +2941,6 @@ jQuery( document ).ready( function( $ ) {
 		$log_data = $wpdb->get_results( $query, ARRAY_A );
 		return $log_data;
 	}
-
 
 	/**
 	 * 決済ログ出力
@@ -2955,9 +3303,9 @@ jQuery( document ).ready( function( $ ) {
 				$sbps_params['sbps_serviceId']  = $acting_opts['service_id'];
 				$sbps_params['message']         = array(
 					'error_token'       => __( 'Credit card information is not appropriate.', 'usces' ),
-					'error_card_number' => __( 'The card number is not a valid credit card number.', 'usces' ),
-					'error_card_expym'  => __( 'The card\'s expiration date is invalid.', 'usces' ),
-					'error_card_seccd'  => __( 'The card\'s security code is invalid.', 'usces' ),
+					'error_card_number' => __( 'Credit card information is not appropriate.', 'usces' ),
+					'error_card_expym'  => __( 'Credit card information is not appropriate.', 'usces' ),
+					'error_card_seccd'  => __( 'Credit card information is not appropriate.', 'usces' ),
 					'confirm_deletion'  => __( 'Are you sure delete credit card registration?', 'usces' ),
 				);
 				wp_localize_script( 'usces_member_sbps', 'sbps_params', $sbps_params );
@@ -3071,7 +3419,7 @@ jQuery( document ).ready( function( $ ) {
 					),
 					USCES_MEMBER_URL
 				);
-				$html                 .= '<li class="gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
+				$html                 .= '<li class="settlement-update gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
 			} else {
 				$register_settlement_url = add_query_arg(
 					array(
@@ -3080,7 +3428,7 @@ jQuery( document ).ready( function( $ ) {
 					),
 					USCES_MEMBER_URL
 				);
-				$html                   .= '<li class="gotoedit"><a href="' . $register_settlement_url . '">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
+				$html                   .= '<li class="settlement-register gotoedit"><a href="' . $register_settlement_url . '">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
 			}
 		}
 		return $html;
@@ -3398,6 +3746,8 @@ jQuery( document ).ready( function( $ ) {
 			'to_address'   => $member['mailaddress1'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
@@ -3426,6 +3776,8 @@ jQuery( document ).ready( function( $ ) {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject . '( ' . sprintf( _x( '%s', 'honorific', 'usces' ), $name ) . ' )',
 			'message'      => do_shortcode( $admin_message ),
@@ -3847,18 +4199,41 @@ jQuery( document ).ready( function( $ ) {
 			$tracking_id = ( isset( $data['tracking_id'] ) ) ? $data['tracking_id'] : '';
 			$latest_log  = $this->get_acting_latest_log( $order_id, $tracking_id, 'ALL' );
 			if ( $latest_log ) :
-				$status      = $latest_log['status'];
-				$class       = ' card-' . $status;
-				$status_name = $this->get_status_name( $status );
+				if ( 1 < $num ) {
+					if ( isset( $latest_log['result'] ) && 'OK' !== $latest_log['result'] ) {
+						$cust_ref = $this->api_customer_reference( $order_data['mem_id'] );
+						if ( isset( $cust_ref['result'] ) && 'OK' === $cust_ref['result'] ) {
+							$status      = '';
+							$class       = ' card-' . $status;
+							$status_name = '';
+						} else {
+							$status      = 'error';
+							$class       = ' card-' . $status;
+							$status_name = $this->get_status_name( $status );
+						}
+					} else {
+						$status      = $latest_log['status'];
+						$class       = ' card-' . $status;
+						$status_name = $this->get_status_name( $status );
+					}
+				} else {
+					$status      = $latest_log['status'];
+					$class       = ' card-' . $status;
+					$status_name = $this->get_status_name( $status );
+				}
 				$amount      = usces_crform( $latest_log['amount'], false, false, 'return', false );
 				?>
 	<tbody>
 	<tr>
 		<td><?php echo esc_html( $num ); ?></td>
 		<td><?php echo esc_html( $data['datetime'] ); ?></td>
-		<td><?php echo esc_html( $tracking_id ); ?></td>
-		<td class="amount"><?php echo esc_html( $amount ); ?></td>
-		<td><span id="settlement-status-<?php echo esc_attr( $num ); ?>"><span class="acting-status<?php echo esc_attr( $class ); ?>"><?php esc_html_e( $status_name, 'usces' ); ?></span></span></td>
+		<td><span id="settlement-tracking_id-<?php echo esc_attr( $num ); ?>"><?php echo esc_html( $tracking_id ); ?></span></td>
+		<td class="amount"><span id="settlement-amount-<?php echo esc_attr( $num ); ?>"><?php echo esc_html( $amount ); ?></span></td>
+		<td><span id="settlement-status-<?php echo esc_attr( $num ); ?>">
+				<?php if ( $status_name ) : ?>
+			<span class="acting-status<?php echo esc_attr( $class ); ?>"><?php esc_html_e( $status_name, 'usces' ); ?></span>
+				<?php endif; ?>
+			</span></td>
 		<td>
 			<input type="button" class="button settlement-information" id="settlement-information-<?php echo esc_attr( $tracking_id ); ?>" data-tracking_id="<?php echo esc_attr( $tracking_id ); ?>" data-num="<?php echo esc_attr( $num ); ?>" value="<?php esc_attr_e( 'Settlement info', 'usces' ); ?>">
 		</td>
@@ -4108,6 +4483,8 @@ jQuery( document ).ready( function( $ ) {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -4156,6 +4533,8 @@ jQuery( document ).ready( function( $ ) {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -4422,6 +4801,8 @@ jQuery( document ).ready( function( $ ) {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $admin_subject,
 			'message'      => do_shortcode( $admin_message ),
@@ -4804,5 +5185,41 @@ jQuery( document ).ready( function( $ ) {
 			$usces->set_order_meta_value( $acting_flg, usces_serialize( $settlement ), $order_id );
 			wcad_settlement_error_mail( $order_id, $settltment_errmsg );
 		}
+	}
+
+	/**
+	 * 決済ログ更新
+	 *
+	 * @param string $acting Acting type.
+	 * @param int    $order_id Order number.
+	 * @param string $tracking_id Tracking ID.
+	 * @param string $trans_id Transaction ID.
+	 * @return array
+	 */
+	private function update_acting_log( $acting, $order_id, $tracking_id, $trans_id ) {
+		global $wpdb;
+
+		$res = false;
+
+		$acting_log = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `acting` = %d AND `order_id` = %d AND `tracking_id` = %s",
+				$acting,
+				$order_id,
+				$trans_id
+			),
+			ARRAY_A
+		);
+
+		if ( $acting_log && isset( $acting_log['status'] ) && 'error' === $acting_log['status'] ) {
+			$res = $wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$wpdb->prefix}usces_acting_log SET `tracking_id` = %s WHERE `ID` = %d",
+					$tracking_id,
+					$acting_log['ID']
+				)
+			);
+		}
+		return $res;
 	}
 }

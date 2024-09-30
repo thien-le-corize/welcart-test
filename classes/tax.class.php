@@ -424,8 +424,9 @@ class Welcart_Tax {
 				$this->tax_reduced = (float) sprintf( '%.3f', ( (float) $this->subtotal_reduced + (float) $this->discount_reduced ) * $this->tax_rate_reduced / 100 );
 			}
 		}
-		$this->tax_standard = usces_tax_rounding_off( $this->tax_standard, $condition['tax_method'] );
-		$this->tax_reduced  = usces_tax_rounding_off( $this->tax_reduced, $condition['tax_method'] );
+		$tax_method         = ( isset( $condition['tax_method'] ) ) ? $condition['tax_method'] : '';
+		$this->tax_standard = usces_tax_rounding_off( $this->tax_standard, $tax_method );
+		$this->tax_reduced  = usces_tax_rounding_off( $this->tax_reduced, $tax_method );
 		$this->tax          = $this->tax_standard + $this->tax_reduced;
 	}
 

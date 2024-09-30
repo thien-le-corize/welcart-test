@@ -284,7 +284,7 @@ class EPSILON_SETTLEMENT {
 	 * admin_print_footer_scripts
 	 */
 	public function admin_scripts() {
-		$admin_page = filter_input( INPUT_GET, 'page', FILTER_SANITIZE_STRING );
+		$admin_page = filter_input( INPUT_GET, 'page', FILTER_DEFAULT );
 		switch ( $admin_page ) :
 			/* クレジット決済設定画面 */
 			case 'usces_settlement':
@@ -292,53 +292,52 @@ class EPSILON_SETTLEMENT {
 				if ( in_array( 'epsilon', $settlement_selected, true ) ) :
 					?>
 <script type="text/javascript">
-jQuery(document).ready( function($) {
-	if( 'on' == $("input[name='card_activate']:checked").val() ) {
-		$('.card_form_epsilon').css('display','');
-	} else {
-		$('.card_form_epsilon').css('display','none');
-	}
-	$(document).on( 'change', "input[name='card_activate']", function() {
-		if( 'on' == $("input[name='card_activate']:checked").val() ) {
-			$('.card_form_epsilon').css('display','');
-		} else {
-			$('.card_form_epsilon').css('display','none');
-		}
-	});
-	$(document).on( 'change', '.multi_currency_epsilon', function() {
-		if( 'on' == $(this).val() ) {
-			$('#3dsecure_epsilon_on').prop('checked',true);
-			$('#process_code_epsilon_off').prop('checked',true);
-		}
-	});
-	$(document).on( 'change', '.3dsecure_epsilon', function() {
-		if( 'on' == $(this).val() ) {
-			$('#process_code_epsilon_off').prop('checked',true);
-		} else if( 'off' == $(this).val() ) {
-			if( $('#multi_currency_epsilon_on').prop('checked') ) {
-				$('#3dsecure_epsilon_on').prop('checked',true);
+	jQuery(document).ready( function($) {
+		const form_epsilon = $('form#epsilon_form');
+		function card_activate_epsilon() {
+			if( 'on' === form_epsilon.find("input[name='card_activate']:checked").val() ) {
+				$('.card_form_epsilon').css('display','');
+			} else {
+				$('.card_form_epsilon').css('display','none');
 			}
 		}
-	});
-	$(document).on( 'change', '.process_code_epsilon', function() {
-		if( 'on' == $(this).val() ) {
-			$('#multi_currency_epsilon_off').prop('checked',true);
-			$('#3dsecure_epsilon_off').prop('checked',true);
+		function conv_activate_epsilon() {
+			if( 'on' === form_epsilon.find("input[name='conv_activate']:checked").val() ) {
+				$(".conv_form_epsilon").css("display","");
+			} else {
+				$(".conv_form_epsilon").css("display","none");
+			}
 		}
+		card_activate_epsilon();
+		$("input[id^='card_activate_epsilon_']").click( function() {
+			card_activate_epsilon();
+		});
+		conv_activate_epsilon();
+		$("input[id^='conv_activate_epsilon_']").click( function() {
+			conv_activate_epsilon();
+		});
+		$(document).on( 'change', '.multi_currency_epsilon', function() {
+			if( 'on' == $(this).val() ) {
+				$('#3dsecure_epsilon_on').prop('checked',true);
+				$('#process_code_epsilon_off').prop('checked',true);
+			}
+		});
+		$(document).on( 'change', '.3dsecure_epsilon', function() {
+			if( 'on' == $(this).val() ) {
+				$('#process_code_epsilon_off').prop('checked',true);
+			} else if( 'off' == $(this).val() ) {
+				if( $('#multi_currency_epsilon_on').prop('checked') ) {
+					$('#3dsecure_epsilon_on').prop('checked',true);
+				}
+			}
+		});
+		$(document).on( 'change', '.process_code_epsilon', function() {
+			if( 'on' == $(this).val() ) {
+				$('#multi_currency_epsilon_off').prop('checked',true);
+				$('#3dsecure_epsilon_off').prop('checked',true);
+			}
+		});
 	});
-	if( 'on' == $("input[name='conv_activate']:checked").val() ) {
-		$(".conv_form_epsilon").css("display","");
-	} else {
-		$(".conv_form_epsilon").css("display","none");
-	}
-	$("input[name='conv_activate']").click( function() {
-		if( 'on' == $("input[name='conv_activate']:checked").val() ) {
-			$(".conv_form_epsilon").css("display","");
-		} else {
-			$(".conv_form_epsilon").css("display","none");
-		}
-	});
-});
 </script>
 					<?php
 				endif;
@@ -353,7 +352,7 @@ jQuery(document).ready( function($) {
 	public function settlement_update() {
 		global $usces;
 
-		if ( 'epsilon' !== filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) ) {
+		if ( 'epsilon' !== filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) ) {
 			return;
 		}
 
@@ -506,7 +505,7 @@ jQuery(document).ready( function($) {
 	<div id="uscestabs_epsilon">
 	<div class="settlement_service"><span class="service_title"><?php echo esc_html( $this->acting_formal_name ); ?></span></div>
 			<?php
-			if ( 'epsilon' === filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) ) :
+			if ( 'epsilon' === filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) ) :
 				if ( '' !== $this->error_mes ) :
 					?>
 		<div class="error_message"><?php wel_esc_script_e( $this->error_mes ); ?></div>
@@ -618,10 +617,10 @@ jQuery(document).ready( function($) {
 					array(
 						'acting'        => 'epsilon',
 						'acting_return' => '1',
-						'trans_code'    => filter_input( INPUT_GET, 'trans_code', FILTER_SANITIZE_STRING ),
-						'user_id'       => filter_input( INPUT_GET, 'user_id', FILTER_SANITIZE_STRING ),
-						'result'        => filter_input( INPUT_GET, 'result', FILTER_SANITIZE_STRING ),
-						'order_number'  => filter_input( INPUT_GET, 'order_number', FILTER_SANITIZE_STRING ),
+						'trans_code'    => filter_input( INPUT_GET, 'trans_code', FILTER_DEFAULT ),
+						'user_id'       => filter_input( INPUT_GET, 'user_id', FILTER_DEFAULT ),
+						'result'        => filter_input( INPUT_GET, 'result', FILTER_DEFAULT ),
+						'order_number'  => filter_input( INPUT_GET, 'order_number', FILTER_DEFAULT ),
 					),
 					USCES_CART_URL
 				)
@@ -729,18 +728,18 @@ jQuery(document).ready( function($) {
 			return;
 		}
 
-		if ( isset( $_GET['acting'] ) && isset( $_GET['acting_return'] ) && isset( $_GET['trans_code'] ) && 'epsilon' === filter_input( INPUT_GET, 'acting', FILTER_SANITIZE_STRING ) ) {
+		if ( isset( $_GET['acting'] ) && isset( $_GET['acting_return'] ) && isset( $_GET['trans_code'] ) && 'epsilon' === filter_input( INPUT_GET, 'acting', FILTER_DEFAULT ) ) {
 			$acting_flg   = ( isset( $payments['settlement'] ) ) ? $payments['settlement'] : '';
-			$order_number = filter_input( INPUT_GET, 'order_number', FILTER_SANITIZE_STRING );
+			$order_number = filter_input( INPUT_GET, 'order_number', FILTER_DEFAULT );
 			$usces->set_order_meta_value( 'settlement_id', $order_number, $order_id );
 			$usces->set_order_meta_value( 'wc_trans_id', $order_number, $order_id );
 			if ( isset( $results['reg_order'] ) ) {
 				unset( $results['0'] );
 				unset( $results['reg_order'] );
 			}
-			$results['trans_code'] = filter_input( INPUT_GET, 'trans_code', FILTER_SANITIZE_STRING );
+			$results['trans_code'] = filter_input( INPUT_GET, 'trans_code', FILTER_DEFAULT );
 			if ( 'acting_epsilon_card' === $acting_flg ) {
-				$user_id     = filter_input( INPUT_GET, 'user_id', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE );
+				$user_id     = filter_input( INPUT_GET, 'user_id', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE );
 				$acting_opts = $this->get_acting_settings();
 				if ( 'on' === $acting_opts['process_code'] && $user_id ) {
 					$usces->del_member_meta( 'epsilon_process_code_release', $user_id );
@@ -1020,7 +1019,7 @@ jQuery(document).ready( function($) {
 	 * @return string
 	 */
 	public function completion_settlement_message( $form, $entry ) {
-		if ( isset( $_GET['acting'] ) && 'epsilon' === filter_input( INPUT_GET, 'acting', FILTER_SANITIZE_STRING ) ) {
+		if ( isset( $_GET['acting'] ) && 'epsilon' === filter_input( INPUT_GET, 'acting', FILTER_DEFAULT ) ) {
 			$payments = usces_get_payments_by_name( $entry['order']['payment_name'] );
 			if ( isset( $payments['settlement'] ) && 'acting_epsilon_conv' === $payments['settlement'] ) {
 				$form .= '<div id="status_table"><h5>イプシロン・コンビニ決済</h5>
@@ -1087,7 +1086,7 @@ jQuery(document).ready( function($) {
 
 		$acting_opts = $this->get_acting_settings();
 		if ( 'on' === $acting_opts['process_code'] ) {
-			if ( filter_input( INPUT_POST, 'epsilon_process_code_release', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ) {
+			if ( filter_input( INPUT_POST, 'epsilon_process_code_release', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ) {
 				$usces->set_member_meta_value( 'epsilon_process_code_release', 'release', $member_id );
 			} else {
 				$usces->del_member_meta( 'epsilon_process_code_release', $member_id );

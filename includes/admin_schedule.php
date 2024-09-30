@@ -9,17 +9,17 @@ require_once USCES_PLUGIN_DIR . '/classes/calendar.class.php';
 
 /* cur */
 list( $todayyy, $todaymm, $todaydd ) = getToday();
-$cal1 = new calendarData();
+$cal1                                = new calendarData();
 $cal1->setToday( $todayyy, $todaymm, $todaydd );
 $cal1->setCalendarData();
 /* next */
 list( $nextyy, $nextmm, $nextdd ) = getAfterMonth( $todayyy, $todaymm, 1, 1 );
-$cal2 = new calendarData();
+$cal2                             = new calendarData();
 $cal2->setToday( $nextyy, $nextmm, $nextdd );
 $cal2->setCalendarData();
 /* aft */
 list( $lateryy, $latermm, $laterdd ) = getAfterMonth( $todayyy, $todaymm, 1, 2 );
-$cal3 = new calendarData();
+$cal3                                = new calendarData();
 $cal3->setToday( $lateryy, $latermm, $laterdd );
 $cal3->setCalendarData();
 /* the_4th_month(three months later) */
@@ -100,7 +100,8 @@ function cangeBus(id, r, c) {
 
 function cangeWday1(id, c) {
 <?php
-for ( $i = 0; $i < $cal1->getRow(); $i++ ) :
+$cal1_row = $cal1->getRow();
+for ( $i = 0; $i < $cal1_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -123,7 +124,8 @@ for ( $i = 0; $i < $cal1->getRow(); $i++ ) :
 
 function cangeWday2(id, c) {
 <?php
-for ( $i = 0; $i < $cal2->getRow(); $i++ ) :
+$cal2_row = $cal2->getRow();
+for ( $i = 0; $i < $cal2_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -146,7 +148,8 @@ for ( $i = 0; $i < $cal2->getRow(); $i++ ) :
 
 function cangeWday3(id, c) {
 <?php
-for ( $i = 0; $i < $cal3->getRow(); $i++ ) :
+$cal3_row = $cal3->getRow();
+for ( $i = 0; $i < $cal3_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -169,7 +172,8 @@ for ( $i = 0; $i < $cal3->getRow(); $i++ ) :
 
 function cangeWday4(id, c) {
 <?php
-for ( $i = 0; $i < $cal4->getRow(); $i++ ) :
+$cal4_row = $cal4->getRow();
+for ( $i = 0; $i < $cal4_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -192,7 +196,8 @@ for ( $i = 0; $i < $cal4->getRow(); $i++ ) :
 
 function cangeWday5(id, c) {
 <?php
-for ( $i = 0; $i < $cal5->getRow(); $i++ ) :
+$cal5_row = $cal5->getRow();
+for ( $i = 0; $i < $cal5_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -215,7 +220,8 @@ for ( $i = 0; $i < $cal5->getRow(); $i++ ) :
 
 function cangeWday6(id, c) {
 <?php
-for ( $i = 0; $i < $cal6->getRow(); $i++ ) :
+$cal6_row = $cal6->getRow();
+for ( $i = 0; $i < $cal6_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -238,7 +244,8 @@ for ( $i = 0; $i < $cal6->getRow(); $i++ ) :
 
 function cangeWday7(id, c) {
 <?php
-for ( $i = 0; $i < $cal7->getRow(); $i++ ) :
+$cal7_row = $cal7->getRow();
+for ( $i = 0; $i < $cal7_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -261,7 +268,8 @@ for ( $i = 0; $i < $cal7->getRow(); $i++ ) :
 
 function cangeWday8(id, c) {
 <?php
-for ( $i = 0; $i < $cal8->getRow(); $i++ ) :
+$cal8_row = $cal8->getRow();
+for ( $i = 0; $i < $cal8_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -284,7 +292,8 @@ for ( $i = 0; $i < $cal8->getRow(); $i++ ) :
 
 function cangeWday9(id, c) {
 <?php
-for ( $i = 0; $i < $cal9->getRow(); $i++ ) :
+$cal9_row = $cal9->getRow();
+for ( $i = 0; $i < $cal9_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -307,7 +316,8 @@ for ( $i = 0; $i < $cal9->getRow(); $i++ ) :
 
 function cangeWday10(id, c) {
 <?php
-for ( $i = 0; $i < $cal10->getRow(); $i++ ) :
+$cal10_row = $cal10->getRow();
+for ( $i = 0; $i < $cal10_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -330,7 +340,8 @@ for ( $i = 0; $i < $cal10->getRow(); $i++ ) :
 
 function cangeWday11(id, c) {
 <?php
-for ( $i = 0; $i < $cal11->getRow(); $i++ ) :
+$cal11_row = $cal11->getRow();
+for ( $i = 0; $i < $cal11_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -353,7 +364,8 @@ for ( $i = 0; $i < $cal11->getRow(); $i++ ) :
 
 function cangeWday12(id, c) {
 <?php
-for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
+$cal12_row = $cal12->getRow();
+for ( $i = 0; $i < $cal12_row; $i++ ) :
 	$row = $i + 1;
 	?>
 	if (document.getElementById(id+'_'+<?php echo esc_attr( $row ); ?>+'_'+c)) {
@@ -465,9 +477,12 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 <div class="postbox">
 <h3 class="hndle"><span><?php esc_html_e( 'Business Calendar', 'usces' ); ?></span><a style="cursor:pointer;" onclick="toggleVisibility('ex_shipping_charge');"> (<?php esc_html_e( 'explanation', 'usces' ); ?>) </a></h3>
 <div class="inside">
+<?php
+ob_start();
+?>
 <table class="form_table">
 <tr>
-	<th><?php esc_html_e( 'This month', 'usces' ); ?><br /><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $todayyy, $todaymm ); ?></th>
+	<th><?php esc_html_e( 'This month', 'usces' ); ?><br /><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $todayyy ), esc_html( $todaymm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar1" class="business-day-calendar">
 		<tr>
@@ -479,7 +494,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday1('calendar1', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday1('calendar1', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal1->getRow(); $i++ ) : ?>
+<?php
+$cal1_row = $cal1->getRow();
+for ( $i = 0; $i < $cal1_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -501,7 +519,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 	<td><span class="business_days_exp_box" style="background-color:#DFFFDD">&nbsp;&nbsp;&nbsp;</span><?php esc_html_e( 'Working day', 'usces' ); ?><br /><span class="business_days_exp_box" style="background-color:#FFAA55">&nbsp;&nbsp;&nbsp;</span><?php esc_html_e( 'Holiday for Shipping Operations', 'usces' ); ?></td>
 </tr>
 <tr>
-	<th><?php esc_html_e( 'Next month', 'usces' ); ?><br /><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $nextyy, $nextmm ); ?></th>
+	<th><?php esc_html_e( 'Next month', 'usces' ); ?><br /><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $nextyy ), esc_html( $nextmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar2" class="business-day-calendar">
 		<tr>
@@ -513,7 +531,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday2('calendar2', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday2('calendar2', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal2->getRow(); $i++ ) : ?>
+<?php
+$cal2_row = $cal2->getRow();
+for ( $i = 0; $i < $cal2_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -535,7 +556,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 	<td>&nbsp;</td>
 </tr>
 <tr>
-	<th><?php esc_html_e( 'Month after next month', 'usces' ); ?><br /><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $lateryy, $latermm ); ?></th>
+	<th><?php esc_html_e( 'Month after next month', 'usces' ); ?><br /><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $lateryy ), esc_html( $latermm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar3" class="business-day-calendar">
 		<tr>
@@ -547,7 +568,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday3('calendar3', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday3('calendar3', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal3->getRow(); $i++ ) : ?>
+<?php
+$cal3_row = $cal3->getRow();
+for ( $i = 0; $i < $cal3_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -570,7 +594,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--4th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_4th_monthyy, $the_4th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_4th_monthyy ), esc_html( $the_4th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar4" class="business-day-calendar">
 		<tr>
@@ -582,7 +606,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday4('calendar4', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday4('calendar4', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal4->getRow(); $i++ ) : ?>
+<?php
+$cal4_row = $cal4->getRow();
+for ( $i = 0; $i < $cal4_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -605,7 +632,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--5th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_5th_monthyy, $the_5th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_5th_monthyy ), esc_html( $the_5th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar5" class="business-day-calendar">
 		<tr>
@@ -617,7 +644,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday5('calendar5', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday5('calendar5', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal5->getRow(); $i++ ) : ?>
+<?php
+$cal5_row = $cal5->getRow();
+for ( $i = 0; $i < $cal5_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -640,7 +670,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--6th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_6th_monthyy, $the_6th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_6th_monthyy ), esc_html( $the_6th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar6" class="business-day-calendar">
 		<tr>
@@ -652,7 +682,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday6('calendar6', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday6('calendar6', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal6->getRow(); $i++ ) : ?>
+<?php
+$cal6_row = $cal6->getRow();
+for ( $i = 0; $i < $cal6_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -675,7 +708,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--7th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_7th_monthyy, $the_7th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_7th_monthyy ), esc_html( $the_7th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar7" class="business-day-calendar">
 		<tr>
@@ -687,7 +720,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday7('calendar7', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday7('calendar7', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal7->getRow(); $i++ ) : ?>
+<?php
+$cal7_row = $cal7->getRow();
+for ( $i = 0; $i < $cal7_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -710,7 +746,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--8th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_8th_monthyy, $the_8th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_8th_monthyy ), esc_html( $the_8th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar8" class="business-day-calendar">
 		<tr>
@@ -722,7 +758,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday8('calendar8', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday8('calendar8', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal8->getRow(); $i++ ) : ?>
+<?php
+$cal8_row = $cal8->getRow();
+for ( $i = 0; $i < $cal8_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -745,7 +784,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--9th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_9th_monthyy, $the_9th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_9th_monthyy ), esc_html( $the_9th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar9" class="business-day-calendar">
 		<tr>
@@ -757,7 +796,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday9('calendar9', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday9('calendar9', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal9->getRow(); $i++ ) : ?>
+<?php
+$cal9_row = $cal9->getRow();
+for ( $i = 0; $i < $cal9_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -780,7 +822,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--10th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_10th_monthyy, $the_10th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_10th_monthyy ), esc_html( $the_10th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar10" class="business-day-calendar">
 		<tr>
@@ -792,7 +834,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday10('calendar10', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday10('calendar10', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal10->getRow(); $i++ ) : ?>
+<?php
+$cal10_row = $cal10->getRow();
+for ( $i = 0; $i < $cal10_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -815,7 +860,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--11th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_11th_monthyy, $the_11th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_11th_monthyy ), esc_html( $the_11th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar11" class="business-day-calendar">
 		<tr>
@@ -827,7 +872,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday11('calendar11', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday11('calendar11', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal11->getRow(); $i++ ) : ?>
+<?php
+$cal11_row = $cal11->getRow();
+for ( $i = 0; $i < $cal11_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -850,7 +898,7 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 </tr>
 <!--12th-->
 <tr>
-	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), $the_12th_monthyy, $the_12th_monthmm ); ?></th>
+	<th><?php echo sprintf( __( '%2$s/%1$s', 'usces' ), esc_html( $the_12th_monthyy ), esc_html( $the_12th_monthmm ) ); ?></th>
 	<td>
 	<table cellspacing="0" id="calendar12" class="business-day-calendar">
 		<tr>
@@ -862,7 +910,10 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 			<th class="cal"><div onclick="cangeWday12('calendar12', '5');"><?php esc_html_e( 'Fri', 'usces' ); ?></div></th>
 			<th class="cal"><div onclick="cangeWday12('calendar12', '6');"><?php esc_html_e( 'Sat', 'usces' ); ?></div></th>
 		</tr>
-<?php for ( $i = 0; $i < $cal12->getRow(); $i++ ) : ?>
+<?php
+$cal12_row = $cal12->getRow();
+for ( $i = 0; $i < $cal12_row; $i++ ) :
+	?>
 		<tr>
 	<?php
 	for ( $d = 0; $d <= 6; $d++ ) :
@@ -884,6 +935,12 @@ for ( $i = 0; $i < $cal12->getRow(); $i++ ) :
 	<td>&nbsp;</td>
 </tr>
 </table>
+<?php
+$html = ob_get_contents();
+ob_end_clean();
+$html = apply_filters( 'usces_filter_admin_schedule_calendar_form', $html );
+echo $html;
+?>
 <hr size="1" color="#CCCCCC" />
 <div id="ex_shipping_charge" class="explanation"></div>
 </div>

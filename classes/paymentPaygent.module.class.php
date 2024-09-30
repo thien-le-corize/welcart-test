@@ -276,7 +276,7 @@ class Paygent_Module {
 	 * Return an instance of this class.
 	 */
 	public static function get_instance() {
-		if ( null == self::$instance ) {
+		if ( is_null( self::$instance ) ) {
 			self::$instance = new self();
 		}
 		return self::$instance;
@@ -314,6 +314,7 @@ class Paygent_Module {
 	public function req_put( $key, $value ) {
 		$temp_val = $value;
 		if ( null === $temp_val ) {
+			// Value 値の null 設定は認めない.
 			$temp_val = '';
 		}
 		$this->telegram_param[ $key ] = $temp_val;
@@ -382,48 +383,48 @@ class Paygent_Module {
 	 */
 	public function post( $telegram_kind ) {
 
-		/* 共通ヘッダ設定 */
+		// 共通ヘッダ設定.
 		$this->set_req_header();
 		$this->telegram_param['telegram_kind'] = $telegram_kind;
 
-		/* URL取得 */
+		// URL取得.
 		$url = $this->get_url( $telegram_kind );
 		if ( TEREGRAM_PARAM_OUTSIDE_ERROR == $url ) {
 			return TEREGRAM_PARAM_OUTSIDE_ERROR;
 		}
 
-		/* Https_Request_Sender 取得 */
+		// Https_Request_Sender 取得.
 		$this->sender = new Https_Request_Sender( $url );
 
-		/* クライアント証明書パス設定 */
+		// クライアント証明書パス設定.
 		$this->sender->set_client_certificate_path( $this->client_file );
 
-		/* CA証明書パス設定 */
+		// CA証明書パス設定.
 		$this->sender->set_ca_certificate_path( $this->ca_file );
 
-		/* カナ変換処理 */
+		// カナ変換処理.
 		$this->replace_telegram_kana();
 
-		/* エンコード処理 */
+		// エンコード処理.
 		$this->encording_request_param();
 
-		/* 電文長チェック */
+		// 電文長チェック.
 		$telegram_length = $this->sender->get_telegram_length( $this->telegram_param );
 		if ( TELEGRAM_LENGTH < $telegram_length ) {
 			return TEREGRAM_PARAM_REQUIRED_ERROR;
 		}
 
-		/* Post */
+		// Post.
 		$rslt = $this->sender->post_request_body( $this->telegram_param );
 		if ( ! ( true === $rslt ) ) {
 			$this->result_message = $this->sender->get_result_message();
 			return $rslt;
 		}
 
-		/* Get Response */
+		// Get Response.
 		$res_body = $this->sender->get_response_body();
 
-		/* Create Response Data */
+		// Create Response Data.
 		$this->response_data = $this->create_response_data( $res_body, $telegram_kind );
 
 		$this->result_message = $this->get_response_code() . ': ' . $this->get_response_detail();
@@ -464,83 +465,83 @@ class Paygent_Module {
 		$url = null;
 		if ( $this->testmode ) {
 			switch ( $telegram_kind ) {
-				case PAYGENT_CREDIT: /* カード決済オーソリ */
-				case PAYGENT_AUTH_CANCEL: /* カード決済オーソリキャンセル */
-				case PAYGENT_CARD_COMMIT: /* カード決済売上 */
-				case PAYGENT_CARD_COMMIT_CANCEL: /* カード決済売上キャンセル */
-				case PAYGENT_CARD_COMMIT_AUTH_REVISE: /* カード決済補正オーソリ */
-				case PAYGENT_CARD_COMMIT_REVISE: /* カード決済補正売上 */
-				case PAYGENT_CARD_STOCK_SET: /* カード情報設定 */
-				case PAYGENT_CARD_STOCK_DEL: /* カード情報削除 */
-				case PAYGENT_CARD_STOCK_GET: /* カード情報照会 */
+				case PAYGENT_CREDIT: // カード決済オーソリ.
+				case PAYGENT_AUTH_CANCEL: // カード決済オーソリキャンセル.
+				case PAYGENT_CARD_COMMIT: // カード決済売上.
+				case PAYGENT_CARD_COMMIT_CANCEL: // カード決済売上キャンセル.
+				case PAYGENT_CARD_COMMIT_AUTH_REVISE: // カード決済補正オーソリ.
+				case PAYGENT_CARD_COMMIT_REVISE: // カード決済補正売上.
+				case PAYGENT_CARD_STOCK_SET: // カード情報設定.
+				case PAYGENT_CARD_STOCK_DEL: // カード情報削除.
+				case PAYGENT_CARD_STOCK_GET: // カード情報照会.
 					$url = 'https://sandbox.paygent.co.jp/n/card/request';
 					break;
-				case PAYGENT_CARD_3DS2: /* 3Dセキュア2.0認証 */
+				case PAYGENT_CARD_3DS2: // 3Dセキュア2.0認証.
 					$url = 'https://sandbox.paygent.co.jp/n/threeds/request';
 					break;
-				case PAYGENT_CONVENI_NUM: /* コンビニ決済（番号方式）申込 */
+				case PAYGENT_CONVENI_NUM: // コンビニ決済（番号方式）申込.
 					$url = 'https://sandbox.paygent.co.jp/n/conveni/request';
 					break;
-				case PAYGENT_ATM: /* ATM決済 */
+				case PAYGENT_ATM: // ATM決済.
 					$url = 'https://sandbox.paygent.co.jp/n/atm/request';
 					break;
-				case PAYGENT_BANK: /* 銀行ネット決済 */
+				case PAYGENT_BANK: // 銀行ネット決済.
 					$url = 'https://sandbox.paygent.co.jp/n/bank/request';
 					break;
-				case PAYGENT_BANK_ASP: /* 銀行ネット決済ASP申込 */
+				case PAYGENT_BANK_ASP: // 銀行ネット決済ASP申込.
 					$url = 'https://sandbox.paygent.co.jp/n/bank/requestasp';
 					break;
-				case PAYGENT_PAIDY_AUTH_CANCEL: /* Paidyオーソリキャンセル */
-				case PAYGENT_PAIDY_CAPTURE: /* Paidy売上 */
-				case PAYGENT_PAIDY_REFUND: /* Paidy返金 */
-				case PAYGENT_PAIDY_REF: /* Paidy決済情報検証 */
+				case PAYGENT_PAIDY_AUTH_CANCEL: // Paidyオーソリキャンセル.
+				case PAYGENT_PAIDY_CAPTURE: // Paidy売上.
+				case PAYGENT_PAIDY_REFUND: // Paidy返金.
+				case PAYGENT_PAIDY_REF: // Paidy決済情報検証.
 					$url = 'https://sandbox.paygent.co.jp/n/paidy/request';
 					break;
-				case PAYGENT_DIFF_REF: /* 決済情報差分照会 */
+				case PAYGENT_DIFF_REF: // 決済情報差分照会.
 					$url = 'https://sandbox.paygent.co.jp/n/ref/paynotice';
 					break;
-				case PAYGENT_REF: /* 決済情報照会 */
+				case PAYGENT_REF: // 決済情報照会.
 					$url = 'https://sandbox.paygent.co.jp/n/ref/paymentref';
 					break;
 			}
 		} else {
 			switch ( $telegram_kind ) {
-				case PAYGENT_CREDIT: /* カード決済オーソリ */
-				case PAYGENT_AUTH_CANCEL: /* カード決済オーソリキャンセル */
-				case PAYGENT_CARD_COMMIT: /* カード決済売上 */
-				case PAYGENT_CARD_COMMIT_CANCEL: /* カード決済売上キャンセル */
-				case PAYGENT_CARD_COMMIT_AUTH_REVISE: /* カード決済補正オーソリ */
-				case PAYGENT_CARD_COMMIT_REVISE: /* カード決済補正売上 */
-				case PAYGENT_CARD_STOCK_SET: /* カード情報設定 */
-				case PAYGENT_CARD_STOCK_DEL: /* カード情報削除 */
-				case PAYGENT_CARD_STOCK_GET: /* カード情報照会 */
+				case PAYGENT_CREDIT: // カード決済オーソリ.
+				case PAYGENT_AUTH_CANCEL: // カード決済オーソリキャンセル.
+				case PAYGENT_CARD_COMMIT: // カード決済売上.
+				case PAYGENT_CARD_COMMIT_CANCEL: // カード決済売上キャンセル.
+				case PAYGENT_CARD_COMMIT_AUTH_REVISE: // カード決済補正オーソリ.
+				case PAYGENT_CARD_COMMIT_REVISE: // カード決済補正売上.
+				case PAYGENT_CARD_STOCK_SET: // カード情報設定.
+				case PAYGENT_CARD_STOCK_DEL: // カード情報削除.
+				case PAYGENT_CARD_STOCK_GET: // カード情報照会.
 					$url = 'https://module.paygent.co.jp/n/card/request';
 					break;
-				case PAYGENT_CARD_3DS2: /* 3Dセキュア2.0認証 */
+				case PAYGENT_CARD_3DS2: // 3Dセキュア2.0認証.
 					$url = 'https://module.paygent.co.jp/n/threeds/request';
 					break;
-				case PAYGENT_CONVENI_NUM: /* コンビニ決済（番号方式）申込 */
+				case PAYGENT_CONVENI_NUM: // コンビニ決済（番号方式）申込.
 					$url = 'https://module.paygent.co.jp/n/conveni/request';
 					break;
-				case PAYGENT_ATM: /* ATM決済 */
+				case PAYGENT_ATM: // ATM決済.
 					$url = 'https://module.paygent.co.jp/n/atm/request';
 					break;
-				case PAYGENT_BANK: /* 銀行ネット決済 */
+				case PAYGENT_BANK: // 銀行ネット決済.
 					$url = 'https://module.paygent.co.jp/n/bank/request';
 					break;
-				case PAYGENT_BANK_ASP: /* 銀行ネット決済ASP申込 */
+				case PAYGENT_BANK_ASP: // 銀行ネット決済ASP申込.
 					$url = 'https://module.paygent.co.jp/n/bank/requestasp';
 					break;
-				case PAYGENT_PAIDY_AUTH_CANCEL: /* Paidyオーソリキャンセル */
-				case PAYGENT_PAIDY_CAPTURE: /* Paidy売上 */
-				case PAYGENT_PAIDY_REFUND: /* Paidy返金 */
-				case PAYGENT_PAIDY_REF: /* Paidy決済情報検証 */
+				case PAYGENT_PAIDY_AUTH_CANCEL: // Paidyオーソリキャンセル.
+				case PAYGENT_PAIDY_CAPTURE: // Paidy売上.
+				case PAYGENT_PAIDY_REFUND: // Paidy返金.
+				case PAYGENT_PAIDY_REF: // Paidy決済情報検証.
 					$url = 'https://module.paygent.co.jp/n/paidy/request';
 					break;
-				case PAYGENT_DIFF_REF: /* 決済情報差分照会 */
+				case PAYGENT_DIFF_REF: // 決済情報差分照会.
 					$url = 'https://module.paygent.co.jp/n/ref/paynotice';
 					break;
-				case PAYGENT_REF: /* 決済情報照会 */
+				case PAYGENT_REF: // 決済情報照会.
 					$url = 'https://module.paygent.co.jp/n/ref/paymentref';
 					break;
 			}
@@ -603,16 +604,16 @@ class Paygent_Module {
 	 */
 	public function parse_payment( $body, $telegram_kind ) {
 
-		/* 保持データを初期化 */
+		// 保持データを初期化.
 		$map = array();
 
-		/* "_html" キー存在フラグ */
+		// "_html" キー存在フラグ.
 		$html_key_flg = false;
 
-		/* "_html" キー値 */
+		// "_htmk" キー値.
 		$html_key = '';
 
-		/* "_html" キー出現以後のデータ保持 */
+		// "_html" キー出現以後のデータ保持.
 		$html_value = '';
 
 		$lines = explode( LINE_SEPARATOR, $body );
@@ -620,36 +621,36 @@ class Paygent_Module {
 		foreach ( $lines as $i => $line ) {
 			$line_item = String_Utitily::split( $line, PROPERTIES_REGEX, PROPERTIES_REGEX_COUNT );
 
-			/* 読込終了 */
+			// 読込終了.
 			$tmp_len = strlen( $line_item[0] ) - strlen( HTML_ITEM );
 			if ( 0 <= $tmp_len && strpos( $line_item[0], HTML_ITEM, $tmp_len ) === $tmp_len ) {
-				/* Key が "_html" の場合 */
+				// Key が "_html" の場合.
 				$html_key     = $line_item[0];
 				$html_key_flg = true;
 			}
 			if ( $html_key_flg ) {
 				if ( ! ( strlen( $line_item[0] ) - strlen( HTML_ITEM ) >= 0 && strpos( $line_item[0], HTML_ITEM, strlen( $line_item[0] ) - strlen( HTML_ITEM ) ) === strlen( $line_item[0] ) - strlen( HTML_ITEM ) ) ) {
-					/* "_html" Key が読み取られた場合 */
+					// "_html" Key が読み取られた場合.
 					$html_value .= $line;
 					$html_value .= LINE_SEPARATOR;
 				}
 			} else {
 				if ( 1 < count( $line_item ) ) {
 					if ( RESPONSEDATA_RESULT == $line_item[0] ) {
-						/* 処理結果を設定 */
+						// 処理結果を設定.
 						$this->result_status = $line_item[1];
 					} elseif ( RESPONSEDATA_RESPONSE_CODE == $line_item[0] ) {
-						/* レスポンスコードを設定 */
+						// レスポンスコードを設定.
 						$this->response_code = $line_item[1];
 					} elseif ( RESPONSEDATA_RESPONSE_DETAIL == $line_item[0] ) {
-						/* レスポンス詳細を設定 */
+						// レスポンス詳細を設定.
 						if ( in_array( $telegram_kind, self::$telegram_kind_utf8 ) ) {
 							$this->response_detail = $line_item[1];
 						} else {
 							$this->response_detail = String_Utitily::convert_encoding_utf8( $line_item[1] );
 						}
 					} else {
-						/* Mapに設定 */
+						// Mapに設定.
 						$map[ $line_item[0] ] = $line_item[1];
 					}
 				}
@@ -657,7 +658,7 @@ class Paygent_Module {
 		}
 
 		if ( $html_key_flg ) {
-			/* "_html" Key が出現した場合、設定 */
+			// "_html" Key が出現した場合、設定.
 			if ( strlen( LINE_SEPARATOR ) <= strlen( $html_value ) ) {
 				if ( strpos( $html_value, LINE_SEPARATOR, strlen( $html_value ) - strlen( LINE_SEPARATOR ) ) === strlen( $html_value ) - strlen( LINE_SEPARATOR ) ) {
 					$html_value = substr( $html_value, 0, strlen( $html_value ) - strlen( LINE_SEPARATOR ) );
@@ -667,12 +668,13 @@ class Paygent_Module {
 		}
 
 		if ( 0 < count( $map ) ) {
-			/* Map が設定されている場合 */
+			// Map が設定されている場合.
 			$map          = self::encording_response_kana( $map );
 			$this->data[] = $map;
 		}
 
 		if ( String_Utitily::is_empty( $this->result_status ) ) {
+			// 処理結果が 空文字 もしくは null の場合.
 			return false;
 		}
 
@@ -688,7 +690,7 @@ class Paygent_Module {
 	 */
 	public function parse_reference( $body, $telegram_kind ) {
 
-		/* 保持データを初期化 */
+		// 保持データを初期化.
 		$map = array();
 
 		$lines = explode( LINE_SEPARATOR, $body );
@@ -698,17 +700,17 @@ class Paygent_Module {
 			$line_item_cnt = count( $line_item );
 			if ( 0 < $line_item_cnt ) {
 				if ( LINENO_HEADER == $line_item[ LINE_RECORD_DIVISION ] ) {
-					/* ヘッダー部の行の場合 */
+					// ヘッダー部の行の場合.
 					if ( LINE_HEADER_RESULT < $line_item_cnt ) {
-						/* 処理結果を設定 */
+						// 処理結果を設定.
 						$this->result_status = $line_item[ LINE_HEADER_RESULT ];
 					}
 					if ( LINE_HEADER_RESPONSE_CODE < $line_item_cnt ) {
-						/* レスポンスコードを設定 */
+						// レスポンスコードを設定.
 						$this->response_code = $line_item[ LINE_HEADER_RESPONSE_CODE ];
 					}
 					if ( LINE_HEADER_RESPONSE_DETAIL < $line_item_cnt ) {
-						/* レスポンス詳細を設定 */
+						// レスポンス詳細を設定.
 						if ( in_array( $telegram_kind, self::$telegram_kind_utf8 ) ) {
 							$this->response_detail = $line_item[ LINE_HEADER_RESPONSE_DETAIL ];
 						} else {
@@ -716,43 +718,44 @@ class Paygent_Module {
 						}
 					}
 				} elseif ( LINENO_DATA_HEADER == $line_item[ LINE_RECORD_DIVISION ] ) {
-					/* データヘッダー部の行の場合 */
+					// データヘッダー部の行の場合.
 					$this->data_header = array();
 					for ( $i = 1; $i < $line_item_cnt; $i++ ) {
-						/* データヘッダーを設定（レコード区分は除く） */
+						// データヘッダーを設定（レコード区分は除く）.
 						$this->data_header[] = $line_item[ $i ];
 					}
 				} elseif ( LINENO_DATA == $line_item[ LINE_RECORD_DIVISION ] ) {
-					/* データ部の行の場合、データヘッダー部が既に展開済みである事を想定 */
+					// データ部の行の場合.
+					// データヘッダー部が既に展開済みである事を想定.
 					$map = array();
 
 					if ( count( $this->data_header ) == ( $line_item_cnt - 1 ) ) {
-						/* データヘッダー数と、データ項目数（レコード区分除く）は一致 */
+						// データヘッダー数と、データ項目数（レコード区分除く）は一致.
 						for ( $i = 1; $i < $line_item_cnt; $i++ ) {
-							/* 対応するデータヘッダーを Key に、Mapへ設定 */
+							// 対応するデータヘッダーを Key に、Mapへ設定.
 							$map[ $this->data_header[ $i - 1 ] ] = $line_item[ $i ];
 						}
 					} else {
-						/* データヘッダー数と、データ項目数が一致しない場合 */
+						// データヘッダー数と、データ項目数が一致しない場合.
 						return false;
 					}
 
 					if ( 0 < count( $map ) ) {
-						/* Map が設定されている場合 */
+						// Map が設定されている場合.
 						$map          = self::encording_response_kana( $map );
 						$this->data[] = $map;
 					}
 				} elseif ( LINENO_TRAILER == $line_item[ LINE_RECORD_DIVISION ] ) {
-					/* トレーラー部の行の場合 */
+					// トレーラー部の行の場合.
 					if ( LINE_TRAILER_DATA_COUNT < $line_item_cnt ) {
-						/* データサイズ */
+						// データサイズ.
 					}
 				}
 			}
 		}
 
 		if ( String_Utitily::is_empty( $this->result_status ) ) {
-			/* 処理結果が 空文字 もしくは null の場合 */
+			// 処理結果が 空文字 もしくは null の場合.
 			return false;
 		}
 
@@ -774,24 +777,24 @@ class Paygent_Module {
 		$this->max_pos     = strlen( $this->line );
 		$this->current_pos = 0;
 
-		/* 項目データを格納する */
+		// 項目データを格納する.
 		$items = array();
-		/* 囲み文字あり／なしの状態判定フラグ */
+		// 囲み文字あり／なしの状態判定フラグ.
 		$exist_envelope = false;
 
 		while ( $this->current_pos <= $this->max_pos ) {
-			/* データ区切り位置を取得する */
+			// データ区切り位置を取得する.
 			$end_pos = $this->get_end_position( $this->current_pos );
-			/* １項目分のデータを読み取る */
+			// １項目分のデータを読み取る.
 			$temp     = substr( $line, $this->current_pos, $end_pos - $this->current_pos );
 			$temp_cnt = strlen( $temp );
 
 			$work = '';
-			/* 項目データなしの場合 */
+			// 項目データなしの場合.
 			if ( 0 == $temp_cnt ) {
 				$work = '';
 			} else {
-				/* 囲い文字があるかチェックする */
+				// 囲い文字があるかチェックする.
 				if ( CSV_DEF_ITEM_ENVELOPE == $temp[0] ) {
 					$exist_envelope = true;
 				}
@@ -803,7 +806,7 @@ class Paygent_Module {
 						$i++;
 						if ( $is_data ) {
 							if ( ( $i < strlen( $temp ) ) && ( CSV_DEF_ITEM_ENVELOPE == $temp[ $i ] ) ) {
-								/* 囲み文字が２つ続けて現れたときは、文字データとして取得する */
+								// 囲み文字が２つ続けて現れたときは、文字データとして取得する.
 								$work .= $temp[ $i++ ];
 							} else {
 								$is_data = ! $is_data;
@@ -816,10 +819,10 @@ class Paygent_Module {
 					}
 				}
 			}
-			/* １項目分のデータを登録する */
+			// １項目分のデータを登録する.
 			$items[] = $work;
 
-			/* 次の読取位置の更新 */
+			// 次の読取位置の更新.
 			$this->current_pos = $end_pos + 1;
 		}
 		return $items;
@@ -833,20 +836,20 @@ class Paygent_Module {
 	 */
 	private function get_end_position( $start ) {
 
-		/* 文字列／文字列外の状態判定フラグ */
+		// 文字列／文字列外の状態判定フラグ.
 		$state = false;
-		/* 囲み文字あり／なしの状態判定フラグ */
+		// 囲み文字あり／なしの状態判定フラグ.
 		$exist_envelope = false;
-		/* 読み込んだ文字 */
+		// 読み込んだ文字.
 		$ch = null;
-		/* 区切り位置 */
+		// 区切り位置.
 		$end = 0;
 
 		if ( $start >= $this->max_pos ) {
 			return $start;
 		}
 
-		/* 囲み文字の有無判定 */
+		// 囲み文字の有無判定.
 		if ( CSV_DEF_ITEM_ENVELOPE == $this->line[ $start ] ) {
 			$exist_envelope = true;
 		}
@@ -854,21 +857,21 @@ class Paygent_Module {
 		$end = $start;
 
 		while ( $end < $this->max_pos ) {
-			/* １文字読み込む */
+			// １文字読み込む.
 			$ch = $this->line[ $end ];
-			/* 文字の判定 */
+			// 文字の判定.
 			if ( false == $state && CSV_DEF_SEPARATOR == $ch ) {
-				/* 文字列中の区切り文字でなければ、データ区切り*/
+				// 文字列中の区切り文字でなければ、データ区切り.
 				break;
 			} elseif ( $exist_envelope && CSV_DEF_ITEM_ENVELOPE == $ch ) {
-				/* 囲み文字が現れたら、文字列／文字列外の状態判定を反転 */
+				// 囲み文字が現れたら、文字列／文字列外の状態判定を反転.
 				if ( $state ) {
 					$state = false;
 				} else {
 					$state = true;
 				}
 			}
-			/* 文字位置のカウントアップ */
+			// 文字位置のカウントアップ.
 			$end++;
 		}
 		return $end;
@@ -1013,8 +1016,13 @@ class Https_Request_Sender {
 	 * @return mixed TRUE:成功、他:エラーコード
 	 */
 	public function post_request_body( $form_data ) {
+		// 通信開始.
 		$this->init_curl();
+
+		// リクエストを送信.
 		$ret_code = $this->send( $form_data );
+
+		// レスポンスを受信.
 		$this->close_curl();
 		return $ret_code;
 	}
@@ -1091,7 +1099,7 @@ class Https_Request_Sender {
 	public function init_curl() {
 		$rslt = true;
 
-		/* 初期化 */
+		// 初期化.
 		$this->ch = curl_init( $this->url );
 
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0 );
@@ -1099,18 +1107,18 @@ class Https_Request_Sender {
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_POST, true );
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_HEADER, true );
 
-		/* 証明書 */
+		// 証明書.
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_SSL_VERIFYHOST, false );
 
-		/* クライアント証明書 */
+		// クライアント証明書.
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_SSLCERT, $this->client_certificate_path );
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_SSLKEYPASSWD, $this->keystore_password );
 
-		/* CA証明書 */
+		// CA証明書.
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_SSL_VERIFYPEER, true );
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_CAINFO, $this->ca_certificate_path );
 
-		/* タイムアウト */
+		// タイムアウト.
 		$rslt = $rslt && curl_setopt( $this->ch, CURLOPT_TIMEOUT, $this->timeout );
 
 		return $rslt;
@@ -1123,6 +1131,7 @@ class Https_Request_Sender {
 	 * @return mixed TRUE:成功、他:エラーコード
 	 */
 	public function send( $form_data ) {
+		// リクエストを Map から String に変換.
 		$query = $this->convert2urlencoded_string( $form_data, false );
 
 		$header   = array();
@@ -1152,22 +1161,30 @@ class Https_Request_Sender {
 		$ret_code  = true;
 
 		if ( CURLE_COULDNT_CONNECT >= $error_no ) {
+			// 接続問題.
 			$ret_code = KS_CONNECT_ERROR;
 		} elseif ( CURLE_COULDNT_CONNECT == $error_no ) {
+			// 接続問題.
 			$ret_code = KS_CONNECT_ERROR;
 		} elseif ( CURLE_SSL_CERTPROBLEM == $error_no ) {
+			// 認証問題.
 			$ret_code = CERTIFICATE_ERROR;
 		} elseif ( CURLE_SSL_CACERT == $error_no ) {
+			// 認証問題.
 			$ret_code = CERTIFICATE_ERROR;
 		} elseif ( CURLE_SSL_CACERT_BADFILE == $error_no ) {
+			// 認証問題.
 			$ret_code = CERTIFICATE_ERROR;
 		} elseif ( CURLE_HTTP_RETURNED_ERROR == $error_no ) {
+			// HTTP Return code error.
 			$ret_code = KS_CONNECT_ERROR;
 		} else {
+			// その他のエラー.
 			$ret_code = KS_CONNECT_ERROR;
 		}
 		$this->result_message = $ret_code . ': ' . $error_msg;
 
+		// 証明書ファイルの状態チェック.
 		if ( ! file_exists( $this->client_certificate_path ) ) {
 			$this->result_message .= '(file is not exists: ' . $this->client_certificate_path . ')';
 		} elseif ( ! is_readable( $this->client_certificate_path ) ) {
@@ -1189,33 +1206,34 @@ class Https_Request_Sender {
 	 */
 	public function parse_response( $data ) {
 
-		/* レスポンス受信 */
+		// レスポンス受信.
 		$line           = null;
 		$ret_code       = HTTP_STATUS_INIT_VALUE;
 		$res_body_start = 0;
 		$lines          = explode( LINE_SEPARATOR, $data );
 
-		/* ヘッダまでを読み込む */
+		// ヘッダまでを読み込む.
 		foreach ( $lines as $i => $line ) {
 			if ( String_Utitily::is_empty( $line ) ) {
 				break;
 			}
 			$res_body_start += strlen( $line ) + strlen( LINE_SEPARATOR );
 			if ( HTTP_STATUS_INIT_VALUE === $ret_code ) {
-				/* ステータスの解析 */
+				// ステータスの解析.
 				$ret_code = $this->parse_status_line( $line );
 				if ( true === $ret_code ) {
 					continue;
 				}
 				return $ret_code;
 			}
-			/* ヘッダの解析 */
+			// ヘッダの解析.
 			if ( ! $this->parse_response_header( $line ) ) {
 				continue;
 			}
 		}
 
-		$info                = curl_getinfo( $this->ch );
+		$info = curl_getinfo( $this->ch );
+		// linuxサーバでheader_sizeに誤った値が設定される事象が見られたためsize_downloadでキャプチャしている.
 		$res_body_start      = -( $info['size_download'] );
 		$this->response_body = substr( $data, $res_body_start );
 
@@ -1224,26 +1242,31 @@ class Https_Request_Sender {
 
 	/**
 	 * ステータスラインを解析
+	 * (HTTP-Version SP Status-Code SP Reason-Phrase CRLF)
 	 *
 	 * @param  string $line ステータスライン.
 	 * @return mixed TRUE:成功、他:エラーコード
 	 */
 	public function parse_status_line( $line ) {
 		if ( String_Utitily::is_empty( $line ) ) {
+			// 不正なステータスコードを受け取った.
 			return KS_CONNECT_ERROR;
 		}
 
 		$status_line = String_Utitily::split( $line, ' ', 3 );
 
 		if ( String_Utitily::is_numeric( $status_line[1] ) ) {
+			// 不正なステータスコードを受け取った.
 			$this->status_code = intval( $status_line[1] );
 		} else {
 			return KS_CONNECT_ERROR;
 		}
 		if ( strpos( $status_line[0], 'HTTP/' ) != 0 || ! String_Utitily::is_numeric_length( $status_line[1], 3 ) ) {
+			// 不正なステータスコードを受け取った.
 			return KS_CONNECT_ERROR;
 		}
 		if ( ! ( ( 200 <= $this->status_code ) && ( $this->status_code <= 206 ) ) ) {
+			// HTTP Status が Success Code (200 - 206) でない場合.
 			return KS_CONNECT_ERROR;
 		}
 		return true;
@@ -1258,14 +1281,17 @@ class Https_Request_Sender {
 	 */
 	public function parse_response_header( $line ) {
 		if ( String_Utitily::is_empty( $line ) ) {
+			// HEADER終了.
 			return false;
 		}
 
+		// HEADER.
 		$header_str = String_Utitily::split( $line, ':', 2 );
 		if ( null == $this->response_header ) {
 			$this->response_header = array();
 		}
 		if ( 1 == count( $header_str ) || 0 == strlen( trim( $header_str[1] ) ) ) {
+			// 値が存在しない or 値が空文字列.
 			$this->response_header[ $header_str[0] ] = null;
 		} else {
 			$this->response_header[ $header_str[0] ] = trim( $header_str[1] );
@@ -1277,6 +1303,7 @@ class Https_Request_Sender {
 	 * Close curl
 	 */
 	public function close_curl() {
+		// プロキシソケットCLOSE.
 		if ( null != $this->ch ) {
 			curl_close( $this->ch );
 			$this->ch = null;
@@ -1525,7 +1552,7 @@ class String_Utitily {
 				}
 			}
 			if ( $pos == strlen( $str ) ) {
-				$list[] = ''; /* the last is the delimiter. */
+				$list[] = ''; // the last is the delimiter.
 			} elseif ( $pos < strlen( $str ) ) {
 				$list[] = substr( $str, $pos );
 			}
@@ -1541,7 +1568,7 @@ class String_Utitily {
 
 		$rs_cnt = count( $rs );
 		if ( ( 0 < $limit ) && ( $limit < $rs_cnt ) ) {
-			/* limit より、分割数が多い場合、分割数を limit に合わせる */
+			// limit より、分割数が多い場合、分割数を limit に合わせる.
 			$temp = array();
 			$pos  = 0;
 			for ( $i = 0; $i < $limit - 1; $i++ ) {

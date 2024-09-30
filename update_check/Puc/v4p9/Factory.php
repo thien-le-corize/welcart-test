@@ -50,7 +50,7 @@ if ( !class_exists('Puc_v4p9_Factory', false) ):
 				throw new RuntimeException(sprintf(
 					'The update checker cannot determine if "%s" is a plugin or a theme. ' .
 					'This is a bug. Please contact the PUC developer.',
-					htmlentities($fullPath)
+					htmlentities( $fullPath, ENT_COMPAT )
 				));
 			}
 
@@ -72,9 +72,9 @@ if ( !class_exists('Puc_v4p9_Factory', false) ):
 				trigger_error(
 					sprintf(
 						'PUC %s does not support updates for %ss %s',
-						htmlentities(self::$latestCompatibleVersion),
+						htmlentities( self::$latestCompatibleVersion, ENT_COMPAT ),
 						strtolower($type),
-						$service ? ('hosted on ' . htmlentities($service)) : 'using JSON metadata'
+						$service ? ( 'hosted on ' . htmlentities( $service, ENT_COMPAT ) ) : 'using JSON metadata'
 					),
 					E_USER_ERROR
 				);
@@ -90,8 +90,8 @@ if ( !class_exists('Puc_v4p9_Factory', false) ):
 				if ( $apiClass === null ) {
 					trigger_error(sprintf(
 						'PUC %s does not support %s',
-						htmlentities(self::$latestCompatibleVersion),
-						htmlentities($service)
+						htmlentities( self::$latestCompatibleVersion, ENT_COMPAT ),
+						htmlentities( $service, ENT_COMPAT )
 					), E_USER_ERROR);
 					return null;
 				}

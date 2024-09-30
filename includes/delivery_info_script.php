@@ -65,13 +65,14 @@ jQuery( function($) {';
 	}
 
 	/* ItemShipping of goods that are in the cart.(カートに入っている商品の発送日目安) */
-	$shipping   = 0;
-	$cart       = $usces->cart->get_cart();
-	$cart_count = ( $cart && is_array( $cart ) ) ? count( $cart ) : 0;
+	$shipping         = 0;
+	$cart             = $usces->cart->get_cart();
+	$cart_count       = ( $cart && is_array( $cart ) ) ? count( $cart ) : 0;
+	$shipping_rule_ex = apply_filters( 'usces_filter_item_shipping_rule_ex', 9 );
 	for ( $i = 0; $i < $cart_count; $i++ ) {
 		$cart_row      = $cart[ $i ];
 		$item_shipping = $usces->getItemShipping( $cart_row['post_id'] );
-		if ( 0 === (int) $item_shipping || 9 === (int) $item_shipping ) {
+		if ( 0 === (int) $item_shipping || $shipping_rule_ex === (int) $item_shipping ) {
 			$shipping = 0;
 			break;
 		}

@@ -2,22 +2,22 @@ jQuery( document ).ready( function( $ ) {
 
 	$( document ).on( "click", ".card-update", function( e ) {
 		var update_mode = $( this ).attr( "data-update_mode" );
-		var message = "";
+		var check = true;
 		if ( "" == $( "#card_number" ).val() ) {
-			message += paygent_params.message.error_card_number + "\n";
+			check = false;
 		}
 		if ( undefined == $( "#expire_year" ).get( 0 ) || undefined == $( "#expire_month" ).get( 0 ) ) {
-			message += paygent_params.message.error_card_expire + "\n";
+			check = false;
 		} else if ( "" == $( "#expire_year option:selected" ).val() || "" == $( "#expire_month option:selected" ).val() ) {
-			message += paygent_params.message.error_card_expire + "\n";
+			check = false;
 		}
 		if ( "on" == paygent_params.use_card_conf_number ) {
 			if ( "" == $( "#cvc" ).val() ) {
-				message += paygent_params.message.error_card_cvc + "\n";
+				check = false;
 			}
 		}
-		if ( "" != message ) {
-			alert( message );
+		if( !check ) {
+			alert( paygent_params.message.error_card_number );
 			return false;
 		}
 

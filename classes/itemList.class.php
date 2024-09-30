@@ -77,40 +77,60 @@ class dataList {
 
 		$this->SetParam();
 		$this->SetTotalRow();
+
+
 		switch ( $this->action ) {
 
 			case 'searchIn':
+				check_admin_referer( 'item_master_list', 'wc_nonce' );
 				$res = $this->GetRows();
 				break;
 
 			case 'searchOut':
+				check_admin_referer( 'item_master_list', 'wc_nonce' );
 				$res = $this->GetRows();
 				break;
 
 			case 'changeSort':
+				check_admin_referer( 'item_master_list', 'wc_nonce' );
 				$res = $this->GetRows();
 				break;
 
 			case 'changePage':
+				check_admin_referer( 'item_master_list', 'wc_nonce' );
 				$res = $this->GetRows();
 				break;
 
 			case 'collective_zaiko':
+				if ( ! current_user_can( 'wel_others_products' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
+				}
+				check_admin_referer( 'item_master_list', 'wc_nonce' );
 				usces_all_change_zaiko( $this );
 				$res = $this->GetRows();
 				break;
 
 			case 'collective_display_status':
+				if ( ! current_user_can( 'wel_others_products' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
+				}
+				check_admin_referer( 'item_master_list', 'wc_nonce' );
 				usces_all_change_itemdisplay( $this );
 				$res = $this->GetRows();
 				break;
 
 			case 'collective_delete':
+				if ( ! current_user_can( 'wel_others_products' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
+				}
+				check_admin_referer( 'item_master_list', 'wc_nonce' );
 				usces_all_delete_itemdata( $this );
 				$res = $this->GetRows();
 				break;
 
 			case 'refresh':
+				check_admin_referer( 'item_master_list', 'wc_nonce' );
+
 			default:
 				$res = $this->GetRows();
 				break;
@@ -197,10 +217,18 @@ class dataList {
 					$this->sortSwitchs[ $key ] = 'ASC';
 				}
 			} else {
-				$this->sortColumn                       = str_replace( '(', '', $_REQUEST['changeSort'] );
-				$this->sortColumn                       = str_replace( ',', '', $this->sortColumn );
-				$this->sortSwitchs[ $this->sortColumn ] = str_replace( '(', '', $_REQUEST['switch'] );
-				$this->sortSwitchs[ $this->sortColumn ] = str_replace( ',', '', $this->sortSwitchs[ $this->sortColumn ] );
+				// Validate sortColumn.
+				if ( in_array( $_REQUEST['changeSort'], $this->columns ) ) {
+					$this->sortColumn = $_REQUEST['changeSort'];
+				} else {
+					$this->sortColumn = 'ID'; // default.
+				}
+				// Validate sortSwitchs.
+				if (isset($_REQUEST['switch']) && in_array($_REQUEST['switch'], array('ASC', 'DESC'))) {
+					$this->sortSwitchs[$this->sortColumn] = $_REQUEST['switch'];
+				} else {
+					$this->sortSwitchs[$this->sortColumn] = 'DESC'; // default.
+				}
 			}
 
 			$this->currentPage        = ( isset( $this->data_cookie['currentPage'] ) ) ? $this->data_cookie['currentPage'] : $this->userHeaderNames;
@@ -361,45 +389,51 @@ class dataList {
 	 * @return dataList $searchSql string search sql condition.
 	 */
 	public function setSearchSql() {
+		global $wpdb;
 		switch ( $this->arr_search['column'] ) {
 			case 'post_id':
-				$column            = 'post.ID';
-				$have_post_id_from = ! empty( $this->arr_search['word']['post_id_from'] );
-				$have_post_id_to   = ! empty( $this->arr_search['word']['post_id_to'] );
+				$column       = 'post.ID';
+				$post_id_from = isset( $this->arr_search['word']['post_id_from'] ) ? $this->arr_search['word']['post_id_from'] : '';
+				$post_id_to   = isset( $this->arr_search['word']['post_id_to'] ) ? $this->arr_search['word']['post_id_to'] : '';
 
-				if ( $have_post_id_from ) {
-					$this->searchSql = $column . '>=' . esc_sql( $this->arr_search['word']['post_id_from'] );
+				if ( ! empty( $post_id_from ) ) {
+					$this->searchSql = $wpdb->prepare( $column . ' >= %d', (int) $post_id_from );
 				}
 
-				if ( $have_post_id_from && $have_post_id_to ) {
+				if ( ! empty( $post_id_from ) && ! empty( $post_id_to ) ) {
 					$this->searchSql .= ' AND ';
 				}
 
-				if ( $have_post_id_to ) {
-					$this->searchSql .= $column . '<=' . esc_sql( $this->arr_search['word']['post_id_to'] );
+				if ( ! empty( $post_id_to ) ) {
+					$this->searchSql .= $wpdb->prepare( $column . ' <= %d', (int) $post_id_to );
 				}
 				break;
 			case 'item_code':
-				$this->searchSql =  'item.itemCode LIKE '."'%" . esc_sql( $this->arr_search['word']['item_code'] ) . "%'";
+				$item_code = isset( $this->arr_search['word']['item_code'] ) ? $this->arr_search['word']['item_code'] : '';
+				$this->searchSql =  'item.itemCode LIKE '."'%" . esc_sql( $item_code) . "%'";
 				break;
 			case 'item_name':
-				$this->searchSql = 'item.itemName LIKE '."'%" . esc_sql( $this->arr_search['word']['item_name'] ) . "%'";
+				$item_name = isset( $this->arr_search['word']['item_name'] ) ? $this->arr_search['word']['item_name'] : '';
+				$this->searchSql = 'item.itemName LIKE '."'%" . esc_sql( $item_name) . "%'";
 				break;
 			case 'post_title':
-				$this->searchSql = 'post.post_title LIKE '."'%" . esc_sql( $this->arr_search['word']['post_title'] ) . "%'";
+				$post_title = isset( $this->arr_search['word']['post_title'] ) ? $this->arr_search['word']['post_title'] : '';
+				$this->searchSql = 'post.post_title LIKE '."'%" . esc_sql( $post_title ) . "%'";
 				break;
 			case 'zaiko_num':
 				$this->searchSql = "sku.stocknum = '0'";
 				break;
 			case 'zaiko':
-				$this->searchSql = "sku.stock = '" . esc_sql( $this->arr_search['word']['zaiko'] ) . "'";
+				$zaiko = isset( $this->arr_search['word']['zaiko'] ) ? $this->arr_search['word']['zaiko'] : '';
+				$this->searchSql = "sku.stock = '" . esc_sql( $zaiko ) . "'";
 				break;
 			case 'category':
-				$column = 'tt.term_id';
-				$this->searchSql = "tt.term_id = '" . esc_sql( $this->arr_search['word']['category'] ) . "'";
+				$category = isset( $this->arr_search['word']['category'] ) ? $this->arr_search['word']['category'] : '';
+				$this->searchSql = "tt.term_id = '" . esc_sql( $category ) . "'";
 				break;
 			case 'display_status':
-				$this->searchSql = "post.post_status = '" . esc_sql( $this->arr_search['word']['display_status'] ) . "'";
+				$display_status = isset( $this->arr_search['word']['display_status'] ) ? $this->arr_search['word']['display_status'] : '';
+				$this->searchSql = "post.post_status = '" . esc_sql( $display_status ) . "'";
 				break;
 		}
 	}
@@ -441,8 +475,12 @@ class dataList {
 			$html .= '<li class="navigationStr">first&lt;&lt;</li>' . "\n";
 			$html .= '<li class="navigationStr">prev&lt;</li>' . "\n";
 		} else {
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=1">first&lt;&lt;</a></li>' . "\n";
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=' . $this->previousPage . '">prev&lt;</a></li>' . "\n";
+			$url       = site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=1';
+			$nonce_url = wp_nonce_url( $url, 'item_master_list', 'wc_nonce' );
+			$html     .= '<li class="navigationStr"><a href="' . $nonce_url . '">first&lt;&lt;</a></li>' . "\n";
+			$url       = site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=' . $this->previousPage;
+			$nonce_url = wp_nonce_url( $url, 'item_master_list', 'wc_nonce' );
+			$html     .= '<li class="navigationStr"><a href="' . $nonce_url . '">prev&lt;</a></li>' . "\n";
 		}
 		if ( $this->selectedRow > 0 ) {
 			$box_count = count( $box );
@@ -450,7 +488,9 @@ class dataList {
 				if ( $box[ $i ] == $this->currentPage ) {
 					$html .= '<li class="navigationButtonSelected">' . $box[ $i ] . '</li>' . "\n";
 				} else {
-					$html .= '<li class="navigationButton"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=' . $box[ $i ] . '">' . $box[ $i ] . '</a></li>' . "\n";
+					$url       = site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=' . $box[ $i ];
+					$nonce_url = wp_nonce_url( $url, 'item_master_list', 'wc_nonce' );
+					$html .= '<li class="navigationButton"><a href="' . $nonce_url . '">' . $box[ $i ] . '</a></li>' . "\n";
 				}
 			}
 		}
@@ -458,16 +498,21 @@ class dataList {
 			$html .= '<li class="navigationStr">&gt;next</li>' . "\n";
 			$html .= '<li class="navigationStr">&gt;&gt;last</li>' . "\n";
 		} else {
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=' . $this->nextPage . '">&gt;next</a></li>' . "\n";
-			$html .= '<li class="navigationStr"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=' . $this->lastPage . '">&gt;&gt;last</a></li>' . "\n";
+			$url       = site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=' . $this->nextPage;
+			$nonce_url = wp_nonce_url( $url, 'item_master_list', 'wc_nonce' );
+			$html .= '<li class="navigationStr"><a href="' . $nonce_url . '">&gt;next</a></li>' . "\n";
+			$url       = site_url() . '/wp-admin/admin.php?page=usces_itemedit&changePage=' . $this->lastPage;
+			$nonce_url = wp_nonce_url( $url, 'item_master_list', 'wc_nonce' );
+			$html .= '<li class="navigationStr"><a href="' . $nonce_url . '">&gt;&gt;last</a></li>' . "\n";
 		}
 		if ( 'OFF' == $this->searchSwitchStatus ) {
 			$html .= '<li class="navigationStr"><a style="cursor:pointer;" id="searchVisiLink">' . __( 'Show the Operation field', 'usces' ) . '</a>' . "\n";
 		} else {
 			$html .= '<li class="navigationStr"><a style="cursor:pointer;" id="searchVisiLink">' . __( 'Hide the Operation field', 'usces' ) . '</a>' . "\n";
 		}
-
-		$html .= '<li class="refresh"><a href="' . site_url() . '/wp-admin/admin.php?page=usces_itemedit&refresh">' . __( 'updates it to latest information', 'usces' ) . '</a></li>' . "\n";
+		$url       = site_url() . '/wp-admin/admin.php?page=usces_itemedit&refresh';
+		$nonce_url = wp_nonce_url( $url, 'item_master_list', 'wc_nonce' );
+		$html .= '<li class="refresh"><a href="' . $nonce_url . '">' . __( 'updates it to latest information', 'usces' ) . '</a></li>' . "\n";
 		$html .= '</ul>' . "\n";
 
 		$this->dataTableNavigation = $html;
@@ -497,14 +542,18 @@ class dataList {
 					$switch = 'ASC';
 				}
 				if ( ( version_compare( USCES_MYSQL_VERSION, '5.0.0', '>=' ) && ( 'item_name' == $value || 'item_code' == $value ) ) || ( version_compare( USCES_MYSQL_VERSION, '5.0.0', '<' ) && 'post_title' == $value ) ) {
-					$this->headers[ $value ] = '<a href="' . site_url() . '/wp-admin/admin.php?page=usces_itemedit&changeSort=' . $value . '&switch=' . $switch . '"><span class="sortcolumn">' . $key . ' ' . $str . '</span></a>';
+					$url                     = site_url() . '/wp-admin/admin.php?page=usces_itemedit&changeSort=' . $value . '&switch=' . $switch;
+					$nonce_url               = wp_nonce_url( $url, 'item_master_list', 'wc_nonce' );
+					$this->headers[ $value ] = '<a href="' . $nonce_url . '"><span class="sortcolumn">' . $key . ' ' . $str . '</span></a>';
 				} else {
 					$this->headers[ $value ] = '<span class="sortcolumn">' . $key . '</span>';
 				}
 			} else {
 				$switch = $this->sortSwitchs[ $value ];
 				if ( ( version_compare( USCES_MYSQL_VERSION, '5.0.0', '>=' ) && ( 'item_name' == $value || 'item_code' == $value ) ) || ( version_compare( USCES_MYSQL_VERSION, '5.0.0', '<' ) && 'post_title' == $value ) ) {
-					$this->headers[ $value ] = '<a href="' . site_url() . '/wp-admin/admin.php?page=usces_itemedit&changeSort=' . $value . '&switch=' . $switch . '"><span>' . $key . '</span></a>';
+					$url                     = site_url() . '/wp-admin/admin.php?page=usces_itemedit&changeSort=' . $value . '&switch=' . $switch;
+					$nonce_url               = wp_nonce_url( $url, 'item_master_list', 'wc_nonce' );
+					$this->headers[ $value ] = '<a href="' . $nonce_url . '"><span>' . $key . '</span></a>';
 				} else {
 					$this->headers[ $value ] = '<span class="sortcolumn">' . $key . '</span>';
 				}

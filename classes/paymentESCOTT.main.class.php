@@ -3,10 +3,10 @@
  * Settlement Class.
  * e-SCOTT Smart
  *
- * @package  Welcart
- * @author   Collne Inc.
- * @version  1.2.0
- * @since    1.9.0
+ * @package Welcart
+ * @author  Welcart Inc.
+ * @version 1.2.0
+ * @since   1.9.0
  */
 
 /**
@@ -828,16 +828,16 @@ class ESCOTT_MAIN {
 		if ( $this->acting_flg_card === $acting_flg ) {
 			$acting_opts = $this->get_acting_settings();
 			if ( 'on' === $acting_opts['card_activate'] ) {
-				$cardno       = filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING );
-				$expyy        = filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING );
-				$expmm        = filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING );
-				$cardlast4    = filter_input( INPUT_POST, 'cardlast4', FILTER_SANITIZE_STRING );
-				$quick_member = filter_input( INPUT_POST, 'quick_member', FILTER_SANITIZE_STRING );
+				$cardno       = filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT );
+				$expyy        = filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT );
+				$expmm        = filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT );
+				$cardlast4    = filter_input( INPUT_POST, 'cardlast4', FILTER_DEFAULT );
+				$quick_member = filter_input( INPUT_POST, 'quick_member', FILTER_DEFAULT );
 				$html         = '<form id="purchase_form" action="' . USCES_CART_URL . '" method="post" onKeyDown="if(event.keyCode == 13){return false;}">
 					<input type="hidden" name="cardno" value="' . trim( $cardno ) . '">
 					<input type="hidden" name="cardlast4" value="' . trim( $cardlast4 ) . '">';
 				if ( 'on' === $acting_opts['seccd'] ) {
-					$seccd = filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING );
+					$seccd = filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT );
 					$html .= '
 					<input type="hidden" name="seccd" value="' . trim( $seccd ) . '">';
 				}
@@ -853,13 +853,13 @@ class ESCOTT_MAIN {
 						<input name="purchase" type="submit" id="purchase_button" class="checkout_button" value="' . apply_filters( 'usces_filter_confirm_checkout_button_value', __( 'Checkout', 'usces' ) ) . '"' . apply_filters( 'usces_filter_confirm_nextbutton', null ) . $purchase_disabled . ' />
 					</div>
 					<input type="hidden" name="_nonce" value="' . wp_create_nonce( $acting_flg ) . '">';
-				$card_change = filter_input( INPUT_POST, 'card_change', FILTER_SANITIZE_STRING );
+				$card_change = filter_input( INPUT_POST, 'card_change', FILTER_DEFAULT );
 				if ( '1' === $card_change ) {
 					$html .= '
 					<input type="hidden" name="card_change" value="1">';
 				}
 			} elseif ( 'link' === $acting_opts['card_activate'] ) {
-				$quick_member = filter_input( INPUT_POST, 'quick_member', FILTER_SANITIZE_STRING );
+				$quick_member = filter_input( INPUT_POST, 'quick_member', FILTER_DEFAULT );
 				$html         = '<form id="purchase_form" action="' . USCES_CART_URL . '" method="post" onKeyDown="if(event.keyCode == 13){return false;}">
 					<input type="hidden" name="rand" value="' . $rand . '">
 					<input type="hidden" name="quick_member" value="' . $quick_member . '">
@@ -870,21 +870,24 @@ class ESCOTT_MAIN {
 					</div>
 					<input type="hidden" name="_nonce" value="' . wp_create_nonce( $acting_flg ) . '">';
 			} elseif ( 'token' === $acting_opts['card_activate'] ) {
-				$token        = filter_input( INPUT_POST, 'token', FILTER_SANITIZE_STRING );
-				$paytype      = filter_input( INPUT_POST, 'paytype', FILTER_SANITIZE_STRING );
-				$quick_member = filter_input( INPUT_POST, 'quick_member', FILTER_SANITIZE_STRING );
+				$token        = filter_input( INPUT_POST, 'token', FILTER_DEFAULT );
+				$paytype      = filter_input( INPUT_POST, 'paytype', FILTER_DEFAULT );
+				$quick_member = filter_input( INPUT_POST, 'quick_member', FILTER_DEFAULT );
+				$billingname  = filter_input( INPUT_POST, 'billingname', FILTER_DEFAULT );
 				$html         = '<form id="purchase_form" action="' . USCES_CART_URL . '" method="post" onKeyDown="if(event.keyCode == 13){return false;}">
 					<input type="hidden" name="token" value="' . trim( $token ) . '">
 					<input type="hidden" name="paytype" value="' . trim( $paytype ) . '">
 					<input type="hidden" name="rand" value="' . $rand . '">
 					<input type="hidden" name="quick_member" value="' . $quick_member . '">
+					<input type="hidden" name="billingname" value="' . $billingname . '">
+					<input type="hidden" name="billingemail" value="' . $usces_entries['customer']['mailaddress1'] . '">
 					<div class="send">
 						' . apply_filters( 'usces_filter_confirm_before_backbutton', null, $payments, $acting_flg, $rand ) . '
 						<input name="backDelivery" type="submit" id="back_button" class="back_to_delivery_button" value="' . __( 'Back', 'usces' ) . '"' . apply_filters( 'usces_filter_confirm_prebutton', null ) . ' />
 						<input name="purchase" type="submit" id="purchase_button" class="checkout_button" value="' . apply_filters( 'usces_filter_confirm_checkout_button_value', __( 'Checkout', 'usces' ) ) . '"' . apply_filters( 'usces_filter_confirm_nextbutton', null ) . $purchase_disabled . ' />
 					</div>
 					<input type="hidden" name="_nonce" value="' . wp_create_nonce( $acting_flg ) . '">';
-				$card_change  = filter_input( INPUT_POST, 'card_change', FILTER_SANITIZE_STRING );
+				$card_change  = filter_input( INPUT_POST, 'card_change', FILTER_DEFAULT );
 				if ( '1' === $card_change ) {
 					$html .= '
 					<input type="hidden" name="card_change" value="1">';
@@ -931,23 +934,24 @@ class ESCOTT_MAIN {
 		$acting_opts = $this->get_acting_settings();
 		if ( 'on' === $acting_opts['card_activate'] ) {
 			$html .= '
-			<input type="hidden" name="cardno" value="' . filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING ) . '">
-			<input type="hidden" name="cardlast4" value="' . filter_input( INPUT_POST, 'cardlast4', FILTER_SANITIZE_STRING ) . '">';
+			<input type="hidden" name="cardno" value="' . filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT ) . '">
+			<input type="hidden" name="cardlast4" value="' . filter_input( INPUT_POST, 'cardlast4', FILTER_DEFAULT ) . '">';
 			if ( 'on' === $acting_opts['seccd'] ) {
 				$html .= '
-				<input type="hidden" name="seccd" value="' . filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING ) . '">';
+				<input type="hidden" name="seccd" value="' . filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT ) . '">';
 			}
 			$html .= '
-			<input type="hidden" name="expyy" value="' . filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING ) . '">
-			<input type="hidden" name="expmm" value="' . filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING ) . '">
+			<input type="hidden" name="expyy" value="' . filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT ) . '">
+			<input type="hidden" name="expmm" value="' . filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT ) . '">
 			<input type="hidden" name="offer[paytype]" value="' . $usces_entries['order']['paytype'] . '">
-			<input type="hidden" name="quick_member" value="' . filter_input( INPUT_POST, 'quick_member', FILTER_SANITIZE_STRING ) . '">';
+			<input type="hidden" name="quick_member" value="' . filter_input( INPUT_POST, 'quick_member', FILTER_DEFAULT ) . '">';
 
 		} elseif ( 'token' === $acting_opts['card_activate'] ) {
 			$html .= '
 			<input type="hidden" name="token" value="' . filter_input( INPUT_POST, 'token' ) . '">
-			<input type="hidden" name="paytype" value="' . filter_input( INPUT_POST, 'paytype', FILTER_SANITIZE_STRING ) . '">
-			<input type="hidden" name="quick_member" value="' . filter_input( INPUT_POST, 'quick_member', FILTER_SANITIZE_STRING ) . '">';
+			<input type="hidden" name="paytype" value="' . filter_input( INPUT_POST, 'paytype', FILTER_DEFAULT ) . '">
+			<input type="hidden" name="quick_member" value="' . filter_input( INPUT_POST, 'quick_member', FILTER_DEFAULT ) . '">
+			<input type="hidden" name="billingname" value="' . filter_input( INPUT_POST, 'billingname', FILTER_DEFAULT ) . '">';
 		}
 		return $html;
 	}
@@ -974,7 +978,7 @@ class ESCOTT_MAIN {
 		$encrypt_value = base64_decode( filter_input( INPUT_POST, 'EncryptValue' ) );
 		$query         = openssl_decrypt( $encrypt_value, $algo, $key, OPENSSL_RAW_DATA, $iv );
 		parse_str( $query, $results );
-		if ( isset( $results['ResponseCd'] ) && isset( $results['SecureResultCode'] ) && ( isset( $results['OperateId'] ) && ( '3Secure' === $results['OperateId'] || '4MemAdd' === $results['OperateId'] || '4MemChg' === $results['OperateId'] ) ) ) { // phpcs:ignore
+		if ( isset( $results['ResponseCd'] ) && isset( $results['SecureResultCode'] ) && ( isset( $results['OperateId'] ) && ( '3Secure' === $results['OperateId'] || '4MemAdd' === $results['OperateId'] || '4MemChg' === $results['OperateId'] ) ) ) {
 		} else {
 			return;
 		}
@@ -993,7 +997,7 @@ class ESCOTT_MAIN {
 						array(
 							'usces_page' => $usces_page,
 							're-enter'   => 1,
-							'ResponseCd' => $results['ResponseCd'],
+							'ResponseCd' => 'NG',
 						),
 						USCES_MEMBER_URL
 					)
@@ -1027,10 +1031,10 @@ class ESCOTT_MAIN {
 
 				/* 3Dセキュアのresを送る */
 				if ( isset( $results['SecureResultCode'] ) ) {
-					echo '<input type="hidden" name="SecureResultCode" value="' . $results['SecureResultCode'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="SecureResultCode" value="' . $results['SecureResultCode'] . '" />' . "\n";
 				}
 				if ( isset( $results['ResponseCd'] ) ) {
-					echo '<input type="hidden" name="ResponseCd" value="' . $results['ResponseCd'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="ResponseCd" value="' . $results['ResponseCd'] . '" />' . "\n";
 				}
 				?>
 <input type="hidden" name="done3d_member" value="1" />
@@ -1069,7 +1073,7 @@ class ESCOTT_MAIN {
 					add_query_arg(
 						array(
 							'MerchantFree2' => $results['MerchantFree2'],
-							'ResponseCd'    => $results['ResponseCd'],
+							'ResponseCd'    => 'NG',
 							'acting'        => $this->acting_card,
 							'acting_return' => 0,
 							'result'        => 0,
@@ -1099,31 +1103,31 @@ class ESCOTT_MAIN {
 
 				/* 3Dセキュアのresを送る */
 				if ( isset( $results['EncodeXId3D'] ) ) {
-					echo '<input type="hidden" name="EncodeXId3D" value="' . $results['EncodeXId3D'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="EncodeXId3D" value="' . $results['EncodeXId3D'] . '" />' . "\n";
 				}
 				if ( isset( $results['MessageVersionNo3D'] ) ) {
-					echo '<input type="hidden" name="MessageVersionNo3D" value="' . $results['MessageVersionNo3D'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="MessageVersionNo3D" value="' . $results['MessageVersionNo3D'] . '" />' . "\n";
 				}
 				if ( isset( $results['TransactionStatus3D'] ) ) {
-					echo '<input type="hidden" name="TransactionStatus3D" value="' . $results['TransactionStatus3D'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="TransactionStatus3D" value="' . $results['TransactionStatus3D'] . '" />' . "\n";
 				}
 				if ( isset( $results['CAVVAlgorithm3D'] ) ) {
-					echo '<input type="hidden" name="CAVVAlgorithm3D" value="' . $results['CAVVAlgorithm3D'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="CAVVAlgorithm3D" value="' . $results['CAVVAlgorithm3D'] . '" />' . "\n";
 				}
 				if ( isset( $results['ECI3D'] ) ) {
-					echo '<input type="hidden" name="ECI3D" value="' . $results['ECI3D'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="ECI3D" value="' . $results['ECI3D'] . '" />' . "\n";
 				}
 				if ( isset( $results['CAVV3D'] ) ) {
-					echo '<input type="hidden" name="CAVV3D" value="' . $results['CAVV3D'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="CAVV3D" value="' . $results['CAVV3D'] . '" />' . "\n";
 				}
 				if ( isset( $results['SecureResultCode'] ) ) {
-					echo '<input type="hidden" name="SecureResultCode" value="' . $results['SecureResultCode'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="SecureResultCode" value="' . $results['SecureResultCode'] . '" />' . "\n";
 				}
 				if ( isset( $results['DSTransactionId'] ) ) {
-					echo '<input type="hidden" name="DSTransactionId" value="' . $results['DSTransactionId'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="DSTransactionId" value="' . $results['DSTransactionId'] . '" />' . "\n";
 				}
 				if ( isset( $results['ThreeDSServerTransactionId'] ) ) {
-					echo '<input type="hidden" name="ThreeDSServerTransactionId" value="' . $results['ThreeDSServerTransactionId'] . '" />' . "\n"; // phpcs:ignore
+					echo '<input type="hidden" name="ThreeDSServerTransactionId" value="' . $results['ThreeDSServerTransactionId'] . '" />' . "\n";
 				}
 				?>
 <input type="hidden" name="purchase" value="" />
@@ -1175,7 +1179,9 @@ class ESCOTT_MAIN {
 		$acting_opts = $this->get_acting_settings();
 		$token       = ( isset( $post_data['token'] ) ) ? trim( $post_data['token'] ) : '';
 		if ( ! empty( $token ) ) {
-			$params['Token'] = $token;
+			$params['Token']           = $token;
+			$params['BillingFullName'] = ( isset( $post_data['billingname'] ) ) ? trim( $post_data['billingname'] ) : '';
+			$params['BillingEmail']    = ( isset( $post_data['billingemail'] ) ) ? trim( $post_data['billingemail'] ) : '';
 		} elseif ( ! empty( $member_id ) && 'on' === $acting_opts['quickpay'] ) {
 			$response_member = $this->escott_member_reference( $member_id );
 			if ( 'OK' === $response_member['ResponseCd'] ) {
@@ -1243,8 +1249,10 @@ class ESCOTT_MAIN {
 			$params['KaiinId']   = $kaiin_id;
 			$params['KaiinPass'] = $kaiin_pass;
 		}
-		$params['ProcNo']      = usces_rand( 7 ); /* 適当な数値7桁 */
-		$params['RedirectUrl'] = $member_settlement_url;
+		$params['ProcNo']          = usces_rand( 7 ); /* 適当な数値7桁 */
+		$params['RedirectUrl']     = $member_settlement_url;
+		$params['BillingFullName'] = ( isset( $post_data['billingname'] ) ) ? trim( $post_data['billingname'] ) : '';
+		$params['BillingEmail']    = ( isset( $post_data['billingemail'] ) ) ? trim( $post_data['billingemail'] ) : '';
 
 		$query = http_build_query( $params );
 
@@ -1279,7 +1287,7 @@ class ESCOTT_MAIN {
 	public function pre_purchase() {
 		$acting_opts = $this->get_acting_settings();
 		if ( 'on' === $acting_opts['sec3d_activate'] && filter_input( INPUT_POST, 'done3d', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) && filter_input( INPUT_POST, 'rand', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ) {
-			usces_restore_order_acting_data( filter_input( INPUT_POST, 'rand', FILTER_SANITIZE_STRING ) );
+			usces_restore_order_acting_data( filter_input( INPUT_POST, 'rand', FILTER_DEFAULT ) );
 		}
 	}
 
@@ -1450,7 +1458,7 @@ class ESCOTT_MAIN {
 								add_query_arg(
 									array(
 										'MerchantFree2' => $response_token['MerchantFree2'],
-										'ResponseCd'    => $tokenresponsecd,
+										'ResponseCd'    => 'NG',
 										'acting'        => $this->acting_card,
 										'acting_return' => 0,
 										'result'        => 0,
@@ -1492,7 +1500,7 @@ class ESCOTT_MAIN {
 							add_query_arg(
 								array(
 									'MerchantFree2' => $response_member['MerchantFree2'],
-									'ResponseCd'    => $response_member['ResponseCd'],
+									'ResponseCd'    => 'NG',
 									'acting'        => $this->acting_card,
 									'acting_return' => 0,
 									'result'        => 0,
@@ -1590,7 +1598,7 @@ class ESCOTT_MAIN {
 						add_query_arg(
 							array(
 								'MerchantFree2' => $response_data['MerchantFree2'],
-								'ResponseCd'    => $response_data['ResponseCd'],
+								'ResponseCd'    => 'NG',
 								'acting'        => $this->acting_card,
 								'acting_return' => 0,
 								'result'        => 0,
@@ -1774,7 +1782,7 @@ class ESCOTT_MAIN {
 	 */
 	public function register_orderdata( $args ) {
 		global $usces;
-		extract( $args ); // phpcs:ignore
+		extract( $args );
 
 		$acting_flg = $payments['settlement'];
 		if ( ! in_array( $acting_flg, $this->pay_method, true ) ) {
@@ -1845,31 +1853,20 @@ class ESCOTT_MAIN {
 					<p>' . __( 'Please do not re-display this page.', 'usces' ) . '</p>
 					</div>';
 			} else {
-				$error_message = array();
-				$responsecd    = explode( '|', wp_unslash( $_REQUEST['ResponseCd'] ) );
-				foreach ( (array) $responsecd as $cd ) {
-					$error_message[] = $this->error_message( $cd );
-				}
-				$error_message = array_unique( $error_message );
-				if ( 0 < count( $error_message ) ) {
-					$html .= '<div class="error_page_mesage">
-						<p>' . __( 'Error code', 'usces' ) . '：' . wp_unslash( $_REQUEST['ResponseCd'] ) . '</p>';
-					foreach ( $error_message as $message ) {
-						$html .= '<p>' . $message . '</p>';
-					}
-					if ( 1 === count( (array) $responsecd ) && 'NG' === $responsecd[0] ) {
-					} else {
-						$back_url = add_query_arg(
-							array(
-								'backDelivery' => $this->acting_card,
-								're-enter'     => 1,
-							),
-							USCES_CART_URL
-						);
-						$html    .= '
-							<p class="return_settlement"><a href="' . $back_url . '">' . __( 'Card number re-enter', 'usces' ) . '</a></p>
-							</div>';
-					}
+				$responsecd = explode( '|', wp_unslash( $_REQUEST['ResponseCd'] ) );
+				$html      .= '<div class="error_page_mesage">';
+				$html      .= '<p>' . __( 'Credit card information is not appropriate.', 'usces' ) . '</p>';
+				if ( 1 === count( (array) $responsecd ) && 'NG' === $responsecd[0] ) {
+					$back_url = add_query_arg(
+						array(
+							'backDelivery' => $this->acting_card,
+							're-enter'     => 1,
+						),
+						USCES_CART_URL
+					);
+					$html    .= '
+						<p class="return_settlement"><a href="' . $back_url . '">' . __( 'Card number re-enter', 'usces' ) . '</a></p>
+						</div>';
 				}
 			}
 		} elseif ( $this->acting_flg_conv === $acting_flg ) {
@@ -1881,7 +1878,7 @@ class ESCOTT_MAIN {
 			$error_message = array_unique( $error_message );
 			if ( 0 < count( $error_message ) ) {
 				$html .= '<div class="error_page_mesage">
-					<p>' . __( 'Error code', 'usces' ) . '：' . wp_unslash( $_REQUEST['ResponseCd'] ) . '</p>';
+					<p>' . __( 'Error code', 'usces' ) . ' : ' . wp_unslash( $_REQUEST['ResponseCd'] ) . '</p>';
 				foreach ( $error_message as $message ) {
 					$html .= '<p>' . $message . '</p>';
 				}
@@ -2008,22 +2005,7 @@ class ESCOTT_MAIN {
 				wp_register_script( 'usces_cart_escott', USCES_FRONT_PLUGIN_URL . '/js/cart_escott.js', array( 'jquery' ), USCES_VERSION, true );
 				$escott_params                         = array();
 				$escott_params['sec3d_activate']       = $acting_opts['sec3d_activate'];
-				$escott_params['message']['agreement'] = __( '* Cautions on Use of Credit Cards', 'usces' ) . "\n"
-					. __( 'In order to prevent unauthorized use of your credit card through theft of information such as your credit card number, we use "EMV 3D Secure," an identity authentication service recommended by international brands.', 'usces' ) . "\n"
-					. __( 'In order to use EMV 3D Secure, it is necessary to send information about you to the card issuer.', 'usces' ) . "\n"
-					. __( 'Please read "* Provision of Personal Information to Third Parties" below and enter your card information only if you agree to the terms of the agreement.', 'usces' ) . "\n"
-					. __( '* Provision of Personal Information to Third Parties', 'usces' ) . "\n"
-					. __( 'The following personal information, etc. collected from customers will be provided to the issuer of the card being used by the customer for the purpose of detecting and preventing fraudulent use by the card issuer.', 'usces' ) . "\n"
-					. __( '"Membership information held by the business", "IP address", "device information", "Information on the Internet usage environment", and "Billing address".', 'usces' ) . "\n"
-					. __( 'If the issuer of the card you are using is located in a foreign country, these information may be transferred to the country to which such issuer belongs.', 'usces' ) . "\n"
-					. __( 'If you are a minor, you are required to obtain the consent of a person with parental authority or a guardian before using the Service.', 'usces' ) . "\n"
-					. __( '* Agreement to provide personal information to a third party', 'usces' ) . "\n"
-					. __( 'If you agree to the above "* Provision of Personal Information to Third Parties", please click "Agree" and proceed to enter your credit card information.', 'usces' ) . "\n"
-					. __( '* Safety Control Measures', 'usces' ) . "\n"
-					. __( 'We may provide all or part of the information obtained from our customers to subcontractors in the United States.', 'usces' ) . "\n"
-					. __( 'We will confirm that the subcontractor takes necessary and appropriate measures for the safe management of the information before storing it.', 'usces' ) . "\n"
-					. __( 'For an overview of the legal system regarding the protection of personal information in the relevant country, please check here.', 'usces' ) . "\n"
-					. 'https://www.ppc.go.jp/personalinfo/legal/kaiseihogohou/#gaikoku';
+				$escott_params['message']['agreement'] = $this->consent_message();
 				$escott_params['message']['agree']     = __( 'Agree', 'usces' );
 				$escott_params['message']['disagree']  = __( 'Disagree', 'usces' );
 				wp_localize_script( 'usces_cart_escott', 'escott_params', $escott_params );
@@ -2069,25 +2051,25 @@ jQuery(document).ready( function($) {
 			$acting_opts = $this->get_acting_settings();
 			if ( isset( $acting_opts['card_activate'] ) && 'on' === $acting_opts['card_activate'] ) {
 				if ( 'on' === $acting_opts['seccd'] ) {
-					if ( filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) === $this->paymod_id &&
-						! filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ) {
+					if ( filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) === $this->paymod_id &&
+						! filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ) {
 						$mes .= __( 'Please enter the card information correctly.', 'usces' ) . '<br />';
 					}
 				} else {
-					if ( filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) === $this->paymod_id &&
-						! filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ) {
+					if ( filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) === $this->paymod_id &&
+						! filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ) {
 						$mes .= __( 'Please enter the card information correctly.', 'usces' ) . '<br />';
 					}
 				}
 			} elseif ( isset( $acting_opts['card_activate'] ) && 'token' === $acting_opts['card_activate'] ) {
-				if ( ! filter_input( INPUT_POST, 'token', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ) {
+				if ( ! filter_input( INPUT_POST, 'token', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ) {
 					if ( $usces->is_member_logged_in() && 'on' === $acting_opts['quickpay'] ) {
-						$quick_member = filter_input( INPUT_POST, 'quick_member', FILTER_SANITIZE_STRING );
+						$quick_member = filter_input( INPUT_POST, 'quick_member', FILTER_DEFAULT );
 						if ( 'add' !== $quick_member ) {
 							if ( ! wel_check_credit_security() ) {
 								$mes .= __( 'Update has been locked. Please contact the store administrator.', 'usces' ) . '<br />';
@@ -2126,6 +2108,7 @@ jQuery(document).ready( function($) {
 					<input type="hidden" name="acting" value="' . $this->paymod_id . '" />
 					<input type="hidden" name="confirm" value="confirm" />
 					<input type="hidden" name="token" id="token" value="" />
+					<input type="hidden" name="billingname" id="billingname" value="" />
 					<input type="hidden" name="paytype" value="" />
 					<input type="hidden" name="quick_member" value="" />
 					<input type="hidden" name="card_change" value="" />';
@@ -2158,26 +2141,26 @@ jQuery(document).ready( function($) {
 			$card_change   = ( isset( $_REQUEST['card_change'] ) ) ? true : false;
 			if ( $card_change ) {
 				if ( 'on' === $acting_opts['seccd'] ) {
-					if ( filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) === $this->paymod_id &&
-						! filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ) {
+					if ( filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) === $this->paymod_id &&
+						! filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ) {
 						$back_delivery = true;
 					}
 				} else {
-					if ( filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) === $this->paymod_id &&
-						! filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ||
-						! filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE ) ) {
+					if ( filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) === $this->paymod_id &&
+						! filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ||
+						! filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE ) ) {
 						$back_delivery = true;
 					}
 				}
 			}
 
-			$cardno  = filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING );
-			$expyy   = filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING );
-			$expmm   = filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING );
+			$cardno  = filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT );
+			$expyy   = filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT );
+			$expmm   = filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT );
 			$paytype = ( isset( $usces_entries['order']['paytype'] ) ) ? esc_html( $usces_entries['order']['paytype'] ) : '01';
 
 			$html .= '<input type="hidden" name="acting" value="' . $this->paymod_id . '">';
@@ -2240,7 +2223,7 @@ jQuery(document).ready( function($) {
 					<td colspan="2"><input name="cardno" id="cardno" type="tel" value="' . $cardno . '" />' . $cardno_attention . $change . $quickpay . '</td>
 				</tr>';
 				if ( 'on' === $acting_opts['seccd'] ) {
-					$seccd           = filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING );
+					$seccd           = filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT );
 					$seccd_attention = apply_filters( 'usces_filter_seccd_attention', __( '(Single-byte numbers only)', 'usces' ) );
 					$html           .= '
 				<tr>
@@ -2270,6 +2253,13 @@ jQuery(document).ready( function($) {
 				$html .= '
 						</select>' . __( 'year', 'usces' ) . '
 					</td>
+				</tr>';
+
+				$cardname_attention = apply_filters( 'usces_filter_cardname_attention', __( '(Alphabetic characters only)', 'usces' ) . '<div class="attention">' . __( '* Use a space to separate the first and last name, and enter all characters in uppercase.', 'usces' ) . '</div>' );
+				$html              .= '
+				<tr>
+					<th scope="row">' . __( 'Card name', 'usces' ) . '</th>
+					<td colspan="2"><input name="billingname" type="text" value="" />' . $cardname_attention . '</td>
 				</tr>';
 			}
 
@@ -2424,7 +2414,7 @@ jQuery(document).ready( function($) {
 	 * @param  int    $post_id Post ID.
 	 * @return string
 	 */
-	public function set_uscesL10n( $l10n, $post_id ) { // phpcs:ignore
+	public function set_uscesL10n( $l10n, $post_id ) {
 		global $usces;
 
 		if ( $usces->is_cart_page( $_SERVER['REQUEST_URI'] ) && 'delivery' === $usces->page ) {
@@ -2456,7 +2446,7 @@ jQuery(document).ready( function($) {
 	public function front_ajax() {
 		global $usces;
 
-		$usces_ajax_action = filter_input( INPUT_POST, 'usces_ajax_action', FILTER_SANITIZE_STRING );
+		$usces_ajax_action = filter_input( INPUT_POST, 'usces_ajax_action', FILTER_DEFAULT );
 		switch ( $usces_ajax_action ) {
 			case 'escott_token_dialog':
 				if ( ! wp_verify_nonce( filter_input( INPUT_POST, 'wc_nonce', FILTER_DEFAULT ), 'wc_delivery_secure_nonce' ) ) {
@@ -2544,6 +2534,13 @@ jQuery(document).ready( function($) {
 					$html .= '
 							</select>' . __( 'year', 'usces' ) . '
 						</td>
+					</tr>';
+
+					$cardname_attention = apply_filters( 'usces_filter_cardname_attention', __( '(Alphabetic characters only)', 'usces' ) . '<div class="attention">' . __( '* Use a space to separate the first and last name, and enter all characters in uppercase.', 'usces' ) . '</div>' );
+					$html              .= '
+					<tr>
+						<th scope="row">' . __( 'Card name', 'usces' ) . '</th>
+						<td colspan="2"><input id="cardname" type="text" value="" />' . $cardname_attention . '</td>
 					</tr>';
 				}
 
@@ -2949,10 +2946,10 @@ jQuery(document).ready( function($) {
 			$params['param_list']['KaiinId']   = $kaiin_id;
 			$params['param_list']['KaiinPass'] = $kaiin_pass;
 			if ( ! isset( $param_list['Token'] ) && isset( $_POST['cardno'] ) && isset( $_POST['expyy'] ) && isset( $_POST['expmm'] ) ) {
-				$params['param_list']['CardNo']  = trim( filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING ) );
-				$params['param_list']['CardExp'] = substr( filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING ), 2 ) . filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING );
+				$params['param_list']['CardNo']  = trim( filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT ) );
+				$params['param_list']['CardExp'] = substr( filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT ), 2 ) . filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT );
 				if ( 'on' === $acting_opts['seccd'] && isset( $_POST['seccd'] ) ) {
-					$params['param_list']['SecCd'] = trim( filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING ) );
+					$params['param_list']['SecCd'] = trim( filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT ) );
 				}
 			}
 			/* e-SCOTT 新規会員登録 */
@@ -2971,15 +2968,15 @@ jQuery(document).ready( function($) {
 			/* e-SCOTT 会員照会 */
 			$response_member = $this->connection( $params );
 			if ( 'OK' === $response_member['ResponseCd'] ) {
-				$card_change = filter_input( INPUT_POST, 'card_change', FILTER_SANITIZE_STRING );
+				$card_change = filter_input( INPUT_POST, 'card_change', FILTER_DEFAULT );
 				if ( '1' === $card_change ) {
 					$params['param_list']['OperateId'] = '4MemChg';
-					$cardno                            = filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING );
+					$cardno                            = filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT );
 					if ( ! isset( $param_list['Token'] ) && '8888888888888888' !== $cardno && isset( $_POST['expyy'] ) && isset( $_POST['expmm'] ) ) {
 						$params['param_list']['CardNo']  = trim( $cardno );
-						$params['param_list']['CardExp'] = substr( filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING ), 2 ) . filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING );
+						$params['param_list']['CardExp'] = substr( filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT ), 2 ) . filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT );
 						if ( 'on' === $acting_opts['seccd'] && isset( $_POST['seccd'] ) ) {
-							$params['param_list']['SecCd'] = trim( filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING ) );
+							$params['param_list']['SecCd'] = trim( filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT ) );
 						}
 					}
 					/* e-SCOTT 会員更新 */
@@ -3102,7 +3099,7 @@ jQuery(document).ready( function($) {
 	/**
 	 * e-SCOTT 会員情報更新
 	 *
-	 * @param  int $member_id Member ID.
+	 * @param int $member_id Member ID.
 	 * @return array
 	 */
 	public function escott_member_update( $member_id ) {
@@ -3138,18 +3135,18 @@ jQuery(document).ready( function($) {
 					$param_list['MerchantFree1'] = $post_data['rand'];
 				}
 
-				$token = filter_input( INPUT_POST, 'token', FILTER_SANITIZE_STRING );
+				$token = filter_input( INPUT_POST, 'token', FILTER_DEFAULT );
 				if ( ! empty( $token ) ) {
 					$param_list['Token'] = $token;
 				} else {
 					if ( ! empty( $_POST['cardno'] ) ) {
-						$param_list['CardNo'] = trim( filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING ) );
+						$param_list['CardNo'] = trim( filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT ) );
 					}
 					if ( 'on' === $acting_opts['seccd'] && ! empty( $_POST['seccd'] ) ) {
-						$param_list['SecCd'] = trim( filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING ) );
+						$param_list['SecCd'] = trim( filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT ) );
 					}
 					if ( ! empty( $_POST['expyy'] ) && ! empty( $_POST['expmm'] ) ) {
-						$param_list['CardExp'] = substr( filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING ), 2 ) . filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING );
+						$param_list['CardExp'] = substr( filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT ), 2 ) . filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT );
 					}
 				}
 
@@ -4545,6 +4542,29 @@ jQuery(document).ready( function($) {
 
 		$query = $wpdb->prepare( "DELETE FROM {$wpdb->prefix}usces_log WHERE `log_type` = %s AND `log_key` = %s", 'acting_post_data', $key );
 		$wpdb->query( $query );
+	}
+
+	/**
+	 * Consent to Obtain Personal Information Messsage.
+	 */
+	protected function consent_message() {
+		$consent_message = __( '* Cautions on Use of Credit Cards', 'usces' ) . "\n"
+			. __( 'In order to prevent unauthorized use of your credit card through theft of information such as your credit card number, we use "EMV 3D Secure," an identity authentication service recommended by international brands.', 'usces' ) . "\n"
+			. __( 'In order to use EMV 3D Secure, it is necessary to send information about you to the card issuer.', 'usces' ) . "\n"
+			. __( 'Please read "* Provision of Personal Information to Third Parties" below and enter your card information only if you agree to the terms of the agreement.', 'usces' ) . "\n"
+			. __( '* Provision of Personal Information to Third Parties', 'usces' ) . "\n"
+			. __( 'The following personal information, etc. collected from customers will be provided to the issuer of the card being used by the customer for the purpose of detecting and preventing fraudulent use by the card issuer.', 'usces' ) . "\n"
+			. __( '"Full name", "e-mail address", "Membership information held by the business", "IP address", "device information", "Information on the Internet usage environment", and "Billing address".', 'usces' ) . "\n"
+			. __( 'If the issuer of the card you are using is located in a foreign country, these information may be transferred to the country to which such issuer belongs.', 'usces' ) . "\n"
+			. __( 'If you are a minor, you are required to obtain the consent of a person with parental authority or a guardian before using the Service.', 'usces' ) . "\n"
+			. __( '* Agreement to provide personal information to a third party', 'usces' ) . "\n"
+			. __( 'If you agree to the above "* Provision of Personal Information to Third Parties", please click "Agree" and proceed to enter your credit card information.', 'usces' ) . "\n"
+			. __( '* Safety Control Measures', 'usces' ) . "\n"
+			. __( 'We may provide all or part of the information obtained from our customers to subcontractors in the United States.', 'usces' ) . "\n"
+			. __( 'We will confirm that the subcontractor takes necessary and appropriate measures for the safe management of the information before storing it.', 'usces' ) . "\n"
+			. __( 'For an overview of the legal system regarding the protection of personal information in the relevant country, please check here.', 'usces' ) . "\n"
+			. 'https://www.ppc.go.jp/personalinfo/legal/kaiseihogohou/#gaikoku';
+		return $consent_message;
 	}
 }
 

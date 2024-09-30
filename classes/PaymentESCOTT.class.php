@@ -3,10 +3,10 @@
  * Settlement Class.
  * e-SCOTT Smart
  *
- * @package  Welcart
- * @author   Collne Inc.
- * @version  1.2.0
- * @since    1.4.14
+ * @package Welcart
+ * @author  Welcart Inc.
+ * @version 1.2.0
+ * @since   1.4.14
  */
 class ESCOTT_SETTLEMENT extends ESCOTT_MAIN {
 	/**
@@ -106,7 +106,7 @@ class ESCOTT_SETTLEMENT extends ESCOTT_MAIN {
 	 * admin_print_footer_scripts
 	 */
 	public function admin_scripts() {
-		$admin_page = filter_input( INPUT_GET, 'page', FILTER_SANITIZE_STRING );
+		$admin_page = filter_input( INPUT_GET, 'page', FILTER_DEFAULT );
 		switch ( $admin_page ) :
 			case 'usces_settlement':
 				$settlement_selected = get_option( 'usces_settlement_selected', array() );
@@ -397,7 +397,7 @@ jQuery(document).ready( function($) {
 	public function settlement_update() {
 		global $usces;
 
-		if ( filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) !== $this->paymod_id ) {
+		if ( filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) !== $this->paymod_id ) {
 			return;
 		}
 
@@ -586,7 +586,7 @@ jQuery(document).ready( function($) {
 	<div id="uscestabs_escott">
 	<div class="settlement_service"><span class="service_title"><?php esc_html_e( $this->acting_formal_name, 'usces' ); ?></span></div>
 			<?php
-			if ( filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) === $this->paymod_id ) :
+			if ( filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) === $this->paymod_id ) :
 				if ( '' !== $this->error_mes ) :
 					?>
 	<div class="error_message"><?php wel_esc_script_e( $this->error_mes ); ?></div>

@@ -14,6 +14,9 @@ class WCUtils {
 	 * @return bool
 	 */
 	public static function is_blank( $val, $strict = false ) {
+		if ( is_null( $val ) ) {
+			return true;
+		}
 
 		if ( ! is_scalar( $val ) && ! is_null( $val ) ) {
 			trigger_error( 'Value is not a scalar', E_USER_NOTICE );

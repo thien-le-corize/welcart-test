@@ -68,7 +68,7 @@
 			var modeControl = '<?php echo esc_attr( $mode_str ); ?>';
 			var order_id = '<?php echo (int) $order_id; ?>';
 			var s = settings;
-			s.data = "action=order_item_ajax&mode=" + modeControl + "&order_id=" + order_id;
+			s.data = "action=order_item_ajax&mode=" + modeControl + "&order_id=" + order_id+ '&wc_nonce=' + '<?php echo wp_create_nonce( 'order_edit' ); ?>';
 			var now_loading = "<?php esc_attr_e( 'now loading', 'usces' ); ?>";
 			if (typeof tinymce !== 'undefined') {
 				tinymce.get("sendmailmessage").setContent(now_loading);

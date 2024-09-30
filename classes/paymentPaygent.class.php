@@ -192,7 +192,7 @@ class PAYGENT_SETTLEMENT {
 			}
 
 			if ( $this->is_validity_acting( 'card' ) ) {
-				if ( $this->is_activate_card( 'module' ) ) {
+				// if ( $this->is_activate_card( 'module' ) ) {
 					add_action( 'init', array( $this, 'done_3ds_auth' ) );
 					add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 					add_action( 'wp_print_footer_scripts', array( $this, 'footer_scripts' ), 9 );
@@ -202,7 +202,7 @@ class PAYGENT_SETTLEMENT {
 					add_filter( 'usces_filter_save_order_acting_data', array( $this, 'save_order_acting_data' ) );
 					add_filter( 'usces_filter_delete_member_check', array( $this, 'delete_member_check' ), 10, 2 );
 					add_action( 'usces_action_pre_delete_memberdata', array( $this, 'delete_member' ) );
-				}
+				// }
 				add_filter( 'usces_filter_template_redirect', array( $this, 'member_update_settlement' ), 1 );
 				add_action( 'usces_action_member_submenu_list', array( $this, 'e_update_settlement' ) );
 				add_filter( 'usces_filter_member_submenu_list', array( $this, 'update_settlement' ), 10, 2 );
@@ -275,7 +275,7 @@ class PAYGENT_SETTLEMENT {
 	 * Return an instance of this class.
 	 */
 	public static function get_instance() {
-		if ( null == self::$instance ) {
+		if ( is_null( self::$instance ) ) {
 			self::$instance = new self();
 		}
 		return self::$instance;
@@ -803,6 +803,7 @@ jQuery( document ).ready( function( $ ) {
 		fd.append( "action", 'upload_certificate_file' );
 		fd.append( "upfile", $upfile.prop( 'files' )[0] );
 		fd.append( "upfile_name", $upfile.prop( 'files' )[0].name );
+		fd.append( "upfile_type", $( "#upload_filetype" ).val() );
 		fd.append( "wc_nonce", $( "#wc_nonce" ).val() );
 		$.ajax({
 			url: ajaxurl,
@@ -1549,7 +1550,7 @@ jQuery( document ).ready( function( $ ) {
 				return;
 			}
 			if ( "" == $( "#price" ).val() || 0 == parseFloat( $( "#price" ).val() ) ) {
-				alert( "<?php printf( __( 'Input the %s', 'usces' ), esc_html__( 'Amount', 'dlseller' ) ); // phpcs:ignore ?>" );
+				alert( "<?php printf( __( 'Input the %s', 'usces' ), esc_html__( 'Amount', 'dlseller' ) ); ?>" );
 				$( "#price" ).focus();
 				return;
 			}
@@ -1572,8 +1573,9 @@ jQuery( document ).ready( function( $ ) {
 	 * Certificate file path check.
 	 */
 	public function check_file_path() {
+		check_admin_referer( 'admin_settlement', 'wc_nonce' );
 		$post_data        = wp_unslash( $_POST );
-		$certificate_path = rtrim( $post_data['path'], '/' );
+		$certificate_path = ( isset( $post_data['path'] ) ) ? rtrim( $post_data['path'], '/' ) : '';
 		if ( empty( $certificate_path ) ) {
 			$data['status'] = '証明書ファイルパスが指定されていません';
 		} else {
@@ -1592,17 +1594,34 @@ jQuery( document ).ready( function( $ ) {
 	 * Upload paygent certificate file.
 	 */
 	public function upload_certificate_file() {
+		check_admin_referer( 'admin_settlement', 'wc_nonce' );
 		$upfile      = $_FILES['upfile'];
 		$acting_opts = $this->get_acting_settings();
-		$data        = array();
-		if ( 0 < $upfile['error'] ) {
-			$data['status'] = $upfile['error'];
-		} else {
-			$res = move_uploaded_file( $upfile['tmp_name'], $acting_opts['certificate_path'] . '/' . $upfile['name'] );
-			if ( $res ) {
-				$data['status'] = 'OK';
-			} else {
+		$data        = array( 'status' => '' );
+		$ext         = substr( $upfile['name'], strrpos( $upfile['name'], '.' ) + 1 );
+		$type        = ( isset( $_POST['upfile_type'] ) ) ? ( $_POST['upfile_type'] ) : '';
+		if ( 'client_file' === $type ) {
+			if ( 'pem' !== $ext ) {
 				$data['status'] = 'NG';
+			}
+		} elseif ( 'ca_file' === $type ) {
+			if ( 'crt' !== $ext ) {
+				$data['status'] = 'NG';
+			}
+		} else {
+			$data['status'] = 'NG';
+		}
+		if ( 'NG' != $data['status'] ) {
+			if ( 0 < $upfile['error'] ) {
+				$data['status'] = $upfile['error'];
+			} else {
+				$filename = sanitize_file_name( $upfile['name'] );
+				$res      = move_uploaded_file( $upfile['tmp_name'], $acting_opts['certificate_path'] . '/' . $filename );
+				if ( $res ) {
+					$data['status'] = 'OK';
+				} else {
+					$data['status'] = 'NG';
+				}
 			}
 		}
 		wp_send_json( $data );
@@ -2359,7 +2378,7 @@ jQuery( document ).ready( function( $ ) {
 			$acting_opts     = $this->get_acting_settings();
 			$original_string = trim( $post_data['payment_notice_id'] ) . trim( $post_data['payment_id'] ) . trim( $post_data['trading_id'] ) . trim( $post_data['payment_type'] ) . trim( $post_data['payment_amount'] ) . trim( $acting_opts['conv_hc'] );
 			$hased_string    = hash( 'sha256', $original_string );
-			if ( $hased_string === $post_data['hc'] ) {
+			if ( isset( $post_data['hc'] ) && $hased_string === $post_data['hc'] ) {
 				$payment_type   = ( isset( $post_data['payment_type'] ) ) ? $post_data['payment_type'] : '';
 				$payment_status = $post_data['payment_status'];
 				switch ( $payment_type ) {
@@ -2375,6 +2394,11 @@ jQuery( document ).ready( function( $ ) {
 											if ( $order_data ) {
 												$res = $usces->order_processing( $post_data );
 												if ( 'ordercompletion' == $res ) {
+													if ( 'on' == $acting_opts['stock_card_mode'] ) {
+														if ( isset( $post_data['customer_id'] ) && isset( $post_data['customer_card_id'] ) ) {
+															$usces->set_member_meta_value( 'paygent_customer_card_id', $post_data['customer_card_id'], $post_data['customer_id'] );
+														}
+													}
 													$usces->cart->crear_cart();
 												} else {
 													$log = array(
@@ -2387,11 +2411,13 @@ jQuery( document ).ready( function( $ ) {
 												}
 												$order_id = $this->get_order_id( $post_data['trading_id'] );
 												if ( $order_id ) {
+													$post_data = apply_filters( 'usces_filter_paygent_card_acting_transaction_log', $post_data, $order_id, $post_data['trading_id'] );
 													$this->save_acting_log( $post_data, 'paygent_card', $payment_status, RESULT_STATUS_NORMAL, $order_id, $post_data['trading_id'] );
 												}
 											}
 										}
 									} else {
+										$post_data = apply_filters( 'usces_filter_paygent_card_acting_transaction_log', $post_data, $order_id, $post_data['trading_id'] );
 										$this->save_acting_log( $post_data, 'paygent_card', $payment_status, RESULT_STATUS_NORMAL, $order_id, $post_data['trading_id'] );
 									}
 								}
@@ -2407,6 +2433,7 @@ jQuery( document ).ready( function( $ ) {
 							case STATUS_3DSECURE_CERTIFICATION: /* 3Dセキュア認証 */
 								$order_id = $this->get_order_id( $post_data['trading_id'] );
 								if ( $order_id ) {
+									$post_data = apply_filters( 'usces_filter_paygent_card_acting_transaction_log', $post_data, $order_id, $post_data['trading_id'] );
 									$this->save_acting_log( $post_data, 'paygent_card', $payment_status, RESULT_STATUS_NORMAL, $order_id, $post_data['trading_id'] );
 								}
 								break;
@@ -2414,6 +2441,7 @@ jQuery( document ).ready( function( $ ) {
 							case STATUS_SALES_CANCELING_TALLY: /* 売上取消集計中 */
 								$order_id = $this->get_order_id( $post_data['trading_id'] );
 								if ( $order_id ) {
+									$post_data = apply_filters( 'usces_filter_paygent_card_acting_transaction_log', $post_data, $order_id, $post_data['trading_id'] );
 									$this->save_acting_log( $post_data, 'paygent_card', $payment_status, RESULT_STATUS_ERROR, $order_id, $post_data['trading_id'] );
 								}
 								break;
@@ -2662,6 +2690,7 @@ jQuery( document ).ready( function( $ ) {
 				$payment_id    = ( isset( $latest_log['payment_id'] ) ) ? $latest_log['payment_id'] : '';
 				$telegram_kind = PAYGENT_CARD_COMMIT;
 				$settlement    = $this->settlement_request( $telegram_kind, $trading_id, $payment_id );
+				$settlement    = apply_filters( 'usces_filter_paygent_card_acting_sales_log', $settlement, $order_id, $trading_id );
 				if ( isset( $settlement['result_status'] ) && RESULT_STATUS_ERROR == $settlement['result_status'] ) {
 					$this->save_acting_log( $settlement, 'paygent_card', 'payment_error', RESULT_STATUS_ERROR, $order_id, $trading_id );
 					$status         = 'payment_error';
@@ -2697,6 +2726,7 @@ jQuery( document ).ready( function( $ ) {
 				$payment_id    = ( isset( $latest_log['payment_id'] ) ) ? $latest_log['payment_id'] : '';
 				$telegram_kind = PAYGENT_AUTH_CANCEL;
 				$settlement    = $this->settlement_request( $telegram_kind, $trading_id, $payment_id );
+				$settlement    = apply_filters( 'usces_filter_paygent_card_acting_auth_cancel_log', $settlement, $order_id, $trading_id );
 				if ( isset( $settlement['result_status'] ) && RESULT_STATUS_ERROR == $settlement['result_status'] ) {
 					$this->save_acting_log( $settlement, 'paygent_card', 'payment_error', RESULT_STATUS_ERROR, $order_id, $trading_id );
 					$status         = 'payment_error';
@@ -2733,6 +2763,7 @@ jQuery( document ).ready( function( $ ) {
 				$payment_id    = ( isset( $latest_log['payment_id'] ) ) ? $latest_log['payment_id'] : '';
 				$telegram_kind = PAYGENT_CARD_COMMIT_AUTH_REVISE;
 				$settlement    = $this->settlement_request_revise( $telegram_kind, $trading_id, $payment_id, $amount );
+				$settlement    = apply_filters( 'usces_filter_paygent_card_acting_auth_revise_log', $settlement, $order_id, $trading_id );
 				if ( isset( $settlement['result_status'] ) && RESULT_STATUS_ERROR == $settlement['result_status'] ) {
 					$this->save_acting_log( $settlement, 'paygent_card', 'payment_error', RESULT_STATUS_ERROR, $order_id, $trading_id );
 					$status         = 'payment_error';
@@ -2768,6 +2799,7 @@ jQuery( document ).ready( function( $ ) {
 				$payment_id    = ( isset( $latest_log['payment_id'] ) ) ? $latest_log['payment_id'] : '';
 				$telegram_kind = PAYGENT_CARD_COMMIT_CANCEL;
 				$settlement    = $this->settlement_request( $telegram_kind, $trading_id, $payment_id );
+				$settlement    = apply_filters( 'usces_filter_paygent_card_acting_sales_cancel_log', $settlement, $order_id, $trading_id );
 				if ( isset( $settlement['result_status'] ) && RESULT_STATUS_ERROR == $settlement['result_status'] ) {
 					$this->save_acting_log( $settlement, 'paygent_card', 'payment_error', RESULT_STATUS_ERROR, $order_id, $trading_id );
 					$status         = 'payment_error';
@@ -2804,6 +2836,7 @@ jQuery( document ).ready( function( $ ) {
 				$payment_id    = ( isset( $latest_log['payment_id'] ) ) ? $latest_log['payment_id'] : '';
 				$telegram_kind = PAYGENT_CARD_COMMIT_REVISE;
 				$settlement    = $this->settlement_request_revise( $telegram_kind, $trading_id, $payment_id, $amount );
+				$settlement    = apply_filters( 'usces_filter_paygent_card_acting_sales_revise_log', $settlement, $order_id, $trading_id );
 				if ( isset( $settlement['result_status'] ) && RESULT_STATUS_ERROR == $settlement['result_status'] ) {
 					$this->save_acting_log( $settlement, 'paygent_card', 'payment_error', RESULT_STATUS_ERROR, $order_id, $trading_id );
 					$status         = 'payment_error';
@@ -2872,14 +2905,14 @@ jQuery( document ).ready( function( $ ) {
 						$data['result'] = $result;
 						$data['status'] = $status;
 					} else {
-						$response_data  = $pm->get_response_data();
+						$response_data = $pm->get_response_data();
 						if ( ! isset( $response_data['payment_type'] ) ) {
 							$response_data['payment_type'] = PAYMENT_TYPE_CREDIT;
 						}
 						$this->save_acting_log( $response_data, 'paygent_card', $telegram_kind, RESULT_STATUS_NORMAL, $order_id, $trading_id );
 						$usces->set_order_meta_value( 'acting_paygent_card', usces_serialize( $response_data ), $order_id );
-						$payment_id     = ( isset( $response_data['payment_id'] ) ) ? $response_data['payment_id'] : '';
-						$data           = $this->settlement_reference_card( $order_id, $trading_id, $payment_id );
+						$payment_id = ( isset( $response_data['payment_id'] ) ) ? $response_data['payment_id'] : '';
+						$data       = $this->settlement_reference_card( $order_id, $trading_id, $payment_id );
 					}
 					$this->save_admin_log( $order_id, $trading_id );
 				} else {
@@ -2895,7 +2928,7 @@ jQuery( document ).ready( function( $ ) {
 					$data['result'] = $result;
 					$data['status'] = $status;
 					$this->save_admin_log( $order_id, $trading_id );
-				}				
+				}
 				wp_send_json( $data );
 				break;
 
@@ -3210,10 +3243,10 @@ jQuery( document ).ready( function( $ ) {
 	private function settlement_reference_card( $order_id, $trading_id, $payment_id, $member_id = '' ) {
 		global $usces;
 
-		$data           = array();
-		$result         = '';
-		$status         = '';
-		$acting_status  = '';
+		$data          = array();
+		$result        = '';
+		$status        = '';
+		$acting_status = '';
 
 		if ( empty( $payment_id ) ) {
 			$latest_log = $this->get_acting_latest_log( $order_id, $trading_id, RESULT_STATUS_ALL );
@@ -3415,7 +3448,7 @@ jQuery( document ).ready( function( $ ) {
 			$num      = count( $log_data );
 			$history  = '<table class="settlement-history">';
 			$history .= '<thead class="settlement-history-head">';
-			$history .= '<tr><th></th><th>' . __( 'Processing date', 'usces' ) . '</th><th>決済ID</th><th>' . __( 'Processing classification', 'usces' ) . '</th><th>' . __( 'Amount', 'usces' ) . '</th><th>' . __( 'Result', 'usces' ) . '</th></tr>';
+			$history .= '<tr><th></th><th>' . __( 'Processing date', 'usces' ) . '</th><th>決済ID</th><th>マーチャント取引ID</th><th>' . __( 'Processing classification', 'usces' ) . '</th><th>' . __( 'Amount', 'usces' ) . '</th><th>' . __( 'Result', 'usces' ) . '</th></tr>';
 			$history .= '</thead>';
 			$history .= '<tbody class="settlement-history-body">';
 			foreach ( (array) $log_data as $data ) {
@@ -3440,6 +3473,7 @@ jQuery( document ).ready( function( $ ) {
 				$history .= '<td class="num">' . $num . '</td>';
 				$history .= '<td class="datetime">' . $data['datetime'] . '</td>';
 				$history .= '<td class="transactionid">' . $payment_id . '</td>';
+				$history .= '<td class="tradingid">' . $trading_id . '</td>';
 				$history .= '<td class="status">' . $status_name . '</td>';
 				$history .= '<td class="amount">' . $amount . '</td>';
 				$history .= '<td class="result' . $class . '">' . $err_code . '</td>';
@@ -3966,9 +4000,13 @@ jQuery( document ).ready( function( $ ) {
 			$str            = apply_filters( 'usces_filter_paygent_payment_limit_conv', $payment_detail, $acting_opts['payment_term_day'] );
 		} elseif ( isset( $payment['settlement'] ) && 'acting_paygent_atm' == $payment['settlement'] ) {
 			$acting_opts        = $this->get_acting_settings();
-			$payment_limit_date = ( empty( $acting_opts['payment_limit_date'] ) ) ? 30 : $acting_opts['payment_limit_date'];
-			$payment_detail     = __( '(', 'usces' ) . sprintf( __( 'Payment is valid for %s days from the date of order.', 'usces' ), $payment_limit_date ) . __( ')', 'usces' );
-			$str                = apply_filters( 'usces_filter_paygent_payment_limit_atm', $payment_detail, $acting_opts['payment_limit_date'] );
+			$payment_limit_date = ( WCUtils::is_blank( $acting_opts['payment_limit_date'] ) ) ? 30 : (int) $acting_opts['payment_limit_date'];
+			if ( 0 < $payment_limit_date ) {
+				$payment_detail = __( '(', 'usces' ) . sprintf( __( 'Payment is valid for %s days from the date of order.', 'usces' ), $payment_limit_date ) . __( ')', 'usces' );
+			} else {
+				$payment_detail = __( '(', 'usces' ) . '本日中にお支払いを完了してください。' . __( ')', 'usces' );
+			}
+			$str = apply_filters( 'usces_filter_paygent_payment_limit_atm', $payment_detail, $acting_opts['payment_limit_date'] );
 		} elseif ( isset( $payment['settlement'] ) && 'acting_paygent_bank' == $payment['settlement'] ) {
 			$acting_opts      = $this->get_acting_settings();
 			$asp_payment_term = $this->asp_payment_term[ $acting_opts['asp_payment_term'] ];
@@ -4407,8 +4445,12 @@ jQuery( document ).ready( function( $ ) {
 			$payment_class        = $acting_opts['payment_class'];
 			$use_card_conf_number = ( 'on' == $acting_opts['use_card_conf_number'] ) ? '1' : '0';
 			if ( 'on' == $acting_opts['stock_card_mode'] && ! empty( $member['ID'] ) ) {
-				$stock_card_mode = '1';
-				$customer_id     = $member['ID'];
+				if ( usces_have_regular_order() || usces_have_continue_charge() ) {
+					$stock_card_mode = '2';
+				} else {
+					$stock_card_mode = '1';
+				}
+				$customer_id = $member['ID'];
 			} else {
 				$stock_card_mode = '';
 				$customer_id     = '';
@@ -4686,7 +4728,7 @@ jQuery( document ).ready( function( $ ) {
 					$pm->init();
 					$pm->req_put( 'trading_id', $trading_id );
 					$pm->req_put( 'payment_amount', $entry['order']['total_full_price'] );
-					if ( 0 == (int) $acting_opts['payment_class'] || '01' == $post_data['split_count'] ) {
+					if ( 0 === (int) $acting_opts['payment_class'] || '01' == $post_data['split_count'] ) {
 						$pm->req_put( 'payment_class', '10' );
 					} elseif ( '23' == $post_data['split_count'] || '80' == $post_data['split_count'] ) {
 						$pm->req_put( 'payment_class', $post_data['split_count'] );
@@ -4703,7 +4745,7 @@ jQuery( document ).ready( function( $ ) {
 					} else {
 						$pm->req_put( '3dsecure_ryaku', '1' );
 					}
-					if ( 1 == $stock_card_mode && ! empty( $customer_card_id ) ) {
+					if ( 1 === (int) $stock_card_mode && ! empty( $customer_card_id ) ) {
 						$pm->req_put( 'stock_card_mode', '1' );
 						$pm->req_put( 'customer_id', $member['ID'] );
 						$pm->req_put( 'customer_card_id', $customer_card_id );
@@ -4756,8 +4798,8 @@ jQuery( document ).ready( function( $ ) {
 					$pm->req_put( 'customer_name_kana', $customer_name_kana );
 					$pm->req_put( 'payment_detail', $payment_detail );
 					$pm->req_put( 'payment_detail_kana', $payment_detail_kana );
-					if ( isset( $acting_data['payment_limit_date'] ) && '' != $acting_data['payment_limit_date'] ) {
-						$pm->req_put( 'payment_limit_date', (int) $acting_data['payment_limit_date'] );
+					if ( ! WCUtils::is_blank( $acting_opts['payment_limit_date'] ) ) {
+						$pm->req_put( 'payment_limit_date', (int) $acting_opts['payment_limit_date'] );
 					}
 					break;
 
@@ -4784,9 +4826,9 @@ jQuery( document ).ready( function( $ ) {
 						'acting_return' => 1,
 					);
 					$pm->req_put( 'return_url', add_query_arg( $return_arg, USCES_CART_URL ) );
-					if ( isset( $acting_data['asp_payment_term'] ) && '' != $acting_data['asp_payment_term'] ) {
-						$pm->req_put( 'asp_payment_term', $acting_data['asp_payment_term'] );
-					}
+					// if ( isset( $acting_opts['asp_payment_term'] ) && '' !== $acting_opts['asp_payment_term'] ) {
+						$pm->req_put( 'asp_payment_term', $acting_opts['asp_payment_term'] );
+					// }
 					$stop_return_arg = array(
 						'acting'  => $acting,
 						'confirm' => 1,
@@ -5335,12 +5377,12 @@ jQuery( document ).ready( function( $ ) {
 		/* 発送・支払方法ページ、クレジットカード情報更新ページ */
 		if ( ( $usces->is_cart_page( $_SERVER['REQUEST_URI'] ) && 'delivery' == $usces->page ) ||
 			( $usces->is_member_page( $_SERVER['REQUEST_URI'] ) && ( isset( $_GET['usces_page'] ) && ( 'member_register_settlement' == wp_unslash( $_GET['usces_page'] ) || 'member_update_settlement' == wp_unslash( $_GET['usces_page'] ) ) ) ) ) :
-			if ( $this->is_activate_card( 'module' ) ) :
+			// if ( $this->is_activate_card( 'module' ) ) :
 				$acting_opts = $this->get_acting_settings();
 				?>
 <script type="text/javascript" src="<?php echo esc_url( $acting_opts['token_url'] ); ?>" charset="UTF-8"></script>
 				<?php
-			endif;
+			// endif;
 		endif;
 	}
 
@@ -5366,9 +5408,9 @@ jQuery( document ).ready( function( $ ) {
 						$paygent_params['token_key']                    = $acting_opts['token_key'];
 						$paygent_params['use_card_conf_number']         = $acting_opts['use_card_conf_number'];
 						$paygent_params['message']['error_token']       = __( 'Credit card information is not appropriate.', 'usces' );
-						$paygent_params['message']['error_card_number'] = __( 'The card number is not a valid credit card number.', 'usces' );
-						$paygent_params['message']['error_card_expire'] = __( 'The card\'s expiration date is invalid.', 'usces' );
-						$paygent_params['message']['error_card_cvc']    = __( 'The card\'s security code is invalid.', 'usces' );
+						$paygent_params['message']['error_card_number'] = __( 'Credit card information is not appropriate.', 'usces' );
+						$paygent_params['message']['error_card_expire'] = __( 'Credit card information is not appropriate.', 'usces' );
+						$paygent_params['message']['error_card_cvc']    = __( 'Credit card information is not appropriate.', 'usces' );
 					}
 					if ( $this->is_activate_conv( 'module' ) ) {
 						$paygent_params['conv_service_type']                     = $this->get_service_type( 'conv' );
@@ -5396,9 +5438,9 @@ jQuery( document ).ready( function( $ ) {
 					$paygent_params['use_card_conf_number'] = $acting_opts['use_card_conf_number'];
 					$paygent_params['message']              = array(
 						'error_token'       => __( 'Credit card information is not appropriate.', 'usces' ),
-						'error_card_number' => __( 'The card number is not a valid credit card number.', 'usces' ),
-						'error_card_expire' => __( 'The card\'s expiration date is invalid.', 'usces' ),
-						'error_card_cvc'    => __( 'The card\'s security code is invalid.', 'usces' ),
+						'error_card_number' => __( 'Credit card information is not appropriate.', 'usces' ),
+						'error_card_expire' => __( 'Credit card information is not appropriate.', 'usces' ),
+						'error_card_cvc'    => __( 'Credit card information is not appropriate.', 'usces' ),
 						'confirm_deletion'  => __( 'Are you sure delete credit card registration?', 'usces' ),
 					);
 					wp_localize_script( 'usces_member_paygent', 'paygent_params', $paygent_params );
@@ -5658,7 +5700,7 @@ function paidyPay() {
 					$payment = usces_get_payments_by_name( $order['order_payment_name'] );
 					if ( isset( $payment['settlement'] ) && 'acting_paygent_paidy' != $payment['settlement'] ) {
 						$total_price = $order['order_item_total_price'] - $order['order_usedpoint'] + $order['order_discount'] + $order['order_shipping_charge'] + $order['order_cod_fee'] + $order['order_tax'];
-						if ( 0 == $order_count ) {
+						if ( 0 === $order_count ) {
 							$last_order_amount = $total_price;
 							$last_order_at     = ceil( ( strtotime( date_i18n( 'Y-m-d H:i:s' ) ) - strtotime( $order['order_date'] ) ) / ( 60 * 60 * 24 ) );
 						}
@@ -6264,8 +6306,8 @@ function paidyPay() {
 				$token    = ( isset( $_POST['token'] ) ) ? trim( $_POST['token'] ) : '';
 				$customer = $this->customer_card_add( $member['ID'], $token );
 				if ( isset( $customer['result_status'] ) && RESULT_STATUS_ERROR == $customer['result_status'] ) {
-					$usces->error_message .= '<p>' . $customer['result_message'] . '</p>';
-					$done_message          = __( 'Registration failed.', 'usces' ) . $customer['response_code'];
+					$usces->error_message .= '<p>' . __( 'Credit card information is not appropriate.', 'usces' ) . '</p>';
+					$done_message          = __( 'Registration failed.', 'usces' );
 				} else {
 					$done_message = __( 'Successfully registered.', 'usces' );
 					$register     = false;
@@ -6281,8 +6323,8 @@ function paidyPay() {
 				$token    = ( isset( $_POST['token'] ) ) ? trim( $_POST['token'] ) : '';
 				$customer = $this->customer_card_upd( $member['ID'], $token );
 				if ( isset( $customer['result_status'] ) && RESULT_STATUS_ERROR == $customer['result_status'] ) {
-					$usces->error_message .= '<p>' . $customer['result_message'] . '</p>';
-					$done_message          = __( 'Update failed.', 'usces' ) . $customer['response_code'];
+					$usces->error_message .= '<p>' . __( 'Credit card information is not appropriate.', 'usces' ) . '</p>';
+					$done_message          = __( 'Update failed.', 'usces' );
 					$register              = true; /* 登録画面 */
 				} else {
 					$this->send_update_settlement_mail();
@@ -6293,8 +6335,8 @@ function paidyPay() {
 			check_admin_referer( 'member_update_settlement', 'wc_nonce' );
 			$customer = $this->customer_card_del( $member['ID'] );
 			if ( isset( $customer['result_status'] ) && RESULT_STATUS_ERROR == $customer['result_status'] ) {
-				$usces->error_message .= '<p>' . $customer['result_message'] . '</p>';
-				$done_message          = __( 'Deletion failed.', 'usces' ) . $customer['response_code'];
+				$usces->error_message .= '<p>' . __( 'Credit card information is not appropriate.', 'usces' ) . '</p>';
+				$done_message          = __( 'Deletion failed.', 'usces' );
 			} else {
 				$done_message = __( 'Successfully deleted.', 'usces' );
 				$register     = true;
@@ -6464,6 +6506,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $member['mailaddress1'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
@@ -6492,6 +6536,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject . '( ' . sprintf( _x( '%s', 'honorific', 'usces' ), $name ) . ' )',
 			'message'      => do_shortcode( $admin_message ),
@@ -6662,11 +6708,15 @@ jQuery.event.add( window, "load", function() {
 			<td class="label">カード情報</td>
 			<td><div class="rod_left shortm"><?php esc_html_e( 'Registered', 'usces' ); ?></div></td>
 		</tr>
+					<?php
+					if ( ! usces_have_member_continue_order( $member['ID'] ) && ! usces_have_member_regular_order( $member['ID'] ) ) :
+						?>
 		<tr>
 			<td class="label"><input type="checkbox" name="paygent_stock_card_mode" id="paygent-stock_card_mode-release" value="release"></td>
 			<td><label for="paygent-stock_card_mode-release">カード情報の登録を解除する</label></td>
 		</tr>
-					<?php
+						<?php
+					endif;
 				endif;
 			endif;
 		endif;
@@ -6744,7 +6794,7 @@ jQuery.event.add( window, "load", function() {
 	 * @return object
 	 */
 	public function first_charging_date( $time, $post_id, $usces_item, $order_id, $continue_data ) {
-		if ( 99 == $usces_item['item_chargingday'] ) {
+		if ( 99 === (int) $usces_item['item_chargingday'] ) {
 			if ( empty( $order_id ) ) {
 				$today                      = date_i18n( 'Y-m-d', current_time( 'timestamp' ) );
 				list( $year, $month, $day ) = explode( '-', $today );
@@ -7151,6 +7201,7 @@ jQuery.event.add( window, "load", function() {
 				$response_data  = $pm->get_response_data();
 				$payment_id     = ( isset( $response_data['payment_id'] ) ) ? $response_data['payment_id'] : '';
 				$settlement_ref = $this->settlement_ref( $order_id, $trading_id, $payment_id );
+				$settlement_ref = apply_filters( 'usces_filter_paygent_card_auto_continuation_charging_log', $settlement_ref, $order_id, $trading_id );
 				if ( isset( $settlement_ref['result_status'] ) && RESULT_STATUS_ERROR == $settlement_ref['result_status'] ) {
 					$this->save_acting_log( $settlement_ref, 'paygent_card', 'reference_error', RESULT_STATUS_ERROR, $order_id, $trading_id );
 				} else {
@@ -7212,6 +7263,8 @@ jQuery.event.add( window, "load", function() {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -7260,6 +7313,8 @@ jQuery.event.add( window, "load", function() {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -7489,6 +7544,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $admin_subject,
 			'message'      => do_shortcode( $admin_message ),
@@ -7898,13 +7955,13 @@ jQuery.event.add( window, "load", function() {
 		if ( empty( $order_id ) ) {
 			if ( RESULT_STATUS_NORMAL == $result ) {
 				$query = $wpdb->prepare(
-					"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `tracking_id` = %s AND `result` = %s ORDER BY `ID` DESC, `datetime` DESC",
+					"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `tracking_id` = %s AND `result` = %s ORDER BY `datetime` DESC, `ID` DESC",
 					$trading_id,
 					RESULT_STATUS_NORMAL
 				);
 			} else {
 				$query = $wpdb->prepare(
-					"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `tracking_id` = %s ORDER BY `ID` DESC, `datetime` DESC",
+					"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `tracking_id` = %s ORDER BY `datetime` DESC, `ID` DESC",
 					$trading_id
 				);
 			}
@@ -7912,27 +7969,27 @@ jQuery.event.add( window, "load", function() {
 			if ( empty( $trading_id ) ) {
 				if ( RESULT_STATUS_NORMAL == $result ) {
 					$query = $wpdb->prepare(
-						"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `datetime` IN( SELECT MAX( `datetime` ) FROM {$wpdb->prefix}usces_acting_log GROUP BY `tracking_id` ) AND `order_id` = %d AND `result` = %s ORDER BY `ID` DESC, `datetime` DESC",
+						"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `datetime` IN( SELECT MAX( `datetime` ) FROM {$wpdb->prefix}usces_acting_log GROUP BY `tracking_id` ) AND `order_id` = %d AND `result` = %s ORDER BY `datetime` DESC, `ID` DESC",
 						$order_id,
 						RESULT_STATUS_NORMAL
 					);
 				} else {
 					$query = $wpdb->prepare(
-						"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `datetime` IN( SELECT MAX( `datetime` ) FROM {$wpdb->prefix}usces_acting_log GROUP BY `tracking_id` ) AND `order_id` = %d ORDER BY `ID` DESC, `datetime` DESC",
+						"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `datetime` IN( SELECT MAX( `datetime` ) FROM {$wpdb->prefix}usces_acting_log GROUP BY `tracking_id` ) AND `order_id` = %d ORDER BY `datetime` DESC, `ID` DESC",
 						$order_id
 					);
 				}
 			} else {
 				if ( RESULT_STATUS_NORMAL == $result ) {
 					$query = $wpdb->prepare(
-						"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `order_id` = %d AND `tracking_id` = %s AND `result` = %s ORDER BY `ID` DESC, `datetime` DESC",
+						"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `order_id` = %d AND `tracking_id` = %s AND `result` = %s ORDER BY `datetime` DESC, `ID` DESC",
 						$order_id,
 						$trading_id,
 						RESULT_STATUS_NORMAL
 					);
 				} else {
 					$query = $wpdb->prepare(
-						"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `order_id` = %d AND `tracking_id` = %s ORDER BY `ID` DESC, `datetime` DESC",
+						"SELECT * FROM {$wpdb->prefix}usces_acting_log WHERE `order_id` = %d AND `tracking_id` = %s ORDER BY `datetime` DESC, `ID` DESC",
 						$order_id,
 						$trading_id
 					);
@@ -8548,7 +8605,7 @@ jQuery.event.add( window, "load", function() {
 
 			$payment_id = ( isset( $log['payment_id'] ) ) ? $log['payment_id'] : 'no value';
 
-			$latest_log['datetime']     = $data['datetime'];
+			$latest_log['datetime']   = $data['datetime'];
 			$latest_log['acting']     = $data['acting'];
 			$latest_log['status']     = $this->get_status_name( $data['status'] );
 			$latest_log['result']     = $data['result'];

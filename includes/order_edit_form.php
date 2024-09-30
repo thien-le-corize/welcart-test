@@ -5,6 +5,13 @@
  * @package Welcart
  */
 
+if ( ! current_user_can( 'wel_manage_order' ) ) {
+	wp_die( __( 'You do not have sufficient privileges to perform this operation.', 'usces' ) );
+}
+if ( ! ( isset( $_GET['page'] ) && 'usces_ordernew' === $_GET['page'] ) ) {
+	check_admin_referer( 'order_edit', 'wc_nonce' );
+}
+
 $pname          = array();
 $payment_method = array();
 $csod_meta      = array();
@@ -153,7 +160,7 @@ if ( 'new' === $order_action ) {
 	$seriarized_cart = stripslashes_deep( unserialize( $data['order_cart'] ) );
 	$cart            = usces_get_ordercartdata( $order_id );
 	$condition       = stripslashes_deep( unserialize( $data['order_condition'] ) );
-	$ordercheck      = stripslashes_deep( unserialize( $data['order_check'] ) );
+	$ordercheck      = stripslashes_deep( maybe_unserialize( $data['order_check'] ) );
 
 	if ( ! is_array( $ordercheck ) ) {
 		$ordercheck = array();
@@ -250,10 +257,10 @@ if ( 'new' === $order_action ) {
 	if ( isset( $exopt['system']['datalistup']['orderlist_flag'] ) && $exopt['system']['datalistup']['orderlist_flag'] ) {
 		$navibutton = '';
 		$navibutton .= '<a href="javascript:;" class="prev-page" style="display:none"><span class="dashicons dashicons-arrow-left-alt2"></span>' . __( 'to prev page', 'usces' ) . '</a>';
-		$navibutton .= '<a href="' . admin_url( 'admin.php?page=usces_orderlist&returnList=1' ) . '" class="back-list"><span class="dashicons dashicons-list-view"></span>' . __( 'to order list', 'usces' ) . '</a>';
+		$navibutton .= '<a href="' . admin_url( 'admin.php?page=usces_orderlist&returnList=1&wc_nonce=' . wp_create_nonce( 'order_list' ) ) . '" class="back-list"><span class="dashicons dashicons-list-view"></span>' . __( 'to order list', 'usces' ) . '</a>';
 		$navibutton .= '<a href="javascript:;" class="next-page"  style="display:none">' . __( 'to next page', 'usces' ) . '<span class="dashicons dashicons-arrow-right-alt2"></span></a>';
 	} else {
-		$navibutton = '<a href="' . admin_url( 'admin.php?page=usces_orderlist&returnList=1' ) . '" class="back-list"><span class="dashicons dashicons-list-view"></span>' . __( 'to order list', 'usces' ) . '</a>';
+		$navibutton = '<a href="' . admin_url( 'admin.php?page=usces_orderlist&returnList=1&wc_nonce=' . wp_create_nonce( 'order_list' ) ) . '" class="back-list"><span class="dashicons dashicons-list-view"></span>' . __( 'to order list', 'usces' ) . '</a>';
 	}
 
 	$order_subtotal_standard = 0;
@@ -350,6 +357,8 @@ $mail_data = usces_mail_data();
 
 $usedpoint_readonly = ( usces_is_membersystem_point() && ! empty( $data['mem_id'] ) ) ? '' : ' readonly';
 $getpoint_readonly  = ( usces_is_membersystem_point() ) ? '' : ' readonly';
+
+$email_attach_file_extension = wel_email_attach_file_extension( explode( ',', strtolower( $this->options['email_attach_file_extension'] ) ) );
 ?>
 <style>
 	.usces_tablenav #mailVisiLink {
@@ -649,19 +658,19 @@ jQuery(function($){
 	});
 	$('#mitumoriprint').click(function() {
 		uscesMail.ordercheckpost('mitumoriprint');
-		window.open ( "<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=pdfout&noheader=true&order_id=' . $order_id ); ?>&type=mitumori", '_blank');
+		window.open ( "<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=pdfout&noheader=true&order_id=' . $order_id . '&wc_nonce=' . wp_create_nonce( 'order_edit' ) ); ?>&type=mitumori", '_blank');
 	});
 	$('#nohinprint').click(function() {
 		uscesMail.ordercheckpost('nohinprint');
-		window.open ( "<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=pdfout&noheader=true&order_id=' . $order_id ); ?>&type=nohin", '_blank');
+		window.open ( "<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=pdfout&noheader=true&order_id=' . $order_id . '&wc_nonce=' . wp_create_nonce( 'order_edit' ) ); ?>&type=nohin", '_blank');
 	});
 	$('#receiptprint').click(function() {
 		uscesMail.ordercheckpost('receiptprint');
-		window.open ( "<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=pdfout&noheader=true&order_id=' . $order_id ); ?>&type=receipt", '_blank');
+		window.open ( "<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=pdfout&noheader=true&order_id=' . $order_id . '&wc_nonce=' . wp_create_nonce( 'order_edit' ) ); ?>&type=receipt", '_blank');
 	});
 	$('#billprint').click(function() {
 		uscesMail.ordercheckpost('billprint');
-		window.open ( "<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=pdfout&noheader=true&order_id=' . $order_id ); ?>&type=bill", '_blank');
+		window.open ( "<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=pdfout&noheader=true&order_id=' . $order_id . '&wc_nonce=' . wp_create_nonce( 'order_edit' ) ); ?>&type=bill", '_blank');
 	});
 
 	orderfunc = {
@@ -796,8 +805,9 @@ jQuery(function($){
 		},
 		getMember : function( email ) {
 			var s = orderfunc.settings;
+			var wc_nonce = $("#wc_nonce").val();
 			s.url = uscesL10n.requestFile;
-			s.data = "action=order_item_ajax&mode=getmember&email=" + encodeURIComponent(email);
+			s.data = "action=order_item_ajax&mode=getmember&email=" + encodeURIComponent(email) + "&wc_nonce=" + wc_nonce;
 			$.ajax( s ).done(function( data ){
 				if(data.status_code === 'ok'){
 					for (var key in data) {
@@ -864,6 +874,7 @@ jQuery(function($){
 			s.data = {
 				action: 'order_item_ajax',
 				mode: 'recalculation_reduced',
+				wc_nonce: $( '#wc_nonce' ).val(),
 				order_id: $( '#order_id' ).val(),
 				mem_id: $( '#member_id_label' ).html(),
 				post_ids: post_ids,
@@ -941,6 +952,7 @@ jQuery(function($){
 			s.data = {
 				action: 'order_item_ajax',
 				mode: 'recalculation',
+				wc_nonce: $( '#wc_nonce' ).val(),
 				order_id: $( '#order_id' ).val(),
 				mem_id: $( '#member_id_label' ).html(),
 				post_ids: post_ids,
@@ -1153,8 +1165,9 @@ jQuery(function($){
 		ordercheckpost : function( checked ) {
 			var p = uscesMail.settings;
 			var order_id = $("#order_id").val();
+			var wc_nonce = $("#wc_nonce").val();
 			p.url = uscesL10n.requestFile;
-			p.data = "action=order_item_ajax&mode=ordercheckpost&order_id=" + order_id + "&checked=" + checked;
+			p.data = "action=order_item_ajax&mode=ordercheckpost&order_id=" + order_id + "&checked=" + checked + "&wc_nonce=" + wc_nonce;
 			$.ajax( p ).done(function( data ){
 				if($.trim(data) == 'mitumoriprint'){
 					$("input[name='check\[mitumoriprint\]']").prop( "checked", true );
@@ -1179,7 +1192,7 @@ jQuery(function($){
 			var checkValidExtension = true;
 			var attachFile = document.getElementById("sendmailattachfile");
 			var maximunFileSize = <?php echo (int) $this->options['email_attach_file_size']; ?>; // unit is Mb
-			var validFileExtensions = <?php echo json_encode( ! empty( $this->options['email_attach_file_extension'] ) ? explode( ',', $this->options['email_attach_file_extension'] ) : array() ); ?>; // file extension
+			var validFileExtensions = <?php echo json_encode( $email_attach_file_extension ); ?>; // file extension
 			if (attachFile && attachFile.files[0]) {
 				// validate file size
 				if (maximunFileSize > 0) {
@@ -1466,7 +1479,11 @@ function delConfirm(){
 
 jQuery(document).ready(function($){
 	// load show nav prev, next link.
-	var sub_uri_link = '<?php echo esc_url_raw( USCES_ADMIN_URL ) . '?page=usces_orderlist&order_action=edit&order_id=' ; ?>';
+	<?php
+		$nonce_url = esc_url_raw( USCES_ADMIN_URL ) . '?page=usces_orderlist&order_action=edit&wc_nonce=' . wp_create_nonce( 'order_edit' ) . '&order_id=';
+	?>
+	var sub_uri_link = '<?php echo $nonce_url; ?>';
+
 	welPageNav.checkShowNextprevPage( 'wel_order_current_page_ids', sub_uri_link, <?php echo esc_attr( $order_id ); ?> );
 
 	$(document).on( "click", "#mailVisiLink", function() {
@@ -1610,9 +1627,29 @@ jQuery(document).ready(function($){
 	?>
 });
 </script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	var formChanged = false;
+
+	$('#order_editpost_form').change(function() {
+		formChanged = true;
+	});
+
+	window.onbeforeunload = function() {
+		if (formChanged) {
+			return true;
+		}
+	};
+
+	$('#order_editpost_form').submit(function() {
+		formChanged = false;
+	});
+});
+</script>
+
 <div class="wrap">
 <div class="usces_admin">
-<form action="<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=' . $oa ); ?>" method="post" name="editpost">
+<form id="order_editpost_form" action="<?php echo esc_url_raw( USCES_ADMIN_URL . '?page=usces_orderlist&order_action=' . $oa ); ?>" method="post" name="editpost">
 <h1>Welcart Management <?php esc_html_e( 'Edit order data','usces' ); ?></h1>
 <p class="version_info">Version <?php echo esc_html( USCES_VERSION ); ?></p>
 <?php
@@ -2146,9 +2183,9 @@ endif;
 					_e( 'Maximum size of email attachment', 'usces' );
 					echo ": " . $this->options['email_attach_file_size'] . "MB. ";
 				} 
-				if ( ! empty($this->options['email_attach_file_extension'] ) ) {
+				if ( ! empty( $email_attach_file_extension ) ) {
 					_e( 'File extension support', 'usces' );
-					echo " ("  . $this->options['email_attach_file_extension'] . ")";
+					echo " ("  . implode( ',', $email_attach_file_extension ) . ")";
 				}
 				?>
 			</div>

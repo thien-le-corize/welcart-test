@@ -3,9 +3,9 @@
  * Plugin Name: Welcart e-Commerce
  * Plugin URI: https://www.welcart.com/
  * Description: Welcart builds the management system with a net shop on WordPress.
- * Version: 2.8.20
- * Author: Collne Inc.
- * Author URI: https://www.collne.com/
+ * Version: 2.11.3
+ * Author: Welcart Inc.
+ * Author URI: https://www.welcart.com/
  * Text Domain: usces
  * Domain Path: /languages/
  * Requires at least: 5.5
@@ -14,7 +14,7 @@
  * @package Welcart
  */
 
-define( 'USCES_VERSION', '2.8.20.2308071' );
+define( 'USCES_VERSION', '2.11.3.2409171' );
 define( 'USCES_DB_ACCESS', '1.5' );
 define( 'USCES_DB_MEMBER', '1.1' );
 define( 'USCES_DB_MEMBER_META', '1.1' );
@@ -25,7 +25,7 @@ define( 'USCES_DB_ORDERCART_META', '1.0' );
 define( 'USCES_DB_LOG', '1.1' );
 define( 'USCES_DB_ACTING_LOG', '1.0' );
 define( 'USCES_DB_ITEM', '1.2' );
-define( 'USCES_DB_SKUS', '1.1' );
+define( 'USCES_DB_SKUS', '1.2' );
 define( 'USCES_DB_OPTS', '1.0' );
 define( 'USCES_DB_ADMIN_LOG', '1.0' );
 
@@ -68,6 +68,5 @@ require_once USCES_PLUGIN_DIR . 'includes/purchase/wel-purchase-functions.php';
 
 register_activation_hook( __FILE__, array( $usces, 'set_initial' ) );
 register_deactivation_hook( __FILE__, array( $usces, 'deactivate' ) );
-
 
 require_once USCES_PLUGIN_DIR . 'includes/default_filters.php';

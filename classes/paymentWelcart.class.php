@@ -298,7 +298,7 @@ class WELCARTPAY_SETTLEMENT extends ESCOTT_MAIN {
 	public function admin_scripts() {
 		global $usces;
 
-		$admin_page = filter_input( INPUT_GET, 'page', FILTER_SANITIZE_STRING );
+		$admin_page = filter_input( INPUT_GET, 'page', FILTER_DEFAULT );
 		switch ( $admin_page ) :
 			case 'usces_settlement':
 				$settlement_selected = get_option( 'usces_settlement_selected', array() );
@@ -672,15 +672,15 @@ jQuery(document).ready( function($) {
 				$order_id     = '';
 				$order_data   = array();
 
-				$order_action    = filter_input( INPUT_GET, 'order_action', FILTER_SANITIZE_STRING );
-				$continue_action = filter_input( INPUT_GET, 'continue_action', FILTER_SANITIZE_STRING );
+				$order_action    = filter_input( INPUT_GET, 'order_action', FILTER_DEFAULT );
+				$continue_action = filter_input( INPUT_GET, 'continue_action', FILTER_DEFAULT );
 
 				/* 受注編集画面・継続課金会員詳細画面 */
 				if ( ( 'usces_orderlist' === $admin_page && ( 'edit' === $order_action || 'editpost' === $order_action || 'newpost' === $order_action ) ) ||
 					( 'usces_continue' === $admin_page && 'settlement' === $continue_action ) ) {
-					$order_id = filter_input( INPUT_GET, 'order_id', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE );
+					$order_id = filter_input( INPUT_GET, 'order_id', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE );
 					if ( ! $order_id && isset( $_POST['order_id'] ) ) {
-						$order_id = filter_input( INPUT_POST, 'order_id', FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE );
+						$order_id = filter_input( INPUT_POST, 'order_id', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE );
 					}
 					if ( $order_id ) {
 						$order_data = $usces->get_order_data( $order_id, 'direct' );
@@ -1295,7 +1295,7 @@ jQuery(document).ready( function( $ ) {
 	public function settlement_update() {
 		global $usces;
 
-		if ( 'welcart' !== filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) ) {
+		if ( 'welcart' !== filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) ) {
 			return;
 		}
 
@@ -1574,7 +1574,7 @@ jQuery(document).ready( function( $ ) {
 	<div id="uscestabs_welcart">
 	<div class="settlement_service"><span class="service_title"><?php esc_html_e( 'WelcartPay', 'usces' ); ?></span></div>
 			<?php
-			if ( 'welcart' === filter_input( INPUT_POST, 'acting', FILTER_SANITIZE_STRING ) ) :
+			if ( 'welcart' === filter_input( INPUT_POST, 'acting', FILTER_DEFAULT ) ) :
 				if ( '' !== $this->error_mes ) :
 					?>
 	<div class="error_message"><?php echo wp_kses_post( $this->error_mes ); ?></div>
@@ -2252,7 +2252,7 @@ jQuery(document).ready( function( $ ) {
 	public function admin_ajax() {
 		global $usces;
 
-		$mode = filter_input( INPUT_POST, 'mode', FILTER_SANITIZE_STRING );
+		$mode = filter_input( INPUT_POST, 'mode', FILTER_DEFAULT );
 		$data = array();
 
 		switch ( $mode ) {
@@ -3547,7 +3547,7 @@ jQuery(document).ready( function( $ ) {
 				if ( ! isset( $response_data['Amount'] ) ) {
 					$response_data['Amount'] = $amount;
 				}
-				$response_data = apply_filters( 'usces_filter_escott_delete_history_log', $response_data, $order_id );
+				$response_data = apply_filters( 'usces_filter_escott_delete_unionpay_history_log', $response_data, $order_id );
 				$this->save_acting_history_log( $response_data, $order_id . '_' . $trans_id );
 				$res                  .= $this->settlement_history( $order_id . '_' . $trans_id );
 				$data['status']        = $response_data['ResponseCd'];
@@ -4015,22 +4015,7 @@ jQuery(document).ready( function( $ ) {
 				wp_register_script( 'usces_cart_escott_link', USCES_FRONT_PLUGIN_URL . '/js/cart_escott_link.js', array( 'jquery' ), USCES_VERSION, true );
 				$escott_params                         = array();
 				$escott_params['card_activate']        = $acting_opts['card_activate'];
-				$escott_params['message']['agreement'] = __( '* Cautions on Use of Credit Cards', 'usces' ) . "\n"
-					. __( 'In order to prevent unauthorized use of your credit card through theft of information such as your credit card number, we use "EMV 3D Secure," an identity authentication service recommended by international brands.', 'usces' ) . "\n"
-					. __( 'In order to use EMV 3D Secure, it is necessary to send information about you to the card issuer.', 'usces' ) . "\n"
-					. __( 'Please read "* Provision of Personal Information to Third Parties" below and enter your card information only if you agree to the terms of the agreement.', 'usces' ) . "\n"
-					. __( '* Provision of Personal Information to Third Parties', 'usces' ) . "\n"
-					. __( 'The following personal information, etc. collected from customers will be provided to the issuer of the card being used by the customer for the purpose of detecting and preventing fraudulent use by the card issuer.', 'usces' ) . "\n"
-					. __( '"Membership information held by the business", "IP address", "device information", "Information on the Internet usage environment", and "Billing address".', 'usces' ) . "\n"
-					. __( 'If the issuer of the card you are using is located in a foreign country, these information may be transferred to the country to which such issuer belongs.', 'usces' ) . "\n"
-					. __( 'If you are a minor, you are required to obtain the consent of a person with parental authority or a guardian before using the Service.', 'usces' ) . "\n"
-					. __( '* Agreement to provide personal information to a third party', 'usces' ) . "\n"
-					. __( 'If you agree to the above "* Provision of Personal Information to Third Parties", please click "Agree" and proceed to enter your credit card information.', 'usces' ) . "\n"
-					. __( '* Safety Control Measures', 'usces' ) . "\n"
-					. __( 'We may provide all or part of the information obtained from our customers to subcontractors in the United States.', 'usces' ) . "\n"
-					. __( 'We will confirm that the subcontractor takes necessary and appropriate measures for the safe management of the information before storing it.', 'usces' ) . "\n"
-					. __( 'For an overview of the legal system regarding the protection of personal information in the relevant country, please check here.', 'usces' ) . "\n"
-					. 'https://www.ppc.go.jp/personalinfo/legal/kaiseihogohou/#gaikoku';
+				$escott_params['message']['agreement'] = $this->consent_message();
 				$escott_params['message']['agree']     = __( 'Agree', 'usces' );
 				$escott_params['message']['disagree']  = __( 'Disagree', 'usces' );
 				wp_localize_script( 'usces_cart_escott_link', 'escott_params', $escott_params );
@@ -4043,9 +4028,9 @@ jQuery(document).ready( function( $ ) {
 		}
 
 		/* クレジットカード情報更新ページ */
-		if ( isset( $_GET['usces_page'] ) && ( 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ) || 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ) ) ) {
+		if ( isset( $_GET['usces_page'] ) && ( 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ) || 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ) ) ) {
 			// wp_enqueue_script( 'usces_escott_member', USCES_FRONT_PLUGIN_URL . '/js/member_escott.js', array( 'jquery' ), USCES_VERSION, true );
-			print_google_recaptcha_response( filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ), 'member-card-info', 'member_update_settlement' );
+			print_google_recaptcha_response( filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ), 'member-card-info', 'member_update_settlement' );
 		}
 
 		/* マイページ */
@@ -4058,22 +4043,7 @@ jQuery(document).ready( function( $ ) {
 				wp_register_script( 'usces_member_escott', USCES_FRONT_PLUGIN_URL . '/js/member_escott.js', array( 'jquery' ), USCES_VERSION, true );
 				$escott_params                            = array();
 				$escott_params['sec3d_activate']          = $acting_opts['sec3d_activate'];
-				$escott_params['message']['agreement']    = __( '* Cautions on Use of Credit Cards', 'usces' ) . "\n"
-					. __( 'In order to prevent unauthorized use of your credit card through theft of information such as your credit card number, we use "EMV 3D Secure," an identity authentication service recommended by international brands.', 'usces' ) . "\n"
-					. __( 'In order to use EMV 3D Secure, it is necessary to send information about you to the card issuer.', 'usces' ) . "\n"
-					. __( 'Please read "* Provision of Personal Information to Third Parties" below and enter your card information only if you agree to the terms of the agreement.', 'usces' ) . "\n"
-					. __( '* Provision of Personal Information to Third Parties', 'usces' ) . "\n"
-					. __( 'The following personal information, etc. collected from customers will be provided to the issuer of the card being used by the customer for the purpose of detecting and preventing fraudulent use by the card issuer.', 'usces' ) . "\n"
-					. __( '"Membership information held by the business", "IP address", "device information", "Information on the Internet usage environment", and "Billing address".', 'usces' ) . "\n"
-					. __( 'If the issuer of the card you are using is located in a foreign country, these information may be transferred to the country to which such issuer belongs.', 'usces' ) . "\n"
-					. __( 'If you are a minor, you are required to obtain the consent of a person with parental authority or a guardian before using the Service.', 'usces' ) . "\n"
-					. __( '* Agreement to provide personal information to a third party', 'usces' ) . "\n"
-					. __( 'If you agree to the above "* Provision of Personal Information to Third Parties", please click "Agree" and proceed to enter your credit card information.', 'usces' ) . "\n"
-					. __( '* Safety Control Measures', 'usces' ) . "\n"
-					. __( 'We may provide all or part of the information obtained from our customers to subcontractors in the United States.', 'usces' ) . "\n"
-					. __( 'We will confirm that the subcontractor takes necessary and appropriate measures for the safe management of the information before storing it.', 'usces' ) . "\n"
-					. __( 'For an overview of the legal system regarding the protection of personal information in the relevant country, please check here.', 'usces' ) . "\n"
-					. 'https://www.ppc.go.jp/personalinfo/legal/kaiseihogohou/#gaikoku';
+				$escott_params['message']['agreement']    = $this->consent_message();
 				$escott_params['message']['agree']        = __( 'Agree', 'usces' );
 				$escott_params['message']['disagree']     = __( 'Disagree', 'usces' );
 				$escott_params['update_settlement_url']   = urlencode(
@@ -4094,6 +4064,9 @@ jQuery(document).ready( function( $ ) {
 						USCES_MEMBER_URL
 					)
 				);
+				$member                                   = $usces->get_member();
+				$escott_params['edit_auth']               = ( isset( $member['edit_auth'] ) ) ? $member['edit_auth'] : '';
+				$escott_params['edit_flag']               = USCES_VERIFY_MEMBERS_EMAIL::$opts['edit_flag'];
 				wp_localize_script( 'usces_member_escott', 'escott_params', $escott_params );
 				wp_enqueue_script( 'usces_member_escott' );
 			}
@@ -4172,7 +4145,7 @@ jQuery(document).ready( function( $ ) {
 	 * @return string
 	 */
 	public function delivery_secure_form_howpay( $html ) {
-		if ( isset( $_GET['usces_page'] ) && ( 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ) || 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ) ) ) {
+		if ( isset( $_GET['usces_page'] ) && ( 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ) || 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ) ) ) {
 			$html = '';
 		}
 		return $html;
@@ -4257,7 +4230,7 @@ jQuery(document).ready( function( $ ) {
 		/* 発送・支払方法ページ、クレジットカード情報更新ページ */
 		if ( ! is_admin() && $this->is_validity_acting( 'card' ) ) :
 			if ( ( $usces->is_cart_page( $_SERVER['REQUEST_URI'] ) && 'delivery' === $usces->page ) ||
-				( $usces->is_member_page( $_SERVER['REQUEST_URI'] ) && ( 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ) || 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ) ) ) ) :
+				( $usces->is_member_page( $_SERVER['REQUEST_URI'] ) && ( 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ) || 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ) ) ) ) :
 				$acting_opts = $this->get_acting_settings();
 				if ( isset( $acting_opts['card_activate'] ) && 'token' === $acting_opts['card_activate'] ) :
 					?>
@@ -4295,7 +4268,7 @@ jQuery(document).ready( function( $ ) {
 					}
 				}
 			}
-		} elseif ( $usces->is_member_page( $_SERVER['REQUEST_URI'] ) && ( isset( $_GET['usces_page'] ) && ( 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ) || 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_SANITIZE_STRING ) ) ) ) {
+		} elseif ( $usces->is_member_page( $_SERVER['REQUEST_URI'] ) && ( isset( $_GET['usces_page'] ) && ( 'member_register_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ) || 'member_update_settlement' === filter_input( INPUT_GET, 'usces_page', FILTER_DEFAULT ) ) ) ) {
 			$acting_opts = $this->get_acting_settings();
 			if ( isset( $acting_opts['card_activate'] ) && 'token' === $acting_opts['card_activate'] ) {
 				$front_ajaxurl = trailingslashit( USCES_SSL_URL ) . 'index.php';
@@ -4393,7 +4366,7 @@ jQuery(document).ready( function( $ ) {
 			$response_member = $this->escott_member_reference( $member['ID'] );
 			if ( 'OK' === $response_member['ResponseCd'] ) {
 				if ( 'on' === $acting_opts['sec3d_activate'] ) {
-					$html .= '<li class="gotoedit"><a href="javascript:void(0);" class="escott_agreement" data-mode="update">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
+					$html .= '<li class="settlement-update gotoedit"><a href="javascript:void(0);" class="escott_agreement" data-mode="update">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
 				} else {
 					$update_settlement_url = add_query_arg(
 						array(
@@ -4402,11 +4375,11 @@ jQuery(document).ready( function( $ ) {
 						),
 						USCES_MEMBER_URL
 					);
-					$html                 .= '<li class="gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
+					$html                 .= '<li class="settlement-update gotoedit"><a href="' . $update_settlement_url . '">' . __( 'Change the credit card is here >>', 'usces' ) . '</a></li>';
 				}
 			} else {
 				if ( 'on' === $acting_opts['sec3d_activate'] ) {
-					$html .= '<li class="gotoedit"><a href="javascript:void(0);" class="escott_agreement" data-mode="register">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
+					$html .= '<li class="settlement-register gotoedit"><a href="javascript:void(0);" class="escott_agreement" data-mode="register">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
 				} else {
 					$register_settlement_url = add_query_arg(
 						array(
@@ -4415,7 +4388,7 @@ jQuery(document).ready( function( $ ) {
 						),
 						USCES_MEMBER_URL
 					);
-					$html                   .= '<li class="gotoedit"><a href="' . $register_settlement_url . '">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
+					$html                   .= '<li class="settlement-register gotoedit"><a href="' . $register_settlement_url . '">' . __( 'Credit card registration is here >>', 'usces' ) . '</a></li>';
 				}
 			}
 		}
@@ -4469,10 +4442,11 @@ jQuery(document).ready( function( $ ) {
 			$register     = ( 'member_register_settlement' === $usces->page ) ? true : false;
 			$deleted      = false;
 
-			$cardno = '';
-			$seccd  = '';
-			$expyy  = '';
-			$expmm  = '';
+			$cardno   = '';
+			$seccd    = '';
+			$expyy    = '';
+			$expmm    = '';
+			$cardname = '';
 
 			if ( 'on' === $acting_opts['quickpay'] ) {
 				if ( isset( $_POST['update'] ) ) {
@@ -4486,21 +4460,12 @@ jQuery(document).ready( function( $ ) {
 							$this->send_update_settlement_mail();
 							$done_message = __( 'Successfully updated.', 'usces' );
 						} else {
-							$error_message = array();
-							$responsecd    = explode( '|', $response_member['ResponseCd'] );
-							foreach ( (array) $responsecd as $cd ) {
-								$error_message[] = $this->error_message( $cd );
-							}
-							$error_message = array_unique( $error_message );
-							if ( 0 < count( $error_message ) ) {
-								foreach ( $error_message as $message ) {
-									$usces->error_message .= '<p>' . $message . '</p>';
-								}
-							}
-							$cardno = filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING );
-							$seccd  = filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING );
-							$expyy  = filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING );
-							$expmm  = filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING );
+							$usces->error_message .= '<p>' . __( 'Credit card information is not appropriate.', 'usces' ) . '</p>';
+							$cardno                = filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT );
+							$seccd                 = filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT );
+							$expyy                 = filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT );
+							$expmm                 = filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT );
+							$cardname              = filter_input( INPUT_POST, 'cardname', FILTER_DEFAULT );
 						}
 					}
 				} elseif ( isset( $_POST['register'] ) ) {
@@ -4514,21 +4479,12 @@ jQuery(document).ready( function( $ ) {
 							$done_message = __( 'Successfully registered.', 'usces' );
 							$register     = false;
 						} else {
-							$error_message = array();
-							$responsecd    = explode( '|', $response_member['ResponseCd'] );
-							foreach ( (array) $responsecd as $cd ) {
-								$error_message[] = $this->error_message( $cd );
-							}
-							$error_message = array_unique( $error_message );
-							if ( 0 < count( $error_message ) ) {
-								foreach ( $error_message as $message ) {
-									$usces->error_message .= '<p>' . $message . '</p>';
-								}
-							}
-							$cardno = filter_input( INPUT_POST, 'cardno', FILTER_SANITIZE_STRING );
-							$seccd  = filter_input( INPUT_POST, 'seccd', FILTER_SANITIZE_STRING );
-							$expyy  = filter_input( INPUT_POST, 'expyy', FILTER_SANITIZE_STRING );
-							$expmm  = filter_input( INPUT_POST, 'expmm', FILTER_SANITIZE_STRING );
+							$usces->error_message .= '<p>' . __( 'Credit card information is not appropriate.', 'usces' ) . '</p>';
+							$cardno                = filter_input( INPUT_POST, 'cardno', FILTER_DEFAULT );
+							$seccd                 = filter_input( INPUT_POST, 'seccd', FILTER_DEFAULT );
+							$expyy                 = filter_input( INPUT_POST, 'expyy', FILTER_DEFAULT );
+							$expmm                 = filter_input( INPUT_POST, 'expmm', FILTER_DEFAULT );
+							$cardname              = filter_input( INPUT_POST, 'cardname', FILTER_DEFAULT );
 						}
 					}
 				}
@@ -4588,6 +4544,13 @@ jQuery(document).ready( function( $ ) {
 					$html .= '
 							</select>' . __( 'year', 'usces' ) . '
 							</td>
+						</tr>';
+
+					$cardname_attention = apply_filters( 'usces_filter_cardname_attention', __( '(Alphabetic characters only)', 'usces' ) . '<div class="attention">' . __( '* Use a space to separate the first and last name, and enter all characters in uppercase.', 'usces' ) . '</div>' );
+					$html              .= '
+						<tr>
+							<th scope="row">' . __( 'Card name', 'usces' ) . '</th>
+							<td colspan="2"><input name="cardname" id="cardname" type="text" value="" />' . $cardname_attention . '</td>
 						</tr>
 					</table>';
 				}
@@ -4666,10 +4629,12 @@ jQuery.event.add( window, "load", function() {
 				if ( 'token' === $acting_opts['card_activate'] ) :
 					?>
 			<input type="hidden" name="token" id="token" value="" />
+			<input type="hidden" name="billingname" id="billingname" value="" />
 					<?php
 				endif;
 				if ( 'on' === $acting_opts['sec3d_activate'] ) :
 					?>
+			<input type="hidden" name="billingemail" id="billingemail" value="<?php echo esc_attr( $member['mailaddress1'] ); ?>" />
 			<input type="hidden" name="rand" id="rand" value="<?php echo esc_attr( usces_acting_key() ); ?>" />
 					<?php
 				endif;
@@ -4750,6 +4715,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $member['mailaddress1'],
 			'from_name'    => get_option( 'blogname' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject,
 			'message'      => do_shortcode( $message ),
@@ -4778,6 +4745,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $subject . '( ' . sprintf( _x( '%s', 'honorific', 'usces' ), $name ) . ' )',
 			'message'      => do_shortcode( $admin_message ),
@@ -5615,6 +5584,8 @@ jQuery.event.add( window, "load", function() {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -5663,6 +5634,8 @@ jQuery.event.add( window, "load", function() {
 				'to_address'   => $member_info['mem_email'],
 				'from_name'    => get_option( 'blogname' ),
 				'from_address' => $usces->options['sender_mail'],
+				'reply_name'   => get_option( 'blogname' ),
+				'reply_to'     => usces_get_first_order_mail(),
 				'return_path'  => $usces->options['sender_mail'],
 				'subject'      => $subject,
 				'message'      => do_shortcode( $message ),
@@ -5959,6 +5932,8 @@ jQuery.event.add( window, "load", function() {
 			'to_address'   => $usces->options['order_mail'],
 			'from_name'    => apply_filters( 'usces_filter_bccmail_from_admin_name', 'Welcart Auto BCC' ),
 			'from_address' => $usces->options['sender_mail'],
+			'reply_name'   => get_option( 'blogname' ),
+			'reply_to'     => usces_get_first_order_mail(),
 			'return_path'  => $usces->options['sender_mail'],
 			'subject'      => $admin_subject,
 			'message'      => do_shortcode( $admin_message ),
@@ -6856,7 +6831,7 @@ jQuery.event.add( window, "load", function() {
 	 * @return string
 	 */
 	public function order_list_action_status( $status ) {
-		if ( isset( $_GET['order_action'] ) && ( 'atodene_upload' === filter_input( INPUT_GET, 'order_action', FILTER_SANITIZE_STRING ) || 'upload_atodene_results' === filter_input( INPUT_GET, 'order_action', FILTER_SANITIZE_STRING ) ) && isset( $_GET['usces_status'] ) && ! empty( $_GET['usces_status'] ) ) {
+		if ( isset( $_GET['order_action'] ) && ( 'atodene_upload' === filter_input( INPUT_GET, 'order_action', FILTER_DEFAULT ) || 'upload_atodene_results' === filter_input( INPUT_GET, 'order_action', FILTER_DEFAULT ) ) && isset( $_GET['usces_status'] ) && ! empty( $_GET['usces_status'] ) ) {
 			$status = filter_input( INPUT_GET, 'usces_status' );
 		}
 		return $status;
@@ -6870,7 +6845,7 @@ jQuery.event.add( window, "load", function() {
 	 * @return string
 	 */
 	public function order_list_action_message( $message ) {
-		if ( isset( $_GET['order_action'] ) && ( 'atodene_upload' === filter_input( INPUT_GET, 'order_action', FILTER_SANITIZE_STRING ) || 'upload_atodene_results' === filter_input( INPUT_GET, 'order_action', FILTER_SANITIZE_STRING ) ) && isset( $_GET['usces_message'] ) && ! empty( $_GET['usces_message'] ) ) {
+		if ( isset( $_GET['order_action'] ) && ( 'atodene_upload' === filter_input( INPUT_GET, 'order_action', FILTER_DEFAULT ) || 'upload_atodene_results' === filter_input( INPUT_GET, 'order_action', FILTER_DEFAULT ) ) && isset( $_GET['usces_message'] ) && ! empty( $_GET['usces_message'] ) ) {
 			$message = urldecode( filter_input( INPUT_GET, 'usces_message' ) );
 		}
 		return $message;
@@ -7184,7 +7159,7 @@ jQuery.event.add( window, "load", function() {
 		$res  = array();
 		$path = WP_CONTENT_DIR . '/uploads/';
 
-		if ( isset( $_GET['atodene_upfile'] ) && ! WCUtils::is_blank( filter_input( INPUT_GET, 'atodene_upfile', FILTER_SANITIZE_STRING ) ) && isset( $_GET['order_action'] ) && 'upload_atodene_results' === filter_input( INPUT_GET, 'order_action', FILTER_SANITIZE_STRING ) ) {
+		if ( isset( $_GET['atodene_upfile'] ) && ! WCUtils::is_blank( filter_input( INPUT_GET, 'atodene_upfile', FILTER_DEFAULT ) ) && isset( $_GET['order_action'] ) && 'upload_atodene_results' === filter_input( INPUT_GET, 'order_action', FILTER_DEFAULT ) ) {
 			$file_name       = urldecode( filter_input( INPUT_GET, 'atodene_upfile' ) );
 			$decode_filename = base64_decode( $file_name );
 			if ( ! file_exists( $path . $file_name ) ) {

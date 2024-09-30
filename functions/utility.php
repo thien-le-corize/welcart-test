@@ -5,6 +5,9 @@
  * @package Welcart
  */
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL
+// phpcs:disable WordPress.PHP.DevelopmentFunctions, WordPress.PHP.NoSilencedErrors
+
 /**
  * Upgrade 143
  *
@@ -1066,9 +1069,12 @@ function usces_admin_login_head() {
  * @return string
  */
 function usces_entity_decode( $str, $ftype ) {
+	if ( is_null( $str ) ) {
+		return $str;
+	}
 	$pos = strpos( $str, '&' );
 	if ( false !== $pos ) {
-		$str = htmlspecialchars_decode( $str );
+		$str = htmlspecialchars_decode( $str, ENT_COMPAT );
 	}
 	if ( 'csv' == $ftype ) {
 		$str = str_replace( '"', '""', $str );
@@ -1210,10 +1216,12 @@ function usces_get_delivery_company_url( $delivery_company, $tracking_number ) {
 					$br     = ( usces_is_html_mail() ) ? '<br>' : "\r\n";
 					$number = explode( ',', $tracking_number );
 					foreach ( $number as $n ) {
-						$url .= 'https://jizen.kuronekoyamato.co.jp/jizen/servlet/crjz.b.NQ0010?id=' . $n . $br;
+						$pno  = str_replace( '-', '', $n );
+						$url .= 'https://member.kms.kuronekoyamato.co.jp/parcel/detail?pno=' . $pno . $br;
 					}
 				} else {
-					$url = 'https://jizen.kuronekoyamato.co.jp/jizen/servlet/crjz.b.NQ0010?id=' . $tracking_number;
+					$pno = str_replace( '-', '', $tracking_number );
+					$url = 'https://member.kms.kuronekoyamato.co.jp/parcel/detail?pno=' . $pno;
 				}
 			} else {
 				$url = 'https://toi.kuronekoyamato.co.jp/cgi-bin/tneko';
@@ -1346,10 +1354,7 @@ function usces_serialize( $data ) {
  * @return array
  */
 function usces_unserialize( $data ) {
-	if ( is_serialized( $data ) ) {
-		return @unserialize( $data );
-	}
-	if ( is_array( $data ) ) {
+	if ( is_array( $data ) || is_null( $data ) ) {
 		return $data;
 	}
 	return @json_decode( $data, true );
@@ -1681,4 +1686,18 @@ function filter_input_array_recursive( $type, array $filters ) {
 		$recursive_static = false;
 	}
 	return $ret;
+}
+
+/**
+ * Remove the path from the uploaded file name and perform escape processing.
+ *
+ * @param string $file_name File Name.
+ *
+ * @return string
+ */
+function wel_esc_upload_file_name( $file_name ) {
+	$filenames = explode( '/', urldecode( $file_name ) );
+	end( $filenames );
+
+	return wel_esc_script( $filenames[0] );
 }
