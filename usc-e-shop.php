@@ -69,5 +69,4 @@ require_once USCES_PLUGIN_DIR . 'includes/purchase/wel-purchase-functions.php';
 register_activation_hook( __FILE__, array( $usces, 'set_initial' ) );
 register_deactivation_hook( __FILE__, array( $usces, 'deactivate' ) );
 
-
 require_once USCES_PLUGIN_DIR . 'includes/default_filters.php';
